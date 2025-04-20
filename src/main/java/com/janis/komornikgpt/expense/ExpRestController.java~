@@ -1,0 +1,25 @@
+package com.janis.komornikgpt;
+
+import lombok.RequiredArgsConstructor;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
+
+@RestController
+@RequiredArgsConstructor
+public class ExpRestController {
+
+    private final ExpenseSettlementService expenseSettlementService;
+
+    @GetMapping("/groups/{groupId}/settlement")
+    public List<SettlementDto> getSettlement(@PathVariable Long groupId) {
+        return expenseSettlementService.getSettlementDtos(groupId);
+    }
+
+    @PostMapping
+    public ResponseEntity<?> createExpense(@RequestBody CreateExpenseRequest request) {
+        expenseSettlementService.createExpense(request);
+        return ResponseEntity.ok("Wydatek dodany – lecimy z hajsem!");
+    }
+}

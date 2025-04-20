@@ -1,5 +1,8 @@
 package com.janis.komornikgpt.user;
 
+import com.janis.komornikgpt.user.exception.UserAlreadyExistsException;
+import com.janis.komornikgpt.user.exception.UserNotFoundException;
+import com.janis.komornikgpt.user.exception.UsernameAlreadyExistsException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
@@ -27,55 +30,58 @@ public class UserService implements UserDetailsService {
         return org.springframework.security.core.userdetails.User.builder()
                 .username(user.getUsername())
                 .password(user.getPassword())
-                .authorities("ROLE_USER")
+                .authorities("ROLE_" + user.getRole().name())
                 .build();
     }
 
-    @Transactional
-    public User createUser(UserRegistrationDto registrationDto) {
-        if (userRepository.existsByUsername(registrationDto.username())) {
-            throw new UserExistsException("Username already exists");
-        }
-
-        if (userRepository.existsByEmail(registrationDto.email())) {
-            throw new UserExistsException("Email already registered");
-        }
-
-        User newUser = new User();
-        newUser.setUsername(registrationDto.username());
-        newUser.setEmail(registrationDto.email());
-        newUser.setPassword(passwordEncoder.encode(registrationDto.password()));
-
-        return userRepository.save(newUser);
+    public List<User> findAll() {
+        return userRepository.findAll();
     }
 
-    public User findById(Long id) {
+    @Transactional
+    public User registerUser(CreateUserRequest request) {
+        if (userRepository.existsByUsername(request.getUsername())) {
+            throw new UsernameAlreadyExistsException("Username already exists");
+        }
+        if (userRepository.existsByEmail(request.getEmail())) {
+            throw new UserAlreadyExistsException("Email already exists");
+        }
+
+        User user = new User();
+        user.setUsername(request.getUsername());
+        user.setEmail(request.getEmail());
+        user.setPassword(passwordEncoder.encode(request.getPassword()));
+        user.setName(request.getName());
+        user.setSurname(request.getSurname());
+        user.setRole(Role.USER);
+
+        return userRepository.save(user);
+    }
+
+    public User getUserById(Long id) {
         return userRepository.findById(id)
                 .orElseThrow(() -> new UserNotFoundException("User not found with id: " + id));
     }
 
     @Transactional
-    public User updateUser(Long id, UserUpdateDto updateDto) {
-        User existingUser = findById(id);
+    public User updateUser(Long id, UpdateUserRequest request) {
+        User user = getUserById(id);
 
-        if (!existingUser.getUsername().equals(updateDto.username()) && 
-            userRepository.existsByUsername(updateDto.username())) {
-            throw new UserExistsException("Username already exists");
+        if (!user.getUsername().equals(request.getUsername()) && 
+            userRepository.existsByUsername(request.getUsername())) {
+            throw new UsernameAlreadyExistsException("Username already exists");
+        }
+        if (!user.getEmail().equals(request.getEmail()) && 
+            userRepository.existsByEmail(request.getEmail())) {
+            throw new UserAlreadyExistsException("Email already exists");
         }
 
-        if (!existingUser.getEmail().equals(updateDto.email()) && 
-            userRepository.existsByEmail(updateDto.email())) {
-            throw new UserExistsException("Email already registered");
-        }
+        user.setUsername(request.getUsername());
+        user.setEmail(request.getEmail());
+        user.setName(request.getName());
+        user.setSurname(request.getSurname());
 
-        existingUser.setUsername(updateDto.username());
-        existingUser.setEmail(updateDto.email());
-        
-        if (updateDto.password() != null && !updateDto.password().isEmpty()) {
-            existingUser.setPassword(passwordEncoder.encode(updateDto.password()));
-        }
-
-        return userRepository.save(existingUser);
+        return userRepository.save(user);
     }
 
     @Transactional

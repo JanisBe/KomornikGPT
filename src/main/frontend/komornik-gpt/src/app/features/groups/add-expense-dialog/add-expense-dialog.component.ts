@@ -12,6 +12,7 @@ import {MatIconModule} from '@angular/material/icon';
 import {MatTooltipModule} from '@angular/material/tooltip';
 import {Group} from '../../../core/models/group.model';
 import {Currency} from '../../../core/models/currency.model';
+import {Expense} from '../../../core/models/expense.model';
 
 @Component({
   selector: 'app-add-expense-dialog',
@@ -371,16 +372,35 @@ import {Currency} from '../../../core/models/currency.model';
   `]
 })
 export class AddExpenseDialogComponent {
-  expenseForm: FormGroup;
+  expenseForm!: FormGroup;
   currencies = Object.values(Currency);
   totalSplitAmount = 0;
   isSplitValid = false;
+  isEditMode = false;
 
   constructor(
     private fb: FormBuilder,
     private dialogRef: MatDialogRef<AddExpenseDialogComponent>,
-    @Inject(MAT_DIALOG_DATA) public data: { group: Group }
+    @Inject(MAT_DIALOG_DATA) public data: {
+      group: Group;
+      expense?: Expense;
+      isEdit?: boolean;
+    }
   ) {
+    this.isEditMode = !!data.isEdit;
+    this.initForm();
+
+    if (this.isEditMode && data.expense) {
+      this.populateForm(data.expense);
+    }
+
+    // Listen to amount changes to validate splits
+    this.expenseForm.get('amount')?.valueChanges.subscribe(() => {
+      this.updateTotalSplit();
+    });
+  }
+
+  private initForm() {
     this.expenseForm = this.fb.group({
       description: ['', Validators.required],
       amount: ['', [Validators.required, Validators.min(0)]],
@@ -392,17 +412,30 @@ export class AddExpenseDialogComponent {
 
     // Initialize split controls
     const splitsGroup = this.expenseForm.get('splits') as FormGroup;
-    data.group.members.forEach(member => {
+    this.data.group.members.forEach(member => {
       splitsGroup.addControl(
         member.id.toString(),
         this.fb.control('', [Validators.required, Validators.min(0)])
       );
     });
+  }
 
-    // Listen to amount changes to validate splits
-    this.expenseForm.get('amount')?.valueChanges.subscribe(() => {
-      this.updateTotalSplit();
+  private populateForm(expense: Expense) {
+    this.expenseForm.patchValue({
+      description: expense.description,
+      amount: expense.amount,
+      currency: expense.currency,
+      date: new Date(expense.date),
+      payerId: expense.payer.id
     });
+
+    // Populate splits
+    const splitsGroup = this.expenseForm.get('splits') as FormGroup;
+    expense.splits.forEach(split => {
+      splitsGroup.get(split.user.id.toString())?.setValue(split.amountOwed);
+    });
+
+    this.updateTotalSplit();
   }
 
   getSplitControl(memberId: string) {

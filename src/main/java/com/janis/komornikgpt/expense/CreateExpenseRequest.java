@@ -1,17 +1,19 @@
 package com.janis.komornikgpt.expense;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.util.List;
 
 public record CreateExpenseRequest(
-        Long payerId,
-        Long groupId,
+        String description,
         BigDecimal amount,
         Currency currency,
-        String description,
-        List<SplitDto> splits
+        LocalDateTime date,
+        Long payerId,
+        Long groupId,
+        List<ExpenseSplitRequest> splits
 ) {
-    public record SplitDto(
+    public record ExpenseSplitRequest(
             Long userId,
             BigDecimal amountOwed
     ) {

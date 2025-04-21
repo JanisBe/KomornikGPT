@@ -123,7 +123,7 @@ public class ExpenseSettlementService {
         expense.setDate(LocalDateTime.now());
 
         List<ExpenseSplit> splits = new ArrayList<>();
-        for (CreateExpenseRequest.SplitDto splitDto : request.splits()) {
+        for (CreateExpenseRequest.ExpenseSplitRequest splitDto : request.splits()) {
             User user = userRepository.findById(splitDto.userId())
                     .orElseThrow(() -> new RuntimeException("Nie znaleziono użytkownika do splitu."));
 

@@ -33,4 +33,6 @@ public interface ExpenseRepository extends JpaRepository<Expense, Long> {
     
     // Query by Example support
     <S extends Expense> Page<S> findAll(Example<S> example, Pageable pageable);
+
+    List<Expense> findAllByGroupIdOrderByDateDesc(Long groupId);
 }

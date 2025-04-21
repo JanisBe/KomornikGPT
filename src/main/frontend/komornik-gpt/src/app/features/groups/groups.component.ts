@@ -19,6 +19,7 @@ import {UserService} from '../../core/services/user.service';
 import {AddExpenseDialogComponent} from './add-expense-dialog/add-expense-dialog.component';
 import {ExpenseService} from '../../core/services/expense.service';
 import {HttpErrorResponse} from '@angular/common/http';
+import {ViewExpensesDialogComponent} from './view-expenses-dialog/view-expenses-dialog.component';
 
 @Component({
   selector: 'app-groups',
@@ -256,7 +257,7 @@ export class GroupsComponent implements OnInit {
     }
 
     const dialogRef = this.dialog.open(EditGroupDialogComponent, {
-      width: '500px',
+      width: '70%',
       data: {group, currentUser: this.currentUser}
     });
 
@@ -318,7 +319,11 @@ export class GroupsComponent implements OnInit {
   }
 
   viewExpenses(group: Group): void {
-    // TODO: Implement expenses view
+    this.dialog.open(ViewExpensesDialogComponent, {
+      width: '80%',
+      height: '80%',
+      data: {group}
+    });
   }
 
   settleExpenses(group: Group): void {
@@ -327,7 +332,7 @@ export class GroupsComponent implements OnInit {
 
   addExpense(group: Group): void {
     const dialogRef = this.dialog.open(AddExpenseDialogComponent, {
-      width: '500px',
+      width: '70%',
       data: {group, currentUser: this.currentUser}
     });
 

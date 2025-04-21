@@ -11,6 +11,7 @@ import org.hibernate.proxy.HibernateProxy;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
@@ -31,6 +32,7 @@ public class Expense {
     @ToString.Exclude
     private User payer;
 
+    @Column(precision = 19, scale = 2)
     private BigDecimal amount;
 
     @Column(nullable = false)
@@ -49,9 +51,24 @@ public class Expense {
 
     @OneToMany(mappedBy = "expense", cascade = CascadeType.ALL, orphanRemoval = true)
     @ToString.Exclude
-    private List<ExpenseSplit> splits;
+    private List<ExpenseSplit> splits = new ArrayList<>();
 
-    // Gettery, settery, konstruktory i cała reszta mechaniki
+    @Column(name = "created_at")
+    private LocalDateTime createdAt;
+
+    @Column(name = "updated_at")
+    private LocalDateTime updatedAt;
+
+    @PrePersist
+    protected void onCreate() {
+        createdAt = LocalDateTime.now();
+        updatedAt = LocalDateTime.now();
+    }
+
+    @PreUpdate
+    protected void onUpdate() {
+        updatedAt = LocalDateTime.now();
+    }
 
     @Override
     public final boolean equals(Object o) {

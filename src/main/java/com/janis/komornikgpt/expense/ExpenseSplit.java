@@ -33,8 +33,10 @@ public class ExpenseSplit {
     @ToString.Exclude
     private User user;
 
-    @Column(name = "amount")
+    @Column(precision = 19, scale = 2)
     private BigDecimal amountOwed;
+
+    private boolean isPaid = false;
 
     @Override
     public final boolean equals(Object o) {

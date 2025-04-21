@@ -2,14 +2,12 @@ package com.janis.komornikgpt.expense;
 
 import com.janis.komornikgpt.SettlementDto;
 import lombok.RequiredArgsConstructor;
-import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.security.Principal;
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Map;
-import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/expenses")
@@ -24,56 +22,53 @@ public class ExpenseRestController {
     }
 
     @PostMapping
-    public ResponseEntity<Map<String, String>> createExpense(@RequestBody CreateExpenseRequest request) {
-        expenseSettlementService.createExpense(request);
-        return ResponseEntity.ok(Map.of("message", "Expense added successfully"));
+    public ResponseEntity<ExpenseDto> createExpense(@RequestBody CreateExpenseRequest request, Principal principal) {
+        Expense expense = expenseService.createExpense(request, principal);
+        return ResponseEntity.ok(ExpenseDto.fromExpense(expense));
     }
 
-    @GetMapping("/groups/{groupId}")
-    public List<ExpenseDto> getExpensesByGroup(@PathVariable Long groupId) {
-        return expenseService.findAllByGroupId(groupId).stream()
-                .map(ExpenseDto::fromExpense)
-                .collect(Collectors.toList());
+    @GetMapping("/group/{groupId}")
+    public ResponseEntity<List<ExpenseDto>> getExpensesByGroupId(@PathVariable Long groupId, Principal principal) {
+        List<Expense> expenses = expenseService.findAllByGroupId(groupId, principal);
+        return ResponseEntity.ok(expenses.stream().map(ExpenseDto::fromExpense).toList());
     }
 
-    @GetMapping("/groups/{groupId}/date-range")
-    public List<ExpenseDto> getExpensesByGroupAndDateRange(
+    @GetMapping("/group/{groupId}/between")
+    public ResponseEntity<List<ExpenseDto>> getExpensesByGroupIdAndDateBetween(
             @PathVariable Long groupId,
-            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime startDate,
-            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime endDate) {
-        return expenseService.findAllByGroupIdAndDateBetween(groupId, startDate, endDate).stream()
-                .map(ExpenseDto::fromExpense)
-                .collect(Collectors.toList());
+            @RequestParam LocalDateTime startDate,
+            @RequestParam LocalDateTime endDate) {
+        List<Expense> expenses = expenseService.findAllByGroupIdAndDateBetween(groupId, startDate, endDate);
+        return ResponseEntity.ok(expenses.stream().map(ExpenseDto::fromExpense).toList());
     }
 
-    @GetMapping("/users/{userId}")
-    public List<ExpenseDto> getExpensesByUser(@PathVariable Long userId) {
-        return expenseService.findAllByPayerId(userId).stream()
-                .map(ExpenseDto::fromExpense)
-                .collect(Collectors.toList());
+    @GetMapping("/user/{userId}")
+    public ResponseEntity<List<ExpenseDto>> getExpensesByPayerId(@PathVariable Long userId) {
+        List<Expense> expenses = expenseService.findAllByPayerId(userId);
+        return ResponseEntity.ok(expenses.stream().map(ExpenseDto::fromExpense).toList());
     }
 
-    @GetMapping("/users/{userId}/date-range")
-    public List<ExpenseDto> getExpensesByUserAndDateRange(
+    @GetMapping("/user/{userId}/between")
+    public ResponseEntity<List<ExpenseDto>> getExpensesByPayerIdAndDateBetween(
             @PathVariable Long userId,
-            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime startDate,
-            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime endDate) {
-        return expenseService.findAllByPayerIdAndDateBetween(userId, startDate, endDate).stream()
-                .map(ExpenseDto::fromExpense)
-                .collect(Collectors.toList());
+            @RequestParam LocalDateTime startDate,
+            @RequestParam LocalDateTime endDate) {
+        List<Expense> expenses = expenseService.findAllByPayerIdAndDateBetween(userId, startDate, endDate);
+        return ResponseEntity.ok(expenses.stream().map(ExpenseDto::fromExpense).toList());
     }
 
     @PutMapping("/{id}")
-    public ExpenseDto updateExpense(
+    public ResponseEntity<ExpenseDto> updateExpense(
             @PathVariable Long id,
-            @RequestBody UpdateExpenseRequest request) {
-        Expense updatedExpense = expenseService.updateExpense(id, request);
-        return ExpenseDto.fromExpense(updatedExpense);
+            @RequestBody UpdateExpenseRequest request,
+            Principal principal) {
+        Expense expense = expenseService.updateExpense(id, request, principal);
+        return ResponseEntity.ok(ExpenseDto.fromExpense(expense));
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteExpense(@PathVariable Long id) {
-        expenseService.deleteExpense(id);
+    public ResponseEntity<Void> deleteExpense(@PathVariable Long id, Principal principal) {
+        expenseService.deleteExpense(id, principal);
         return ResponseEntity.noContent().build();
     }
 }

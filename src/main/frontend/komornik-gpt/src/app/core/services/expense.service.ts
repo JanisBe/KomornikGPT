@@ -48,7 +48,15 @@ export class ExpenseService {
   }
 
   updateExpense(id: number, expense: CreateExpenseDto): Observable<Expense> {
-    return this.http.put<Expense>(`${this.apiUrl}/${id}`, expense);
+    return this.http.put<Expense>(`${this.apiUrl}/${id}`, expense).pipe(
+      tap(() => {
+        this.snackBar.open('Expense updated successfully', 'Close', {
+          duration: 3000,
+          horizontalPosition: 'center',
+          verticalPosition: 'bottom',
+        });
+      })
+    );
   }
 
   deleteExpense(id: number): Observable<void> {

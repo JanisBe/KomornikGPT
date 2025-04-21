@@ -36,6 +36,7 @@ public class GroupService {
 
         Group group = new Group();
         group.setName(request.name());
+        group.setDescription(request.description());
         group.setCreatedBy(creator);
 
         List<User> users = new ArrayList<>();
@@ -53,8 +54,7 @@ public class GroupService {
                         memberRequest.userName(),
                         "", // Empty surname for now
                         memberRequest.userName(), // Using userName as username
-                        memberRequest.email()
-                );
+                        memberRequest.email());
                 user = userService.createUserWithoutPassword(createUserRequest);
             }
             users.add(user);
@@ -64,7 +64,7 @@ public class GroupService {
         if (!users.contains(creator)) {
             users.add(creator);
         }
-        
+
         group.setUsers(users);
         return groupRepository.save(group);
     }
@@ -85,6 +85,10 @@ public class GroupService {
             group.setName(request.name());
         }
 
+        if (request.description() != null) {
+            group.setDescription(request.description());
+        }
+
         if (request.userIds() != null) {
             List<User> users = userRepository.findAllById(request.userIds());
             if (users.size() != request.userIds().size()) {
@@ -95,7 +99,7 @@ public class GroupService {
             if (!users.contains(group.getCreatedBy())) {
                 users.add(group.getCreatedBy());
             }
-            
+
             group.setUsers(users);
         }
 
@@ -116,4 +120,15 @@ public class GroupService {
 
         groupRepository.delete(group);
     }
-} 
+
+    public boolean isUserMemberOfGroup(String username, Long groupId) {
+        Group group = groupRepository.findById(groupId)
+                .orElseThrow(() -> new GroupNotFoundException("Group not found with id: " + groupId));
+
+        User user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new RuntimeException("User not found with username: " + username));
+
+        return group.getUsers().stream()
+                .anyMatch(member -> member.getId().equals(user.getId()));
+    }
+}

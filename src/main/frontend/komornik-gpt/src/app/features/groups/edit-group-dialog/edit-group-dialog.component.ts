@@ -1,21 +1,28 @@
 import {Component, Inject, OnInit} from '@angular/core';
 import {CommonModule} from '@angular/common';
-import {FormBuilder, FormGroup, ReactiveFormsModule, Validators} from '@angular/forms';
+import {FormArray, FormBuilder, FormGroup, ReactiveFormsModule, Validators} from '@angular/forms';
 import {MAT_DIALOG_DATA, MatDialogModule, MatDialogRef} from '@angular/material/dialog';
 import {MatButtonModule} from '@angular/material/button';
 import {MatFormFieldModule} from '@angular/material/form-field';
 import {MatInputModule} from '@angular/material/input';
-import {MatSelectModule} from '@angular/material/select';
 import {MatExpansionModule} from '@angular/material/expansion';
 import {MatDividerModule} from '@angular/material/divider';
+import {MatIconModule} from '@angular/material/icon';
+import {MatAutocompleteModule, MatAutocompleteSelectedEvent} from '@angular/material/autocomplete';
 import {Group} from '../../../core/models/group.model';
 import {User} from '../../../core/models/user.model';
 import {CreateUserRequest, UserService} from '../../../core/services/user.service';
-import {firstValueFrom} from 'rxjs';
+import {firstValueFrom, map, Observable, startWith} from 'rxjs';
 import {HttpErrorResponse} from '@angular/common/http';
 
 interface PendingUser extends CreateUserRequest {
   tempId: string;
+}
+
+interface MemberInput {
+  userName: string;
+  email: string;
+  userId?: string | number;
 }
 
 interface CreatedUserResponse {
@@ -33,9 +40,10 @@ interface CreatedUserResponse {
     MatButtonModule,
     MatFormFieldModule,
     MatInputModule,
-    MatSelectModule,
     MatExpansionModule,
-    MatDividerModule
+    MatDividerModule,
+    MatIconModule,
+    MatAutocompleteModule
   ],
   template: `
     <div class="dialog-container">
@@ -62,18 +70,52 @@ interface CreatedUserResponse {
             </mat-form-field>
           </div>
 
-          <div class="form-field">
-            <mat-form-field appearance="outline" class="full-width">
-              <mat-label>Members</mat-label>
-              <mat-select formControlName="userIds" multiple>
-                <mat-option *ngFor="let user of availableUsers" [value]="user.id">
-                  {{ user.name }} ({{ user.email }})
-                </mat-option>
-                <mat-option *ngFor="let user of pendingUsers" [value]="user.tempId">
-                  {{ user.name }} ({{ user.email }}) (New)
-                </mat-option>
-              </mat-select>
-            </mat-form-field>
+          <div formArrayName="members" class="members-container">
+            <h3>Members</h3>
+            <div *ngFor="let member of members.controls; let i=index" [formGroupName]="i" class="member-row">
+              <div class="member-inputs">
+                <mat-form-field appearance="outline">
+                  <mat-label>Username</mat-label>
+                  <input matInput
+                         formControlName="userName"
+                         [matAutocomplete]="auto"
+                         (input)="onUserNameInput(i)">
+                  <mat-error *ngIf="member.get('userName')?.hasError('required')">
+                    Username is required
+                  </mat-error>
+                  <mat-autocomplete #auto="matAutocomplete"
+                                  (optionSelected)="onUserSelected($event, i)">
+                    <mat-option *ngFor="let user of filteredUsers[i] | async" [value]="user.name">
+                      {{ user.name }} ({{ user.email }})
+                    </mat-option>
+                  </mat-autocomplete>
+                </mat-form-field>
+
+                <mat-form-field appearance="outline">
+                  <mat-label>Email</mat-label>
+                  <input matInput formControlName="email" type="email">
+                  <mat-error *ngIf="member.get('email')?.hasError('required')">
+                    Email is required
+                  </mat-error>
+                  <mat-error *ngIf="member.get('email')?.hasError('email')">
+                    Please enter a valid email address
+                  </mat-error>
+                </mat-form-field>
+              </div>
+
+              <button mat-icon-button color="warn" type="button"
+                      (click)="removeMember(i)"
+                      [disabled]="members.length <= 1">
+                <mat-icon>close</mat-icon>
+              </button>
+            </div>
+
+            <div class="add-member-link">
+              <a mat-button color="primary" (click)="addMember()">
+                <mat-icon>add</mat-icon>
+                Add a person
+              </a>
+            </div>
           </div>
 
           <mat-divider></mat-divider>
@@ -188,6 +230,36 @@ interface CreatedUserResponse {
       justify-content: flex-end;
       margin-top: 16px;
     }
+
+    .members-container {
+      margin: 24px 0;
+    }
+
+    .member-row {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      margin-bottom: 16px;
+    }
+
+    .member-inputs {
+      display: flex;
+      gap: 16px;
+      flex: 1;
+    }
+
+    .member-inputs mat-form-field {
+      flex: 1;
+    }
+
+    .add-member-link {
+      margin-top: 8px;
+    }
+
+    h3 {
+      margin: 0 0 16px 0;
+      font-weight: 500;
+    }
   `]
 })
 export class EditGroupDialogComponent implements OnInit {
@@ -195,6 +267,7 @@ export class EditGroupDialogComponent implements OnInit {
   newUserForm: FormGroup;
   availableUsers: User[] = [];
   pendingUsers: PendingUser[] = [];
+  filteredUsers: Observable<User[]>[] = [];
   private tempIdCounter = 0;
 
   constructor(
@@ -206,7 +279,7 @@ export class EditGroupDialogComponent implements OnInit {
     this.groupForm = this.fb.group({
       name: ['', [Validators.required, Validators.minLength(2)]],
       description: [''],
-      userIds: [[]]
+      members: this.fb.array([])
     });
 
     this.newUserForm = this.fb.group({
@@ -217,19 +290,25 @@ export class EditGroupDialogComponent implements OnInit {
     });
   }
 
+  get members(): FormArray {
+    return this.groupForm.get('members') as FormArray;
+  }
+
   ngOnInit(): void {
     // Load initial form values
     this.groupForm.patchValue({
       name: this.data.group.name,
-      userIds: this.data.group.members.map(member => member.id)
+      description: this.data.group.description
     });
 
     // Load available users
     this.userService.getUsers().subscribe({
       next: (users: User[]) => {
-        this.availableUsers = users.filter(user =>
-          !this.data.group.members.some(member => member.id === user.id)
-        );
+        this.availableUsers = users;
+        // Initialize members form array with existing members
+        this.data.group.members.forEach(member => {
+          this.addMember(member);
+        });
       },
       error: (error: HttpErrorResponse) => {
         console.error('Error loading users:', error);
@@ -237,24 +316,82 @@ export class EditGroupDialogComponent implements OnInit {
     });
   }
 
+  createMemberFormGroup(member?: User): FormGroup {
+    return this.fb.group({
+      userName: [member?.name || '', Validators.required],
+      email: [member?.email || '', [Validators.required, Validators.email]],
+      userId: [member?.id || '']
+    });
+  }
+
+  addMember(member?: User): void {
+    const memberGroup = this.createMemberFormGroup(member);
+    this.members.push(memberGroup);
+
+    // Add new autocomplete filter for this member
+    const index = this.members.length - 1;
+    this.setupAutoComplete(index);
+  }
+
+  removeMember(index: number): void {
+    if (this.members.length > 1) {
+      this.members.removeAt(index);
+      this.filteredUsers.splice(index, 1);
+    }
+  }
+
+  onUserNameInput(index: number): void {
+    const memberGroup = this.members.at(index);
+    const userNameControl = memberGroup.get('userName');
+    const userName = userNameControl?.value;
+
+    if (userNameControl) {
+      this.filteredUsers[index] = userNameControl.valueChanges.pipe(
+        startWith(userName),
+        map(value => this._filter(value || ''))
+      );
+    }
+  }
+
+  onUserSelected(event: MatAutocompleteSelectedEvent, index: number): void {
+    const selectedUserName = event.option.value;
+    const selectedUser = this.availableUsers.find(user => user.name === selectedUserName);
+
+    if (selectedUser) {
+      const memberGroup = this.members.at(index);
+      memberGroup.patchValue({
+        userName: selectedUser.name,
+        email: selectedUser.email,
+        userId: selectedUser.id
+      });
+    }
+  }
+
   addNewUser(): void {
     if (this.newUserForm.valid) {
       const formValue = this.newUserForm.value;
       const tempId = `temp_${this.tempIdCounter++}`;
-      const pendingUser: PendingUser = {
+
+      // Create a temporary user object
+      const newUser: PendingUser = {
         ...formValue,
         tempId
       };
 
-      this.pendingUsers.push(pendingUser);
-      const userIdsControl = this.groupForm.get('userIds');
-      if (userIdsControl) {
-        const currentUserIds = userIdsControl.value || [];
-        this.groupForm.patchValue({
-          userIds: [...currentUserIds, tempId]
-        });
-      }
+      // Add to pending users
+      this.pendingUsers = [...this.pendingUsers, newUser];
 
+      // Add as a new member row
+      const memberGroup = this.createMemberFormGroup();
+      memberGroup.patchValue({
+        userName: formValue.name,
+        email: formValue.email,
+        userId: tempId
+      });
+      this.members.push(memberGroup);
+      this.setupAutoComplete(this.members.length - 1);
+
+      // Reset the form
       this.newUserForm.reset();
     }
   }
@@ -262,11 +399,6 @@ export class EditGroupDialogComponent implements OnInit {
   async onSubmit(): Promise<void> {
     if (this.groupForm.valid) {
       const formValue = this.groupForm.value;
-
-      // Make sure the creator stays in the group
-      if (this.data.group.createdBy && !formValue.userIds.includes(this.data.group.createdBy.id)) {
-        formValue.userIds.push(this.data.group.createdBy.id);
-      }
 
       try {
         // First, create all pending users
@@ -280,24 +412,63 @@ export class EditGroupDialogComponent implements OnInit {
           })
         );
 
-        // Replace temporary IDs with real ones in the userIds array
-        const finalUserIds = formValue.userIds.map((id: string | number) => {
-          const createdUser = createdUsers.find(u => u.tempId === id);
-          return createdUser ? createdUser.createdUser.id : id;
+        // Process members to get final member data
+        const memberData = formValue.members.map((member: MemberInput) => {
+          if (member.userId) {
+            // If it's a temp ID, replace with real ID
+            const createdUser = createdUsers.find(u => u.tempId === member.userId);
+            if (createdUser) {
+              return {
+                userId: createdUser.createdUser.id,
+                userName: member.userName,
+                email: member.email
+              };
+            }
+            // If not a temp ID, it's an existing user ID
+            return {
+              userId: parseInt(member.userId.toString()),
+              userName: member.userName,
+              email: member.email
+            };
+          }
+          // If no userId, this is a new user to be created
+          return {
+            userName: member.userName,
+            email: member.email
+          };
         });
 
         // Close dialog with final data
         this.dialogRef.close({
           name: formValue.name,
           description: formValue.description,
-          userIds: finalUserIds,
-          pendingUsers: this.pendingUsers
+          members: memberData
         });
       } catch (error: unknown) {
         if (error instanceof HttpErrorResponse) {
-          console.error('Error creating users:', error);
+          console.error('Error updating group:', error);
         }
       }
     }
+  }
+
+  private setupAutoComplete(index: number): void {
+    const memberGroup = this.members.at(index);
+    const userNameControl = memberGroup.get('userName');
+
+    if (userNameControl) {
+      this.filteredUsers[index] = userNameControl.valueChanges.pipe(
+        startWith(''),
+        map(value => this._filter(value || ''))
+      );
+    }
+  }
+
+  private _filter(value: string): User[] {
+    const filterValue = value.toLowerCase();
+    return this.availableUsers.filter(user =>
+      user.name.toLowerCase().includes(filterValue) ||
+      user.email.toLowerCase().includes(filterValue)
+    );
   }
 }

@@ -18,19 +18,19 @@ VALUES (1, 1),
        (1, 3);
 
 -- Insert sample expenses
-INSERT INTO test.expenses (amount, description, date, group_id, paid_by_id)
+INSERT INTO test.expenses (amount, description, date, group_id, payer_id)
 VALUES (100.00, 'Dinner at restaurant', NOW(), 1, 1),
        (50.00, 'Museum tickets', NOW(), 1, 2),
        (200.00, 'Hotel room', NOW(), 1, 3);
 
 -- Insert expense splits
-INSERT INTO test.expense_splits (expense_id, user_id, amount)
-VALUES (1, 1, 33.33),
-       (1, 2, 33.33),
-       (1, 3, 33.34),
-       (2, 1, 16.67),
-       (2, 2, 16.67),
-       (2, 3, 16.66),
-       (3, 1, 66.67),
-       (3, 2, 66.67),
-       (3, 3, 66.66);
+INSERT INTO test.expense_splits (expense_id, user_id, amount_owed, is_paid)
+VALUES (1, 1, 33.33, false),
+       (1, 2, 33.33, false),
+       (1, 3, 33.34, false),
+       (2, 1, 16.67, false),
+       (2, 2, 16.67, false),
+       (2, 3, 16.66, false),
+       (3, 1, 66.67, false),
+       (3, 2, 66.67, false),
+       (3, 3, 66.66, false);

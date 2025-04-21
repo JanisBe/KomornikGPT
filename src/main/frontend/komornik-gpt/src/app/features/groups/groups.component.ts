@@ -16,10 +16,10 @@ import {MatSnackBar, MatSnackBarModule} from '@angular/material/snack-bar';
 import {User} from '../../core/models/user.model';
 import {forkJoin} from 'rxjs';
 import {UserService} from '../../core/services/user.service';
-import {AddExpenseDialogComponent} from './add-expense-dialog/add-expense-dialog.component';
+import {AddExpenseDialogComponent} from '../expenses/add-expense-dialog/add-expense-dialog.component';
 import {ExpenseService} from '../../core/services/expense.service';
 import {HttpErrorResponse} from '@angular/common/http';
-import {ViewExpensesDialogComponent} from './view-expenses-dialog/view-expenses-dialog.component';
+import {ViewExpensesDialogComponent} from '../expenses/view-expenses-dialog/view-expenses-dialog.component';
 import {MatDatepickerModule} from '@angular/material/datepicker';
 import {MatNativeDateModule} from '@angular/material/core';
 import {DATE_PROVIDERS} from '../../core/config/date.config';
@@ -47,52 +47,46 @@ import {DATE_PROVIDERS} from '../../core/config/date.config';
   template: `
     <div class="container mt-4">
       <div class="row">
-        <div class="col-12 mb-4 d-flex justify-content-between align-items-center">
-          <h1>Groups</h1>
-          <button mat-raised-button color="primary" (click)="createGroup()">
+        <div class="col-12 mb-4">
+          <button mat-raised-button color="primary" (click)="openCreateGroupDialog()">
             <mat-icon>add</mat-icon>
-            Create Group
+            Create New Group
           </button>
         </div>
       </div>
       <div class="row">
-        <div class="col-md-6 mb-4" *ngFor="let group of groups">
-          <mat-card>
-            <mat-card-header>
-              <mat-card-title>{{ group.name }}</mat-card-title>
-            </mat-card-header>
-            <mat-card-content>
-              <p class="mb-0">Members:</p>
-              @for (member of group.members; let isLast = $last; track member) {
-                <span matTooltip="{{member.email}}">{{ member.name }}{{ isLast ? '' : ', ' }}</span>
-              }
-            </mat-card-content>
-            <mat-card-actions align="end">
-              <button mat-icon-button color="primary" (click)="addExpense(group)"
-                      matTooltip="Add expense">
-                <mat-icon>add_shopping_cart</mat-icon>
-              </button>
-              <button mat-icon-button color="primary" (click)="editGroup(group)"
-                      [disabled]="!canEditGroup(group)"
-                      [matTooltip]="canEditGroup(group) ? 'Edit group' : 'You can only edit groups you created'">
-                <mat-icon>edit</mat-icon>
-              </button>
-              <button mat-icon-button color="warn" (click)="deleteGroup(group)"
-                      [disabled]="!canDeleteGroup(group)"
-                      [matTooltip]="canDeleteGroup(group) ? 'Delete group' : 'You can only delete groups you created'">
-                <mat-icon>delete</mat-icon>
-              </button>
-              <button mat-icon-button color="accent" (click)="viewExpenses(group)"
-                      matTooltip="View expenses">
-                <mat-icon>receipt</mat-icon>
-              </button>
-              <button mat-icon-button color="primary" (click)="settleExpenses(group)"
-                      matTooltip="Settle expenses">
-                <mat-icon>payments</mat-icon>
-              </button>
-            </mat-card-actions>
-          </mat-card>
-        </div>
+        @for (group of groups; track group.id) {
+          <div class="col-md-6 mb-4">
+            <mat-card class="group-card">
+              <mat-card-header>
+                <mat-card-title>{{group.name}}</mat-card-title>
+                <mat-card-subtitle>{{group.description}}</mat-card-subtitle>
+              </mat-card-header>
+              <mat-card-content>
+                <p><strong>Members:</strong></p>
+                <p class="members-list">{{getMembersList(group)}}</p>
+              </mat-card-content>
+              <mat-card-actions align="end">
+                <button mat-button color="primary" (click)="viewExpenses(group)">
+                  <mat-icon>receipt</mat-icon>
+                  View Expenses
+                </button>
+                <button mat-button color="accent" (click)="editGroup(group)">
+                  <mat-icon>edit</mat-icon>
+                  Edit
+                </button>
+              </mat-card-actions>
+            </mat-card>
+          </div>
+        } @empty {
+          <div class="col-12">
+            <mat-card>
+              <mat-card-content>
+                <p class="text-center">No groups found. Create a new group to get started!</p>
+              </mat-card-content>
+            </mat-card>
+          </div>
+        }
       </div>
     </div>
   `,
@@ -216,6 +210,17 @@ export class GroupsComponent implements OnInit {
         });
       }
     });
+  }
+
+  openCreateGroupDialog(): void {
+    this.createGroup();
+  }
+
+  getMembersList(group: Group): string {
+    if (!group.members || group.members.length === 0) {
+      return 'No members';
+    }
+    return group.members.map(member => member.name).join(', ');
   }
 
   createGroup(): void {

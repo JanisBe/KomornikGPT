@@ -19,13 +19,12 @@ export const routes: Routes = [
     children: [
       {
         path: '',
-        redirectTo: 'login',
+        redirectTo: '/groups',
         pathMatch: 'full'
       },
       {
         path: 'login',
-        loadComponent: () => import('./features/auth/login.component').then(m => m.LoginComponent),
-        canActivate: [redirectToGroupsIfAuthenticated]
+        loadComponent: () => import('./features/auth/login.component').then(m => m.LoginComponent)
       },
       {
         path: 'register',
@@ -37,13 +36,9 @@ export const routes: Routes = [
         canActivate: [AuthGuard]
       },
       {
-        path: 'expenses',
-        loadComponent: () => import('./features/expenses/expenses.component').then(m => m.ExpensesComponent),
-        canActivate: [AuthGuard]
-      },
-      {
         path: 'profile',
-        loadComponent: () => import('./features/profile/profile.component').then(m => m.ProfileComponent)
+        loadComponent: () => import('./features/profile/profile.component').then(m => m.ProfileComponent),
+        canActivate: [AuthGuard]
       }
     ]
   },

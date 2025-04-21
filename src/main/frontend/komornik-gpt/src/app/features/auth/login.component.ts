@@ -1,6 +1,6 @@
 import {Component} from '@angular/core';
 import {CommonModule} from '@angular/common';
-import {FormsModule} from '@angular/forms';
+import {FormBuilder, FormGroup, ReactiveFormsModule, Validators} from '@angular/forms';
 import {Router, RouterModule} from '@angular/router';
 import {AuthService, LoginRequest} from '../../core/services/auth.service';
 import {MatSnackBar} from '@angular/material/snack-bar';
@@ -15,7 +15,7 @@ import {MatProgressBarModule} from '@angular/material/progress-bar';
   standalone: true,
   imports: [
     CommonModule,
-    FormsModule,
+    ReactiveFormsModule,
     RouterModule,
     MatInputModule,
     MatFormFieldModule,
@@ -30,43 +30,31 @@ import {MatProgressBarModule} from '@angular/material/progress-bar';
           <mat-card-title>Login</mat-card-title>
         </mat-card-header>
 
+        @if (isLoading) {
+          <mat-progress-bar mode="indeterminate"></mat-progress-bar>
+        }
+
         <mat-card-content>
-          <form (ngSubmit)="onSubmit()" #loginForm="ngForm">
-            <mat-progress-bar *ngIf="isLoading" mode="indeterminate"></mat-progress-bar>
+          <form [formGroup]="loginForm" (ngSubmit)="onSubmit()">
+            <mat-form-field appearance="outline">
+              <mat-label>Username</mat-label>
+              <input matInput formControlName="username" required>
+              @if (loginForm.get('username')?.invalid && (loginForm.get('username')?.dirty || loginForm.get('username')?.touched)) {
+                <mat-error>Username is required</mat-error>
+              }
+            </mat-form-field>
 
-            <div class="form-field">
-              <mat-form-field appearance="outline">
-                <mat-label>Username</mat-label>
-                <input matInput
-                       type="text"
-                       [(ngModel)]="credentials.username"
-                       name="username"
-                       required
-                       #username="ngModel">
-                <mat-error *ngIf="username.invalid && (username.dirty || username.touched)">
-                  Username is required
-                </mat-error>
-              </mat-form-field>
-            </div>
+            <mat-form-field appearance="outline">
+              <mat-label>Password</mat-label>
+              <input matInput type="password" formControlName="password" required>
+              @if (loginForm.get('password')?.invalid && (loginForm.get('password')?.dirty || loginForm.get('password')?.touched)) {
+                <mat-error>Password is required</mat-error>
+              }
+            </mat-form-field>
 
-            <div class="form-field">
-              <mat-form-field appearance="outline">
-                <mat-label>Password</mat-label>
-                <input matInput
-                       type="password"
-                       [(ngModel)]="credentials.password"
-                       name="password"
-                       required
-                       #password="ngModel">
-                <mat-error *ngIf="password.invalid && (password.dirty || password.touched)">
-                  Password is required
-                </mat-error>
-              </mat-form-field>
-            </div>
-
-            <div class="error-message" *ngIf="errorMessage">
-              {{ errorMessage }}
-            </div>
+            @if (errorMessage) {
+              <div class="error-message">{{errorMessage}}</div>
+            }
 
             <div class="form-actions">
               <button mat-raised-button
@@ -118,6 +106,8 @@ import {MatProgressBarModule} from '@angular/material/progress-bar';
 
     mat-form-field {
       width: 100%;
+      display: block;
+      margin-bottom: 16px;
     }
 
     .form-actions {
@@ -150,57 +140,58 @@ import {MatProgressBarModule} from '@angular/material/progress-bar';
   `]
 })
 export class LoginComponent {
-  credentials: LoginRequest = {
-    username: '',
-    password: ''
-  };
+  loginForm: FormGroup;
   isLoading = false;
   errorMessage = '';
 
   constructor(
+    private fb: FormBuilder,
     private authService: AuthService,
     private router: Router,
     private snackBar: MatSnackBar
-  ) {}
+  ) {
+    this.loginForm = this.fb.group({
+      username: ['', Validators.required],
+      password: ['', Validators.required]
+    });
+  }
 
   onSubmit(): void {
-    if (!this.credentials.username || !this.credentials.password) {
-      this.errorMessage = 'Please fill in all fields';
-      return;
-    }
+    if (this.loginForm.valid) {
+      const credentials: LoginRequest = this.loginForm.value;
+      this.isLoading = true;
+      this.errorMessage = '';
 
-    this.isLoading = true;
-    this.errorMessage = '';
+      this.authService.login(credentials).subscribe({
+        next: () => {
+          this.isLoading = false;
+          this.snackBar.open('Login successful', 'Close', {
+            duration: 3000,
+            horizontalPosition: 'end',
+            verticalPosition: 'top'
+          });
+          this.router.navigate(['/groups']);
+        },
+        error: (error) => {
+          this.isLoading = false;
+          console.error('Login failed:', error);
 
-    this.authService.login(this.credentials).subscribe({
-      next: () => {
-        this.isLoading = false;
-        this.snackBar.open('Login successful', 'Close', {
-          duration: 3000,
-          horizontalPosition: 'end',
-          verticalPosition: 'top'
-        });
-        this.router.navigate(['/groups']);
-      },
-      error: (error) => {
-        this.isLoading = false;
-        console.error('Login failed:', error);
+          if (error.status === 401) {
+            this.errorMessage = 'Invalid username or password';
+          } else if (error.status === 0) {
+            this.errorMessage = 'Unable to connect to the server';
+          } else {
+            this.errorMessage = 'An error occurred during login. Please try again.';
+          }
 
-        if (error.status === 401) {
-          this.errorMessage = 'Invalid username or password';
-        } else if (error.status === 0) {
-          this.errorMessage = 'Unable to connect to the server';
-        } else {
-          this.errorMessage = 'An error occurred during login. Please try again.';
+          this.snackBar.open(this.errorMessage, 'Close', {
+            duration: 5000,
+            horizontalPosition: 'end',
+            verticalPosition: 'top',
+            panelClass: ['error-snackbar']
+          });
         }
-
-        this.snackBar.open(this.errorMessage, 'Close', {
-          duration: 5000,
-          horizontalPosition: 'end',
-          verticalPosition: 'top',
-          panelClass: ['error-snackbar']
-        });
-      }
-    });
+      });
+    }
   }
 }

@@ -9,7 +9,7 @@ import {User} from '../core/models/user.model';
   standalone: true,
   imports: [CommonModule, RouterModule],
   template: `
-    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
       <div class="container">
         <a class="navbar-brand" routerLink="/">KomornikGPT</a>
         <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
@@ -25,22 +25,21 @@ import {User} from '../core/models/user.model';
             </li>
           </ul>
           <ul class="navbar-nav">
-            <ng-container *ngIf="authService.isAuthenticated()">
+            @if (authService.isAuthenticated()) {
               <li class="nav-item">
                 <a class="nav-link" routerLink="/profile" routerLinkActive="active">Profile ({{userName}})</a>
               </li>
               <li class="nav-item">
                 <a class="nav-link" (click)="logout()" style="cursor: pointer">Logout</a>
               </li>
-            </ng-container>
-            <ng-container *ngIf="!authService.isAuthenticated()">
+            } @else {
               <li class="nav-item">
                 <a class="nav-link" routerLink="/login" routerLinkActive="active">Login</a>
               </li>
               <li class="nav-item">
                 <a class="nav-link" routerLink="/register" routerLinkActive="active">Register</a>
               </li>
-            </ng-container>
+            }
           </ul>
         </div>
       </div>

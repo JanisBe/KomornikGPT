@@ -52,9 +52,9 @@ interface UpdateUserRequest {
               <mat-form-field appearance="outline">
                 <mat-label>Name</mat-label>
                 <input matInput formControlName="name" required>
-                <mat-error *ngIf="profileForm.get('name')?.hasError('required')">
-                  Name is required
-                </mat-error>
+                @if (profileForm.get('name')?.errors?.['required'] && profileForm.get('name')?.touched) {
+                  <mat-error>Name is required</mat-error>
+                }
               </mat-form-field>
             </div>
 
@@ -62,9 +62,11 @@ interface UpdateUserRequest {
               <mat-form-field appearance="outline">
                 <mat-label>Surname</mat-label>
                 <input matInput formControlName="surname" required>
-                <mat-error *ngIf="profileForm.get('surname')?.hasError('required')">
-                  Surname is required
-                </mat-error>
+                @if (profileForm.get('surname')?.hasError('required') && profileForm.get('surname')?.touched) {
+                  <mat-error>
+                    Surname is required
+                  </mat-error>
+                }
               </mat-form-field>
             </div>
 
@@ -72,12 +74,12 @@ interface UpdateUserRequest {
               <mat-form-field appearance="outline">
                 <mat-label>Email</mat-label>
                 <input matInput formControlName="email" type="email" required>
-                <mat-error *ngIf="profileForm.get('email')?.hasError('required')">
-                  Email is required
-                </mat-error>
-                <mat-error *ngIf="profileForm.get('email')?.hasError('email')">
-                  Please enter a valid email address
-                </mat-error>
+                @if (profileForm.get('email')?.errors?.['required'] && profileForm.get('email')?.touched) {
+                  <mat-error>Email is required</mat-error>
+                }
+                @if (profileForm.get('email')?.errors?.['email'] && profileForm.get('email')?.touched) {
+                  <mat-error>Please enter a valid email address</mat-error>
+                }
               </mat-form-field>
             </div>
 
@@ -92,10 +94,9 @@ interface UpdateUserRequest {
                 <mat-form-field appearance="outline">
                   <mat-label>Current Password</mat-label>
                   <input matInput type="password" formControlName="currentPassword">
-                  <mat-error *ngIf="profileForm.get('currentPassword')?.hasError('required') &&
-                                  profileForm.get('newPassword')?.value">
-                    Current password is required to set new password
-                  </mat-error>
+                  @if (profileForm.get('currentPassword')?.errors?.['required'] && profileForm.get('currentPassword')?.touched) {
+                    <mat-error>Current password is required to make changes</mat-error>
+                  }
                 </mat-form-field>
               </div>
 
@@ -103,9 +104,9 @@ interface UpdateUserRequest {
                 <mat-form-field appearance="outline">
                   <mat-label>New Password</mat-label>
                   <input matInput type="password" formControlName="newPassword">
-                  <mat-error *ngIf="profileForm.get('newPassword')?.hasError('minlength')">
-                    Password must be at least 6 characters
-                  </mat-error>
+                  @if (profileForm.get('newPassword')?.errors?.['minlength'] && profileForm.get('newPassword')?.touched) {
+                    <mat-error>Password must be at least 6 characters long</mat-error>
+                  }
                 </mat-form-field>
               </div>
             </mat-expansion-panel>
@@ -122,14 +123,18 @@ interface UpdateUserRequest {
 
           <h3>My Groups</h3>
           <mat-list>
-            <mat-list-item *ngFor="let group of userGroups" class="group-item">
-              <a [routerLink]="['/groups', group.id]" class="group-link">
-                {{ group.name }}
-              </a>
-            </mat-list-item>
-            <mat-list-item *ngIf="userGroups.length === 0">
-              You are not a member of any groups
-            </mat-list-item>
+            @for (group of userGroups; track group.id) {
+              <mat-list-item class="group-item">
+                <a [routerLink]="['/groups', group.id]" class="group-link">
+                  {{ group.name }}
+                </a>
+              </mat-list-item>
+            }
+            @if (userGroups.length === 0) {
+              <mat-list-item>
+                You are not a member of any groups
+              </mat-list-item>
+            }
           </mat-list>
         </mat-card-content>
       </mat-card>

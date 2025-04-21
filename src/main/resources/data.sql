@@ -21,10 +21,6 @@ VALUES (1, 1),
 INSERT INTO test.expenses (amount, description, date, group_id, payer_id)
 VALUES
 -- Original expenses
-(100.00, 'Dinner at restaurant', '2024-04-21 19:30:00', 1, 1),
-(50.00, 'Museum tickets', '2024-04-21 14:15:00', 1, 2),
-(200.00, 'Hotel room', '2024-04-21 12:00:00', 1, 3),
-
 -- Additional expenses (40 more with different dates)
 (75.50, 'Grocery shopping', '2024-04-20 10:30:00', 1, 1),
 (120.00, 'Cinema tickets', '2024-04-20 18:45:00', 1, 2),

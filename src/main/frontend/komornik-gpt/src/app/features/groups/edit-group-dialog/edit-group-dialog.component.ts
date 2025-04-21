@@ -54,12 +54,12 @@ interface CreatedUserResponse {
             <mat-form-field appearance="outline" class="full-width">
               <mat-label>Group Name</mat-label>
               <input matInput formControlName="name" required>
-              <mat-error *ngIf="groupForm.get('name')?.hasError('required')">
-                Group name is required
-              </mat-error>
-              <mat-error *ngIf="groupForm.get('name')?.hasError('minlength')">
-                Group name must be at least 2 characters
-              </mat-error>
+              @if (groupForm.get('name')?.hasError('required')) {
+                <mat-error>Name is required</mat-error>
+              }
+              @if (groupForm.get('name')?.hasError('minlength')) {
+                <mat-error>Name must be at least 3 characters long</mat-error>
+              }
             </mat-form-field>
           </div>
 
@@ -72,43 +72,47 @@ interface CreatedUserResponse {
 
           <div formArrayName="members" class="members-container">
             <h3>Members</h3>
-            <div *ngFor="let member of members.controls; let i=index" [formGroupName]="i" class="member-row">
-              <div class="member-inputs">
-                <mat-form-field appearance="outline">
-                  <mat-label>Username</mat-label>
-                  <input matInput
-                         formControlName="userName"
-                         [matAutocomplete]="auto"
-                         (input)="onUserNameInput(i)">
-                  <mat-error *ngIf="member.get('userName')?.hasError('required')">
-                    Username is required
-                  </mat-error>
-                  <mat-autocomplete #auto="matAutocomplete"
-                                  (optionSelected)="onUserSelected($event, i)">
-                    <mat-option *ngFor="let user of filteredUsers[i] | async" [value]="user.name">
-                      {{ user.name }} ({{ user.email }})
-                    </mat-option>
-                  </mat-autocomplete>
-                </mat-form-field>
+            @for (member of members.controls; track $index) {
+              <div [formGroupName]="$index" class="member-row">
+                <div class="member-inputs">
+                  <mat-form-field appearance="outline">
+                    <mat-label>Username</mat-label>
+                    <input matInput
+                           formControlName="userName"
+                           [matAutocomplete]="auto"
+                           (input)="onUserNameInput($index)">
+                    @if (member.get('userName')?.hasError('required')) {
+                      <mat-error>Username is required</mat-error>
+                    }
+                    <mat-autocomplete #auto="matAutocomplete"
+                                    (optionSelected)="onUserSelected($event, $index)">
+                      @for (user of filteredUsers[$index] | async; track user.id) {
+                        <mat-option [value]="user.name">
+                          {{user.name}}
+                        </mat-option>
+                      }
+                    </mat-autocomplete>
+                  </mat-form-field>
 
-                <mat-form-field appearance="outline">
-                  <mat-label>Email</mat-label>
-                  <input matInput formControlName="email" type="email">
-                  <mat-error *ngIf="member.get('email')?.hasError('required')">
-                    Email is required
-                  </mat-error>
-                  <mat-error *ngIf="member.get('email')?.hasError('email')">
-                    Please enter a valid email address
-                  </mat-error>
-                </mat-form-field>
+                  <mat-form-field appearance="outline">
+                    <mat-label>Email</mat-label>
+                    <input matInput formControlName="email" type="email" required>
+                    @if (member.get('email')?.hasError('required')) {
+                      <mat-error>Email is required</mat-error>
+                    }
+                    @if (member.get('email')?.hasError('email')) {
+                      <mat-error>Please enter a valid email address</mat-error>
+                    }
+                  </mat-form-field>
+                </div>
+
+                <button mat-icon-button color="warn" type="button"
+                        (click)="removeMember($index)"
+                        [disabled]="members.length <= 1">
+                  <mat-icon>close</mat-icon>
+                </button>
               </div>
-
-              <button mat-icon-button color="warn" type="button"
-                      (click)="removeMember(i)"
-                      [disabled]="members.length <= 1">
-                <mat-icon>close</mat-icon>
-              </button>
-            </div>
+            }
 
             <div class="add-member-link">
               <a mat-button color="primary" (click)="addMember()">
@@ -134,43 +138,43 @@ interface CreatedUserResponse {
               <div class="form-field">
                 <mat-form-field appearance="outline" class="full-width">
                   <mat-label>Name</mat-label>
-                  <input matInput formControlName="name" placeholder="Enter name">
-                  <mat-error *ngIf="newUserForm.get('name')?.hasError('required')">
-                    Name is required
-                  </mat-error>
+                  <input matInput formControlName="name" placeholder="Enter name" required>
+                  @if (newUserForm.get('name')?.hasError('required')) {
+                    <mat-error>Name is required</mat-error>
+                  }
                 </mat-form-field>
               </div>
 
               <div class="form-field">
                 <mat-form-field appearance="outline" class="full-width">
                   <mat-label>Surname</mat-label>
-                  <input matInput formControlName="surname" placeholder="Enter surname">
-                  <mat-error *ngIf="newUserForm.get('surname')?.hasError('required')">
-                    Surname is required
-                  </mat-error>
+                  <input matInput formControlName="surname" placeholder="Enter surname" required>
+                  @if (newUserForm.get('surname')?.hasError('required')) {
+                    <mat-error>Surname is required</mat-error>
+                  }
                 </mat-form-field>
               </div>
 
               <div class="form-field">
                 <mat-form-field appearance="outline" class="full-width">
                   <mat-label>Username</mat-label>
-                  <input matInput formControlName="username" placeholder="Enter username">
-                  <mat-error *ngIf="newUserForm.get('username')?.hasError('required')">
-                    Username is required
-                  </mat-error>
+                  <input matInput formControlName="username" placeholder="Enter username" required>
+                  @if (newUserForm.get('username')?.hasError('required')) {
+                    <mat-error>Username is required</mat-error>
+                  }
                 </mat-form-field>
               </div>
 
               <div class="form-field">
                 <mat-form-field appearance="outline" class="full-width">
                   <mat-label>Email</mat-label>
-                  <input matInput formControlName="email" placeholder="Enter email" type="email">
-                  <mat-error *ngIf="newUserForm.get('email')?.hasError('required')">
-                    Email is required
-                  </mat-error>
-                  <mat-error *ngIf="newUserForm.get('email')?.hasError('email')">
-                    Please enter a valid email address
-                  </mat-error>
+                  <input matInput formControlName="email" placeholder="Enter email" type="email" required>
+                  @if (newUserForm.get('email')?.hasError('required')) {
+                    <mat-error>Email is required</mat-error>
+                  }
+                  @if (newUserForm.get('email')?.hasError('email')) {
+                    <mat-error>Please enter a valid email address</mat-error>
+                  }
                 </mat-form-field>
               </div>
 

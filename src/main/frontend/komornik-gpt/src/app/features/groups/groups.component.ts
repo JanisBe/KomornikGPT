@@ -4,15 +4,20 @@ import {MatCardModule} from '@angular/material/card';
 import {MatIconModule} from '@angular/material/icon';
 import {MatButtonModule} from '@angular/material/button';
 import {MatDialog, MatDialogModule} from '@angular/material/dialog';
+import {RouterModule} from '@angular/router';
 import {Group} from '../../core/models/group.model';
 import {MatTooltipModule} from '@angular/material/tooltip';
 import {GroupService} from '../../core/services/group.service';
 import {DeleteGroupDialogComponent} from './delete-group-dialog/delete-group-dialog.component';
 import {EditGroupDialogComponent} from './edit-group-dialog/edit-group-dialog.component';
+import {CreateGroupDialogComponent} from './create-group-dialog/create-group-dialog.component';
 import {AuthService} from '../../core/services/auth.service';
 import {MatSnackBar, MatSnackBarModule} from '@angular/material/snack-bar';
 import {User} from '../../core/models/user.model';
 import {forkJoin} from 'rxjs';
+import {UserService} from '../../core/services/user.service';
+import {AddExpenseDialogComponent} from './add-expense-dialog/add-expense-dialog.component';
+import {ExpenseService} from '../../core/services/expense.service';
 
 @Component({
   selector: 'app-groups',
@@ -24,29 +29,37 @@ import {forkJoin} from 'rxjs';
     MatButtonModule,
     MatDialogModule,
     MatTooltipModule,
-    MatSnackBarModule
+    MatSnackBarModule,
+    RouterModule
   ],
   template: `
     <div class="container mt-4">
       <div class="row">
-        <div class="col-12 mb-4">
+        <div class="col-12 mb-4 d-flex justify-content-between align-items-center">
           <h1>Groups</h1>
+          <button mat-raised-button color="primary" (click)="createGroup()">
+            <mat-icon>add</mat-icon>
+            Create Group
+          </button>
         </div>
       </div>
       <div class="row">
-        <div class="col-md-6 col-lg-4 mb-4" *ngFor="let group of groups">
+        <div class="col-md-6 mb-4" *ngFor="let group of groups">
           <mat-card>
             <mat-card-header>
               <mat-card-title>{{ group.name }}</mat-card-title>
             </mat-card-header>
             <mat-card-content>
               <p class="mb-0">Members:</p>
-              Członkowie:
               @for (user of group.users; let isLast = $last; track user) {
                 <span matTooltip="{{user.email}}">{{ user.name }}{{ isLast ? '' : ', ' }}</span>
               }
             </mat-card-content>
             <mat-card-actions align="end">
+              <button mat-icon-button color="primary" (click)="addExpense(group)"
+                      matTooltip="Add expense">
+                <mat-icon>add_shopping_cart</mat-icon>
+              </button>
               <button mat-icon-button color="primary" (click)="editGroup(group)"
                       [disabled]="!canEditGroup(group)"
                       [matTooltip]="canEditGroup(group) ? 'Edit group' : 'You can only edit groups you created'">
@@ -57,10 +70,12 @@ import {forkJoin} from 'rxjs';
                       [matTooltip]="canDeleteGroup(group) ? 'Delete group' : 'You can only delete groups you created'">
                 <mat-icon>delete</mat-icon>
               </button>
-              <button mat-icon-button color="accent" (click)="viewExpenses(group)">
+              <button mat-icon-button color="accent" (click)="viewExpenses(group)"
+                      matTooltip="View expenses">
                 <mat-icon>receipt</mat-icon>
               </button>
-              <button mat-icon-button color="primary" (click)="settleExpenses(group)">
+              <button mat-icon-button color="primary" (click)="settleExpenses(group)"
+                      matTooltip="Settle expenses">
                 <mat-icon>payments</mat-icon>
               </button>
             </mat-card-actions>
@@ -71,7 +86,7 @@ import {forkJoin} from 'rxjs';
   `,
   styles: [`
     .container {
-      max-width: 1200px;
+      max-width: 1400px;
       margin: 0 auto;
       padding: 20px;
     }
@@ -86,12 +101,7 @@ import {forkJoin} from 'rxjs';
       flex: 0 0 50%;
       max-width: 50%;
       padding: 15px;
-    }
-
-    .col-lg-4 {
-      flex: 0 0 33.333333%;
-      max-width: 33.333333%;
-      padding: 15px;
+      display: flex;
     }
 
     .mb-4 {
@@ -101,22 +111,27 @@ import {forkJoin} from 'rxjs';
     h1 {
       font-size: 2rem;
       font-weight: 500;
-      margin-bottom: 1rem;
+      margin-bottom: 0;
     }
 
     mat-card {
-      height: 100%;
+      width: 100%;
       display: flex;
       flex-direction: column;
     }
 
     mat-card-content {
       flex: 1;
+      padding: 16px;
     }
 
     mat-card-actions {
       padding: 16px;
       margin-top: auto;
+      display: flex;
+      gap: 8px;
+      justify-content: flex-end;
+      flex-wrap: wrap;
     }
 
     @media (max-width: 768px) {
@@ -124,13 +139,37 @@ import {forkJoin} from 'rxjs';
         flex: 0 0 100%;
         max-width: 100%;
       }
+
+      mat-card-actions {
+        justify-content: center;
+      }
+
+      .container {
+        padding: 10px;
+      }
     }
 
-    @media (max-width: 992px) {
-      .col-lg-4 {
-        flex: 0 0 50%;
-        max-width: 50%;
+    @media (max-width: 480px) {
+      mat-card-actions {
+        padding: 8px;
+        gap: 4px;
       }
+
+      mat-card-content {
+        padding: 8px;
+      }
+    }
+
+    .d-flex {
+      display: flex !important;
+    }
+
+    .justify-content-between {
+      justify-content: space-between !important;
+    }
+
+    .align-items-center {
+      align-items: center !important;
     }
   `]
 })
@@ -142,7 +181,9 @@ export class GroupsComponent implements OnInit {
     private groupService: GroupService,
     private dialog: MatDialog,
     private authService: AuthService,
-    private snackBar: MatSnackBar
+    private snackBar: MatSnackBar,
+    private userService: UserService,
+    private expenseService: ExpenseService
   ) {
   }
 
@@ -160,6 +201,31 @@ export class GroupsComponent implements OnInit {
         console.error('Error loading data:', error);
         this.snackBar.open('Error loading data', 'Close', {
           duration: 3000
+        });
+      }
+    });
+  }
+
+  createGroup(): void {
+    const dialogRef = this.dialog.open(CreateGroupDialogComponent, {
+      width: '70%'
+    });
+
+    dialogRef.afterClosed().subscribe(result => {
+      if (result) {
+        this.groupService.createGroup(result).subscribe({
+          next: (newGroup) => {
+            this.groups = [...this.groups, newGroup];
+            this.snackBar.open('Group created successfully', 'Close', {
+              duration: 3000
+            });
+          },
+          error: (error) => {
+            console.error('Error creating group:', error);
+            this.snackBar.open('Error creating group', 'Close', {
+              duration: 3000
+            });
+          }
         });
       }
     });
@@ -256,5 +322,30 @@ export class GroupsComponent implements OnInit {
 
   settleExpenses(group: Group): void {
     // TODO: Implement expenses settlement
+  }
+
+  addExpense(group: Group): void {
+    const dialogRef = this.dialog.open(AddExpenseDialogComponent, {
+      width: '500px',
+      data: {group, currentUser: this.currentUser}
+    });
+
+    dialogRef.afterClosed().subscribe(result => {
+      if (result) {
+        this.expenseService.createExpense(result).subscribe({
+          next: () => {
+            this.snackBar.open('Expense added successfully', 'Close', {
+              duration: 3000
+            });
+          },
+          error: (error) => {
+            console.error('Error adding expense:', error);
+            this.snackBar.open('Error adding expense', 'Close', {
+              duration: 3000
+            });
+          }
+        });
+      }
+    });
   }
 }

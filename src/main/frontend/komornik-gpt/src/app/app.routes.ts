@@ -2,6 +2,7 @@ import {Routes} from '@angular/router';
 import {LayoutComponent} from './layout/layout.component';
 import {AuthService} from './core/services/auth.service';
 import {inject} from '@angular/core';
+import {AuthGuard} from './core/guards/auth.guard';
 
 const redirectToGroupsIfAuthenticated = () => {
   const authService = inject(AuthService);
@@ -32,7 +33,8 @@ export const routes: Routes = [
       },
       {
         path: 'groups',
-        loadComponent: () => import('./features/groups/groups.component').then(m => m.GroupsComponent)
+        loadChildren: () => import('./features/groups/groups.routes').then(m => m.GROUPS_ROUTES),
+        canActivate: [AuthGuard]
       },
       {
         path: 'expenses',

@@ -33,6 +33,9 @@ public class Expense {
 
     private BigDecimal amount;
 
+    @Column(nullable = false)
+    private String description;
+
     private LocalDateTime date;
 
     @ManyToOne(fetch = FetchType.LAZY)

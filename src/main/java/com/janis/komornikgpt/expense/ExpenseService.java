@@ -1,16 +1,15 @@
 package com.janis.komornikgpt.expense;
 
-import com.janis.komornikgpt.user.User;
-import com.janis.komornikgpt.user.UserRepository;
 import com.janis.komornikgpt.group.Group;
 import com.janis.komornikgpt.group.GroupRepository;
+import com.janis.komornikgpt.user.User;
+import com.janis.komornikgpt.user.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -54,6 +53,10 @@ public class ExpenseService {
 
         if (request.amount() != null) {
             expense.setAmount(request.amount());
+        }
+
+        if (request.description() != null) {
+            expense.setDescription(request.description());
         }
 
         if (request.splits() != null && !request.splits().isEmpty()) {

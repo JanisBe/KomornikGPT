@@ -10,6 +10,7 @@ public record ExpenseDto(
     Long id,
     UserDto payer,
     BigDecimal amount,
+    String description,
     LocalDateTime date,
     Long groupId,
     List<ExpenseSplitDto> splits
@@ -19,6 +20,7 @@ public record ExpenseDto(
             expense.getId(),
             UserDto.fromUser(expense.getPayer()),
             expense.getAmount(),
+                expense.getDescription(),
             expense.getDate(),
             expense.getGroup().getId(),
             expense.getSplits().stream()

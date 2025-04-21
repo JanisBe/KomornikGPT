@@ -8,6 +8,15 @@ export interface UpdateGroupRequest {
   userIds?: number[];
 }
 
+export interface CreateGroupRequest {
+  name: string;
+  members: Array<{
+    userId?: number;
+    userName: string;
+    email: string;
+  }>;
+}
+
 @Injectable({
   providedIn: 'root'
 })
@@ -25,8 +34,8 @@ export class GroupService {
     return this.http.get<Group>(`${this.apiUrl}/${id}`);
   }
 
-  createGroup(group: Partial<Group>): Observable<Group> {
-    return this.http.post<Group>(this.apiUrl, group);
+  createGroup(request: CreateGroupRequest): Observable<Group> {
+    return this.http.post<Group>(this.apiUrl, request);
   }
 
   updateGroup(id: number, request: UpdateGroupRequest): Observable<Group> {

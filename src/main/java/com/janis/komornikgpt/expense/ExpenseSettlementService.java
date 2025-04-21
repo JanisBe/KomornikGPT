@@ -1,8 +1,8 @@
 package com.janis.komornikgpt.expense;
 
+import com.janis.komornikgpt.SettlementDto;
 import com.janis.komornikgpt.group.Group;
 import com.janis.komornikgpt.group.GroupRepository;
-import com.janis.komornikgpt.SettlementDto;
 import com.janis.komornikgpt.user.User;
 import com.janis.komornikgpt.user.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -109,26 +109,27 @@ public class ExpenseSettlementService {
 
     @Transactional
     public void createExpense(CreateExpenseRequest request) {
-        User payer = userRepository.findById(request.payerId)
+        User payer = userRepository.findById(request.payerId())
                 .orElseThrow(() -> new RuntimeException("Nie znaleziono płacącego – bida z nędzą."));
-        Group group = groupRepository.findById(request.groupId)
+        Group group = groupRepository.findById(request.groupId())
                 .orElseThrow(() -> new RuntimeException("Nie znaleziono grupy – dzwonić do NASA."));
 
         Expense expense = new Expense();
         expense.setPayer(payer);
         expense.setGroup(group);
-        expense.setAmount(request.amount);
+        expense.setAmount(request.amount());
+        expense.setDescription(request.description());
         expense.setDate(LocalDateTime.now());
 
         List<ExpenseSplit> splits = new ArrayList<>();
-        for (CreateExpenseRequest.SplitDto splitDto : request.splits) {
-            User user = userRepository.findById(splitDto.userId)
+        for (CreateExpenseRequest.SplitDto splitDto : request.splits()) {
+            User user = userRepository.findById(splitDto.userId())
                     .orElseThrow(() -> new RuntimeException("Nie znaleziono użytkownika do splitu – ucieka w hyperspace."));
 
             ExpenseSplit split = new ExpenseSplit();
             split.setExpense(expense);
             split.setUser(user);
-            split.setAmountOwed(splitDto.amountOwed);
+            split.setAmountOwed(splitDto.amountOwed());
             splits.add(split);
         }
 

@@ -7,6 +7,7 @@ public record UpdateExpenseRequest(
     Long payerId,
     Long groupId,
     BigDecimal amount,
+    String description,
     List<SplitDto> splits
 ) {
     public record SplitDto(

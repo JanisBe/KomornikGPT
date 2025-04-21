@@ -1,12 +1,15 @@
 package com.janis.komornikgpt.group;
 
+import com.janis.komornikgpt.user.CreateUserWithoutPasswordRequest;
 import com.janis.komornikgpt.user.User;
 import com.janis.komornikgpt.user.UserRepository;
+import com.janis.komornikgpt.user.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Service
@@ -14,6 +17,7 @@ import java.util.List;
 public class GroupService {
     private final GroupRepository groupRepository;
     private final UserRepository userRepository;
+    private final UserService userService;
 
     public List<Group> findAll() {
         return groupRepository.findAll();
@@ -33,10 +37,27 @@ public class GroupService {
         Group group = new Group();
         group.setName(request.name());
         group.setCreatedBy(creator);
-        
-        List<User> users = userRepository.findAllById(request.userIds());
-        if (users.size() != request.userIds().size()) {
-            throw new RuntimeException("Some users not found");
+
+        List<User> users = new ArrayList<>();
+
+        // Process each member request
+        for (CreateGroupRequest.MemberRequest memberRequest : request.members()) {
+            User user;
+            if (memberRequest.userId() != null) {
+                // Existing user
+                user = userRepository.findById(memberRequest.userId())
+                        .orElseThrow(() -> new RuntimeException("User not found with id: " + memberRequest.userId()));
+            } else {
+                // Create new user
+                CreateUserWithoutPasswordRequest createUserRequest = new CreateUserWithoutPasswordRequest(
+                        memberRequest.userName(),
+                        "", // Empty surname for now
+                        memberRequest.userName(), // Using userName as username
+                        memberRequest.email()
+                );
+                user = userService.createUserWithoutPassword(createUserRequest);
+            }
+            users.add(user);
         }
 
         // Make sure creator is in the group

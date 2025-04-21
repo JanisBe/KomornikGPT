@@ -1,3 +1,5 @@
+import {Group} from './group.model';
+
 export interface User {
   id: number;
   username: string;
@@ -5,8 +7,8 @@ export interface User {
   name: string;
   surname: string;
   role: string;
-  expensesPaid?: any[];
-  splits?: any[];
-  groups?: any[];
+  expensesPaid?: number[];
+  splits?: number[];
+  groups?: Group[];
   password?: string;
-} 
+}

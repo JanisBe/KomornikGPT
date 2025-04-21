@@ -8,25 +8,25 @@ import {MatInputModule} from '@angular/material/input';
 import {MatExpansionModule} from '@angular/material/expansion';
 import {MatDividerModule} from '@angular/material/divider';
 import {MatIconModule} from '@angular/material/icon';
-import {MatAutocompleteModule} from '@angular/material/autocomplete';
+import {MatAutocompleteModule, MatAutocompleteSelectedEvent} from '@angular/material/autocomplete';
 import {User} from '../../../core/models/user.model';
 import {CreateUserRequest, UserService} from '../../../core/services/user.service';
 import {firstValueFrom, map, Observable, startWith} from 'rxjs';
+import {HttpErrorResponse} from '@angular/common/http';
 
 interface PendingUser extends CreateUserRequest {
   tempId: string;
-  id: string;
-}
-
-interface CreatedUserResponse {
-  tempId: string;
-  createdUser: User;
 }
 
 interface MemberInput {
   userName: string;
   email: string;
-  userId?: string;
+  userId?: string | number;
+}
+
+interface CreatedUserResponse {
+  tempId: string;
+  createdUser: User;
 }
 
 @Component({
@@ -59,6 +59,13 @@ interface MemberInput {
               <mat-error *ngIf="groupForm.get('name')?.hasError('minlength')">
                 Group name must be at least 2 characters
               </mat-error>
+            </mat-form-field>
+          </div>
+
+          <div class="form-field">
+            <mat-form-field appearance="outline" class="full-width">
+              <mat-label>Description</mat-label>
+              <textarea matInput formControlName="description" rows="3" placeholder="Enter group description"></textarea>
             </mat-form-field>
           </div>
 
@@ -269,6 +276,7 @@ export class CreateGroupDialogComponent implements OnInit {
   ) {
     this.groupForm = this.fb.group({
       name: ['', [Validators.required, Validators.minLength(2)]],
+      description: [''],
       members: this.fb.array([])
     });
 
@@ -283,7 +291,7 @@ export class CreateGroupDialogComponent implements OnInit {
     this.addMember();
   }
 
-  get members() {
+  get members(): FormArray {
     return this.groupForm.get('members') as FormArray;
   }
 
@@ -325,23 +333,20 @@ export class CreateGroupDialogComponent implements OnInit {
     }
   }
 
-  setupAutoComplete(index: number): void {
-    const control = this.members.at(index).get('userName');
-    if (control) {
-      this.filteredUsers[index] = control.valueChanges.pipe(
-        startWith(''),
+  onUserNameInput(index: number): void {
+    const memberGroup = this.members.at(index);
+    const userNameControl = memberGroup.get('userName');
+    const userName = userNameControl?.value;
+
+    if (userNameControl) {
+      this.filteredUsers[index] = userNameControl.valueChanges.pipe(
+        startWith(userName),
         map(value => this._filter(value || ''))
       );
     }
   }
 
-  onUserNameInput(index: number): void {
-    // Clear userId when user starts typing (unless they select from autocomplete)
-    const memberGroup = this.members.at(index);
-    memberGroup.patchValue({userId: ''}, {emitEvent: false});
-  }
-
-  onUserSelected(event: any, index: number): void {
+  onUserSelected(event: MatAutocompleteSelectedEvent, index: number): void {
     const selectedUserName = event.option.value;
     const selectedUser = this.availableUsers.find(user => user.name === selectedUserName);
 
@@ -358,13 +363,12 @@ export class CreateGroupDialogComponent implements OnInit {
   addNewUser(): void {
     if (this.newUserForm.valid) {
       const formValue = this.newUserForm.value;
-      const tempId = `temp-${++this.tempIdCounter}`;
+      const tempId = `temp_${this.tempIdCounter++}`;
 
       // Create a temporary user object
       const newUser: PendingUser = {
         ...formValue,
-        tempId,
-        id: tempId
+        tempId
       };
 
       // Add to pending users
@@ -393,7 +397,7 @@ export class CreateGroupDialogComponent implements OnInit {
         // First, create all pending users
         const createdUsers = await Promise.all(
           this.pendingUsers.map(async (pendingUser): Promise<CreatedUserResponse> => {
-            const {tempId, id, ...userData} = pendingUser;
+            const {tempId, ...userData} = pendingUser;
             const createdUser = await firstValueFrom<User>(
               this.userService.createUser(userData)
             );
@@ -415,7 +419,7 @@ export class CreateGroupDialogComponent implements OnInit {
             }
             // If not a temp ID, it's an existing user ID
             return {
-              userId: parseInt(member.userId),
+              userId: parseInt(member.userId.toString()),
               userName: member.userName,
               email: member.email
             };
@@ -430,11 +434,26 @@ export class CreateGroupDialogComponent implements OnInit {
         // Close dialog with final data
         this.dialogRef.close({
           name: formValue.name,
+          description: formValue.description,
           members: memberData
         });
       } catch (error: unknown) {
-        console.error('Error creating users:', error);
+        if (error instanceof HttpErrorResponse) {
+          console.error('Error creating users:', error);
+        }
       }
+    }
+  }
+
+  private setupAutoComplete(index: number): void {
+    const memberGroup = this.members.at(index);
+    const userNameControl = memberGroup.get('userName');
+
+    if (userNameControl) {
+      this.filteredUsers[index] = userNameControl.valueChanges.pipe(
+        startWith(''),
+        map(value => this._filter(value || ''))
+      );
     }
   }
 

@@ -18,6 +18,7 @@ import {forkJoin} from 'rxjs';
 import {UserService} from '../../core/services/user.service';
 import {AddExpenseDialogComponent} from './add-expense-dialog/add-expense-dialog.component';
 import {ExpenseService} from '../../core/services/expense.service';
+import {HttpErrorResponse} from '@angular/common/http';
 
 @Component({
   selector: 'app-groups',
@@ -51,8 +52,8 @@ import {ExpenseService} from '../../core/services/expense.service';
             </mat-card-header>
             <mat-card-content>
               <p class="mb-0">Members:</p>
-              @for (user of group.users; let isLast = $last; track user) {
-                <span matTooltip="{{user.email}}">{{ user.name }}{{ isLast ? '' : ', ' }}</span>
+              @for (member of group.members; let isLast = $last; track member) {
+                <span matTooltip="{{member.email}}">{{ member.name }}{{ isLast ? '' : ', ' }}</span>
               }
             </mat-card-content>
             <mat-card-actions align="end">
@@ -197,7 +198,7 @@ export class GroupsComponent implements OnInit {
         this.currentUser = user;
         this.groups = groups;
       },
-      error: (error) => {
+      error: (error: HttpErrorResponse) => {
         console.error('Error loading data:', error);
         this.snackBar.open('Error loading data', 'Close', {
           duration: 3000
@@ -239,7 +240,7 @@ export class GroupsComponent implements OnInit {
     if (!this.currentUser || !group) return false;
 
     // Check if the current user is part of the group
-    const isGroupMember = group.users.some(user => user.id === this.currentUser?.id);
+    const isGroupMember = group.members.some(member => member.id === this.currentUser?.id);
     if (!isGroupMember) return false;
 
     // Check if the current user is the creator of the group
@@ -305,7 +306,7 @@ export class GroupsComponent implements OnInit {
               duration: 3000
             });
           },
-          error: (error) => {
+          error: (error: HttpErrorResponse) => {
             console.error('Error deleting group:', error);
             this.snackBar.open('Error deleting group', 'Close', {
               duration: 3000
@@ -338,7 +339,7 @@ export class GroupsComponent implements OnInit {
               duration: 3000
             });
           },
-          error: (error) => {
+          error: (error: HttpErrorResponse) => {
             console.error('Error adding expense:', error);
             this.snackBar.open('Error adding expense', 'Close', {
               duration: 3000

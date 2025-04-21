@@ -33,17 +33,22 @@ export const routes: Routes = [
       },
       {
         path: 'groups',
-        loadChildren: () => import('./features/groups/groups.routes').then(m => m.GROUPS_ROUTES),
+        loadComponent: () => import('./features/groups/groups.component').then(m => m.GroupsComponent),
         canActivate: [AuthGuard]
       },
       {
         path: 'expenses',
-        loadComponent: () => import('./features/expenses/expenses.component').then(m => m.ExpensesComponent)
+        loadComponent: () => import('./features/expenses/expenses.component').then(m => m.ExpensesComponent),
+        canActivate: [AuthGuard]
       },
       {
         path: 'profile',
         loadComponent: () => import('./features/profile/profile.component').then(m => m.ProfileComponent)
       }
     ]
+  },
+  {
+    path: '**',
+    redirectTo: 'groups'
   }
 ];

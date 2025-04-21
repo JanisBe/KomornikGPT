@@ -1,11 +1,21 @@
 package com.janis.komornikgpt.user;
 
-import lombok.Data;
+import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.Size;
 
-@Data
-public class UpdateUserRequest {
-    private String username;
-    private String email;
-    private String name;
-    private String surname;
-} 
+public record UpdateUserRequest(
+        @Size(min = 2, max = 50, message = "Name must be between 2 and 50 characters")
+        String name,
+
+        @Size(min = 2, max = 50, message = "Surname must be between 2 and 50 characters")
+        String surname,
+
+        @Email(message = "Email must be valid")
+        String email,
+
+        String currentPassword,
+
+        @Size(min = 6, message = "New password must be at least 6 characters")
+        String newPassword
+) {
+}

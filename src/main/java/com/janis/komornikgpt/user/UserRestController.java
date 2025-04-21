@@ -4,8 +4,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -18,8 +17,8 @@ public class UserRestController {
     private final UserService userService;
 
     @GetMapping("/me")
-    public UserDto getCurrentUser(@AuthenticationPrincipal UserDetails userDetails) {
-        User user = userService.getUserByUsername(userDetails.getUsername());
+    public UserDto getCurrentUser(Authentication authentication) {
+        User user = userService.getUserByUsername(authentication.getName());
         return UserDto.fromUser(user);
     }
 
@@ -59,5 +58,13 @@ public class UserRestController {
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void deleteUser(@PathVariable Long id) {
         userService.deleteUser(id);
+    }
+
+    @PutMapping("/me")
+    public ResponseEntity<UserDto> updateCurrentUser(
+            @Valid @RequestBody UpdateUserRequest request,
+            Authentication authentication) {
+        User updatedUser = userService.updateUser(authentication.getName(), request);
+        return ResponseEntity.ok(UserDto.fromUser(updatedUser));
     }
 }

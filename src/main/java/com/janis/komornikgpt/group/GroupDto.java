@@ -8,6 +8,7 @@ import java.util.List;
 public record GroupDto(
     Long id,
     String name,
+    String description,
     List<UserDto> users,
     UserDto createdBy,
     LocalDateTime createdAt
@@ -16,6 +17,7 @@ public record GroupDto(
         return new GroupDto(
             group.getId(),
             group.getName(),
+                group.getDescription(),
             group.getUsers().stream()
                 .map(UserDto::fromUser)
                     .toList(),

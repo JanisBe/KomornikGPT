@@ -12,10 +12,10 @@ import {Group} from '../../../core/models/group.model';
 import {User} from '../../../core/models/user.model';
 import {CreateUserRequest, UserService} from '../../../core/services/user.service';
 import {firstValueFrom} from 'rxjs';
+import {HttpErrorResponse} from '@angular/common/http';
 
 interface PendingUser extends CreateUserRequest {
   tempId: string;
-  id: string; // Temporary ID for mat-select
 }
 
 interface CreatedUserResponse {
@@ -52,6 +52,13 @@ interface CreatedUserResponse {
               <mat-error *ngIf="groupForm.get('name')?.hasError('minlength')">
                 Group name must be at least 2 characters
               </mat-error>
+            </mat-form-field>
+          </div>
+
+          <div class="form-field">
+            <mat-form-field appearance="outline" class="full-width">
+              <mat-label>Description</mat-label>
+              <textarea matInput formControlName="description" rows="3" placeholder="Enter group description"></textarea>
             </mat-form-field>
           </div>
 
@@ -198,6 +205,7 @@ export class EditGroupDialogComponent implements OnInit {
   ) {
     this.groupForm = this.fb.group({
       name: ['', [Validators.required, Validators.minLength(2)]],
+      description: [''],
       userIds: [[]]
     });
 
@@ -210,45 +218,43 @@ export class EditGroupDialogComponent implements OnInit {
   }
 
   ngOnInit(): void {
-    // Load all available users
-    this.userService.getUsers().subscribe({
-      next: (users: User[]) => {
-        this.availableUsers = users;
-      },
-      error: (error: unknown) => {
-        console.error('Error loading users:', error);
-      }
-    });
-
-    // Set initial form values
+    // Load initial form values
     this.groupForm.patchValue({
       name: this.data.group.name,
-      userIds: this.data.group.users.map(user => user.id)
+      userIds: this.data.group.members.map(member => member.id)
+    });
+
+    // Load available users
+    this.userService.getUsers().subscribe({
+      next: (users: User[]) => {
+        this.availableUsers = users.filter(user =>
+          !this.data.group.members.some(member => member.id === user.id)
+        );
+      },
+      error: (error: HttpErrorResponse) => {
+        console.error('Error loading users:', error);
+      }
     });
   }
 
   addNewUser(): void {
     if (this.newUserForm.valid) {
       const formValue = this.newUserForm.value;
-      const tempId = `temp-${++this.tempIdCounter}`;
-
-      // Create a temporary user object
-      const newUser: PendingUser = {
+      const tempId = `temp_${this.tempIdCounter++}`;
+      const pendingUser: PendingUser = {
         ...formValue,
-        tempId,
-        id: tempId // This will be replaced with real ID after saving
+        tempId
       };
 
-      // Add to pending users
-      this.pendingUsers = [...this.pendingUsers, newUser];
+      this.pendingUsers.push(pendingUser);
+      const userIdsControl = this.groupForm.get('userIds');
+      if (userIdsControl) {
+        const currentUserIds = userIdsControl.value || [];
+        this.groupForm.patchValue({
+          userIds: [...currentUserIds, tempId]
+        });
+      }
 
-      // Add to selected users
-      const currentUserIds = this.groupForm.get('userIds')?.value || [];
-      this.groupForm.patchValue({
-        userIds: [...currentUserIds, tempId]
-      });
-
-      // Reset the form
       this.newUserForm.reset();
     }
   }
@@ -258,7 +264,7 @@ export class EditGroupDialogComponent implements OnInit {
       const formValue = this.groupForm.value;
 
       // Make sure the creator stays in the group
-      if (!formValue.userIds.includes(this.data.group.createdBy.id)) {
+      if (this.data.group.createdBy && !formValue.userIds.includes(this.data.group.createdBy.id)) {
         formValue.userIds.push(this.data.group.createdBy.id);
       }
 
@@ -266,7 +272,7 @@ export class EditGroupDialogComponent implements OnInit {
         // First, create all pending users
         const createdUsers = await Promise.all(
           this.pendingUsers.map(async (pendingUser): Promise<CreatedUserResponse> => {
-            const {tempId, id, ...userData} = pendingUser;
+            const {tempId, ...userData} = pendingUser;
             const createdUser = await firstValueFrom<User>(
               this.userService.createUser(userData)
             );
@@ -283,11 +289,14 @@ export class EditGroupDialogComponent implements OnInit {
         // Close dialog with final data
         this.dialogRef.close({
           name: formValue.name,
-          userIds: finalUserIds
+          description: formValue.description,
+          userIds: finalUserIds,
+          pendingUsers: this.pendingUsers
         });
       } catch (error: unknown) {
-        console.error('Error creating users:', error);
-        // You might want to show an error message here
+        if (error instanceof HttpErrorResponse) {
+          console.error('Error creating users:', error);
+        }
       }
     }
   }

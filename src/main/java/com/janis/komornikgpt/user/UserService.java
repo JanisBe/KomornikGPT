@@ -72,21 +72,42 @@ public class UserService implements UserDetailsService {
 
     @Transactional
     public User updateUser(Long id, UpdateUserRequest request) {
-        User user = getUserById(id);
+        User user = userRepository.findById(id)
+                .orElseThrow(() -> new UserNotFoundException("User not found with id: " + id));
 
-        if (!user.getUsername().equals(request.getUsername()) && 
-            userRepository.existsByUsername(request.getUsername())) {
-            throw new UsernameAlreadyExistsException("Username already exists");
-        }
-        if (!user.getEmail().equals(request.getEmail()) && 
-            userRepository.existsByEmail(request.getEmail())) {
-            throw new UserAlreadyExistsException("Email already exists");
+        // Verify current password if trying to change password
+        if (request.newPassword() != null && !request.newPassword().isEmpty()) {
+            if (request.currentPassword() == null || !passwordEncoder.matches(request.currentPassword(), user.getPassword())) {
+                throw new RuntimeException("Current password is incorrect");
+            }
+            user.setPassword(passwordEncoder.encode(request.newPassword()));
         }
 
-        user.setUsername(request.getUsername());
-        user.setEmail(request.getEmail());
-        user.setName(request.getName());
-        user.setSurname(request.getSurname());
+        // Update other fields
+        user.setName(request.name());
+        user.setSurname(request.surname());
+        user.setEmail(request.email());
+
+        return userRepository.save(user);
+    }
+
+    @Transactional
+    public User updateUser(String username, UpdateUserRequest request) {
+        User user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        // Verify current password if trying to change password
+        if (request.newPassword() != null && !request.newPassword().isEmpty()) {
+            if (request.currentPassword() == null || !passwordEncoder.matches(request.currentPassword(), user.getPassword())) {
+                throw new RuntimeException("Current password is incorrect");
+            }
+            user.setPassword(passwordEncoder.encode(request.newPassword()));
+        }
+
+        // Update other fields
+        user.setName(request.name());
+        user.setSurname(request.surname());
+        user.setEmail(request.email());
 
         return userRepository.save(user);
     }
@@ -128,5 +149,10 @@ public class UserService implements UserDetailsService {
         user.setPassword(passwordEncoder.encode(randomPassword));
 
         return userRepository.save(user);
+    }
+
+    public User findByUsername(String username) {
+        return userRepository.findByUsername(username)
+                .orElseThrow(() -> new RuntimeException("User not found"));
     }
 }

@@ -27,6 +27,9 @@ public class Group {
 
     private String name;
 
+    @Column(length = 1000)
+    private String description;
+
     @ManyToMany
     @JoinTable(
             name = "group_users",

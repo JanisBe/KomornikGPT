@@ -69,8 +69,8 @@ import {User} from '../../../core/models/user.model';
             <mat-form-field appearance="outline" class="full-width">
               <mat-label>Paid by</mat-label>
               <mat-select formControlName="payerId" required>
-                <mat-option *ngFor="let user of data.group.users" [value]="user.id">
-                  {{ user.name }}
+                <mat-option *ngFor="let member of data.group.members" [value]="member.id">
+                  {{ member.name }}
                 </mat-option>
               </mat-select>
               <mat-error *ngIf="expenseForm.get('payerId')?.hasError('required')">
@@ -82,14 +82,14 @@ import {User} from '../../../core/models/user.model';
           <div class="form-field">
             <h3>Split between</h3>
             <div formArrayName="splits">
-              @for (user of data.group.users; track user) {
+              @for (member of data.group.members; track member) {
                 <mat-form-field appearance="outline" class="full-width mb-2">
-                  <mat-label>{{ user.name }}'s share</mat-label>
-                  <input matInput type="number" [formControlName]="user.id.toString()" required>
-                  <mat-error *ngIf="getSplitControl(user.id.toString())?.hasError('required')">
+                  <mat-label>{{ member.name }}'s share</mat-label>
+                  <input matInput type="number" [formControlName]="member.id.toString()" required>
+                  <mat-error *ngIf="getSplitControl(member.id.toString())?.hasError('required')">
                     Share amount is required
                   </mat-error>
-                  <mat-error *ngIf="getSplitControl(user.id.toString())?.hasError('min')">
+                  <mat-error *ngIf="getSplitControl(member.id.toString())?.hasError('min')">
                     Share amount must be greater than or equal to 0
                   </mat-error>
                 </mat-form-field>
@@ -158,8 +158,8 @@ export class AddExpenseDialogComponent {
       payerId: [data.currentUser.id, Validators.required],
       splits: this.fb.group(
         Object.fromEntries(
-          data.group.users.map(user => [
-            user.id.toString(),
+          data.group.members.map(member => [
+            member.id.toString(),
             [0, [Validators.required, Validators.min(0)]]
           ])
         )

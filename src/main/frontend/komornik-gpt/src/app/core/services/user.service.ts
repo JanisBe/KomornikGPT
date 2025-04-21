@@ -1,6 +1,7 @@
 import {Injectable} from '@angular/core';
 import {HttpClient} from '@angular/common/http';
 import {Observable} from 'rxjs';
+import {environment} from '../../../environments/environment';
 import {User} from '../models/user.model';
 import {AuthService} from './auth.service';
 import {map} from 'rxjs/operators';
@@ -22,7 +23,7 @@ export interface UpdateUserRequest {
   providedIn: 'root'
 })
 export class UserService {
-  private apiUrl = '/api/users';
+  private readonly apiUrl = `${environment.apiUrl}/users`;
 
   constructor(private http: HttpClient, private authService: AuthService) {
   }
@@ -39,12 +40,12 @@ export class UserService {
     return this.http.get<User>(`${this.apiUrl}/me`);
   }
 
-  createUser(request: CreateUserRequest): Observable<User> {
-    return this.http.post<User>(`${this.apiUrl}/create-without-password`, request);
+  createUser(user: CreateUserRequest): Observable<User> {
+    return this.http.post<User>(`${this.apiUrl}/create-without-password`, user);
   }
 
-  updateUser(id: number, request: UpdateUserRequest): Observable<User> {
-    return this.http.put<User>(`${this.apiUrl}/${id}`, request);
+  updateUser(id: number, user: Partial<User>): Observable<User> {
+    return this.http.put<User>(`${this.apiUrl}/${id}`, user);
   }
 
   deleteUser(id: number): Observable<void> {

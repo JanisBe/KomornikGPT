@@ -13,7 +13,7 @@ public record ExpenseSplitDto(
         return new ExpenseSplitDto(
             expenseSplit.getId(),
             UserDto.fromUser(expenseSplit.getUser()),
-            expenseSplit.getAmount()
+                expenseSplit.getAmountOwed()
         );
     }
 } 

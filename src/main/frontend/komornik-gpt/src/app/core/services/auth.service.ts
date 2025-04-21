@@ -1,19 +1,13 @@
-import { Injectable } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
-import { BehaviorSubject, Observable, tap } from 'rxjs';
-import { environment } from '../../../environments/environment';
+import {Injectable} from '@angular/core';
+import {HttpClient} from '@angular/common/http';
+import {BehaviorSubject, Observable, tap} from 'rxjs';
+import {Router} from '@angular/router';
+import {TokenService} from './token.service';
+import {User} from '../models/user.model';
 
 export interface LoginRequest {
   username: string;
   password: string;
-}
-
-export interface User {
-  id: number;
-  username: string;
-  email: string;
-  name: string;
-  surname: string;
 }
 
 @Injectable({
@@ -23,11 +17,24 @@ export class AuthService {
   private currentUserSubject = new BehaviorSubject<User | null>(null);
   public currentUser$ = this.currentUserSubject.asObservable();
 
-  constructor(private http: HttpClient) {
+  constructor(
+    private http: HttpClient,
+    private router: Router,
+    private tokenService: TokenService
+  ) {
     // Check if user is already logged in
-    const token = localStorage.getItem('token');
+    const token = this.tokenService.getToken();
+
     if (token) {
-      this.getCurrentUser().subscribe();
+      this.getCurrentUser().subscribe({
+        next: (user) => {
+          this.router.navigate(['/groups']);
+        },
+        error: (error) => {
+          console.error('Error loading user:', error);
+          this.logout();
+        }
+      });
     }
   }
 
@@ -35,29 +42,29 @@ export class AuthService {
     return this.http.post<{ token: string }>('/api/auth/login', credentials)
       .pipe(
         tap(response => {
-          localStorage.setItem('token', response.token);
+          this.tokenService.setToken(response.token);
           this.getCurrentUser().subscribe();
         })
       );
   }
 
   logout(): void {
-    localStorage.removeItem('token');
+    this.tokenService.removeToken();
     this.currentUserSubject.next(null);
+    this.router.navigate(['/login']);
   }
 
   getCurrentUser(): Observable<User> {
     return this.http.get<User>('/api/users/me')
       .pipe(
-        tap(user => this.currentUserSubject.next(user))
+        tap(user => {
+          this.currentUserSubject.next(user);
+        })
       );
   }
 
   isAuthenticated(): boolean {
-    return !!localStorage.getItem('token');
+    const hasToken = this.tokenService.hasToken();
+    return hasToken;
   }
-
-  getToken(): string | null {
-    return localStorage.getItem('token');
-  }
-} 
+}

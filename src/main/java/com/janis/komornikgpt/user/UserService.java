@@ -1,5 +1,6 @@
 package com.janis.komornikgpt.user;
 
+import com.janis.komornikgpt.exception.ResourceAlreadyExistsException;
 import com.janis.komornikgpt.user.exception.UserAlreadyExistsException;
 import com.janis.komornikgpt.user.exception.UserNotFoundException;
 import com.janis.komornikgpt.user.exception.UsernameAlreadyExistsException;
@@ -12,6 +13,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
@@ -63,6 +65,11 @@ public class UserService implements UserDetailsService {
                 .orElseThrow(() -> new UserNotFoundException("User not found with id: " + id));
     }
 
+    public User getUserByUsername(String username) {
+        return userRepository.findByUsername(username)
+                .orElseThrow(() -> new UserNotFoundException("User not found with username: " + username));
+    }
+
     @Transactional
     public User updateUser(Long id, UpdateUserRequest request) {
         User user = getUserById(id);
@@ -94,5 +101,32 @@ public class UserService implements UserDetailsService {
 
     public List<User> findAllByGroupId(Long groupId) {
         return userRepository.findAllByGroupId(groupId);
+    }
+
+    @Transactional
+    public User createUserWithoutPassword(CreateUserWithoutPasswordRequest request) {
+        // Check if username is already taken
+        if (userRepository.existsByUsername(request.username())) {
+            throw new ResourceAlreadyExistsException("Username is already taken");
+        }
+
+        // Check if email is already taken
+        if (userRepository.existsByEmail(request.email())) {
+            throw new ResourceAlreadyExistsException("Email is already taken");
+        }
+
+        // Create user with a random password
+        User user = new User();
+        user.setName(request.name());
+        user.setSurname(request.surname());
+        user.setUsername(request.username());
+        user.setEmail(request.email());
+        user.setRole(Role.USER);
+
+        // Generate a random password that the user will need to change later
+        String randomPassword = UUID.randomUUID().toString();
+        user.setPassword(passwordEncoder.encode(randomPassword));
+
+        return userRepository.save(user);
     }
 }

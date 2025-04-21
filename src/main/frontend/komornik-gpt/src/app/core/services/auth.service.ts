@@ -11,6 +11,11 @@ export interface LoginRequest {
   password: string;
 }
 
+export interface LoginResponse {
+  token: string;
+  user: User;
+}
+
 export interface UpdateUserRequest {
   name: string;
   surname: string;
@@ -38,6 +43,7 @@ export class AuthService {
     if (token) {
       this.getCurrentUser().subscribe({
         next: (user) => {
+          this.currentUserSubject.next(user);
           this.router.navigate(['/groups']);
         },
         error: (error) => {
@@ -54,12 +60,13 @@ export class AuthService {
     }
   }
 
-  login(request: LoginRequest): Observable<User> {
-    return this.http.post<User>(`${this.apiUrl}/auth/login`, request)
+  login(request: LoginRequest): Observable<LoginResponse> {
+    return this.http.post<LoginResponse>(`${this.apiUrl}/auth/login`, request)
       .pipe(
-        tap(user => {
-          localStorage.setItem('currentUser', JSON.stringify(user));
-          this.currentUserSubject.next(user);
+        tap(response => {
+          this.tokenService.setToken(response.token);
+          localStorage.setItem('currentUser', JSON.stringify(response.user));
+          this.currentUserSubject.next(response.user);
         })
       );
   }

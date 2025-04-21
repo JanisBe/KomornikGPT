@@ -9,6 +9,7 @@ import {MatSnackBar} from '@angular/material/snack-bar';
 import {MatExpansionModule} from '@angular/material/expansion';
 import {MatDividerModule} from '@angular/material/divider';
 import {MatListModule} from '@angular/material/list';
+import {RouterModule} from '@angular/router';
 import {Group} from '../../core/models/group.model';
 import {User} from '../../core/models/user.model';
 import {AuthService} from '../../core/services/auth.service';
@@ -35,7 +36,8 @@ interface UpdateUserRequest {
     MatButtonModule,
     MatExpansionModule,
     MatDividerModule,
-    MatListModule
+    MatListModule,
+    RouterModule
   ],
   template: `
     <div class="profile-container">
@@ -120,8 +122,10 @@ interface UpdateUserRequest {
 
           <h3>My Groups</h3>
           <mat-list>
-            <mat-list-item *ngFor="let group of userGroups">
-              {{ group.name }}
+            <mat-list-item *ngFor="let group of userGroups" class="group-item">
+              <a [routerLink]="['/groups', group.id]" class="group-link">
+                {{ group.name }}
+              </a>
             </mat-list-item>
             <mat-list-item *ngIf="userGroups.length === 0">
               You are not a member of any groups
@@ -169,6 +173,26 @@ interface UpdateUserRequest {
     h3 {
       margin: 0 0 16px 0;
       font-weight: 500;
+    }
+
+    .group-item {
+      cursor: pointer;
+    }
+
+    .group-item:hover {
+      background-color: rgba(0, 0, 0, 0.04);
+    }
+
+    .group-link {
+      text-decoration: none;
+      color: inherit;
+      display: block;
+      width: 100%;
+      padding: 16px;
+    }
+
+    .group-link:hover {
+      color: #1976d2;
     }
   `]
 })

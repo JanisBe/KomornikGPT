@@ -1,6 +1,6 @@
 -- Insert sample users
 INSERT INTO test.users (username, email, password, name, surname, role)
-VALUES ('john_doe', 'john@example.com', '$2a$10$N9qo8uLOickgx2ZMRZoMyea7wdtWgtb7pfXoReLE2qQR2N4VuAbtO', 'John', 'Doe',
+VALUES ('a', 'john@example.com', '$2a$10$N9qo8uLOickgx2ZMRZoMyea7wdtWgtb7pfXoReLE2qQR2N4VuAbtO', 'John', 'Doe',
         'USER'),
        ('jane_smith', 'jane@example.com', '$2a$10$N9qo8uLOickgx2ZMRZoMyea7wdtWgtb7pfXoReLE2qQR2N4VuAbtO', 'Jane',
         'Smith', 'USER'),
@@ -12,7 +12,7 @@ INSERT INTO test.groups (name, description, created_at, created_by_id)
 VALUES ('Family Trip', 'Expenses from our summer vacation', NOW(), 1);
 
 -- Insert group members
-INSERT INTO test.group_members (group_id, user_id)
+INSERT INTO test.group_users (group_id, user_id)
 VALUES (1, 1),
        (1, 2),
        (1, 3);

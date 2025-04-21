@@ -237,7 +237,7 @@ export class GroupsComponent implements OnInit {
   }
 
   canDeleteGroup(group: Group): boolean {
-    if (!this.currentUser || !group) return false;
+    if (!this.currentUser || !group || !group.members) return false;
 
     // Check if the current user is part of the group
     const isGroupMember = group.members.some(member => member.id === this.currentUser?.id);

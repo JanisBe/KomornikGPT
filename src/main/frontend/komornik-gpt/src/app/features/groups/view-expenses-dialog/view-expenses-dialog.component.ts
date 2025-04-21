@@ -1,7 +1,6 @@
 import {Component, Inject, OnInit} from '@angular/core';
 import {CommonModule} from '@angular/common';
 import {MAT_DIALOG_DATA, MatDialog, MatDialogModule, MatDialogRef} from '@angular/material/dialog';
-import {MatTableModule} from '@angular/material/table';
 import {MatButtonModule} from '@angular/material/button';
 import {MatIconModule} from '@angular/material/icon';
 import {MatTooltipModule} from '@angular/material/tooltip';
@@ -9,8 +8,13 @@ import {MatSnackBar, MatSnackBarModule} from '@angular/material/snack-bar';
 import {Group} from '../../../core/models/group.model';
 import {Expense} from '../../../core/models/expense.model';
 import {ExpenseService} from '../../../core/services/expense.service';
-import {MatSortModule, Sort} from '@angular/material/sort';
 import {AddExpenseDialogComponent} from '../add-expense-dialog/add-expense-dialog.component';
+import {ConfirmDeleteDialogComponent} from './confirm-delete-dialog.component';
+
+interface GroupedExpenses {
+  date: Date;
+  expenses: Expense[];
+}
 
 @Component({
   selector: 'app-view-expenses-dialog',
@@ -18,12 +22,10 @@ import {AddExpenseDialogComponent} from '../add-expense-dialog/add-expense-dialo
   imports: [
     CommonModule,
     MatDialogModule,
-    MatTableModule,
     MatButtonModule,
     MatIconModule,
     MatTooltipModule,
-    MatSnackBarModule,
-    MatSortModule
+    MatSnackBarModule
   ],
   template: `
     <div class="dialog-container">
@@ -35,68 +37,60 @@ import {AddExpenseDialogComponent} from '../add-expense-dialog/add-expense-dialo
       </div>
 
       <mat-dialog-content>
-        <table mat-table [dataSource]="expenses" matSort (matSortChange)="sortData($event)" class="full-width">
-          <!-- Date Column -->
-          <ng-container matColumnDef="date">
-            <th mat-header-cell *matHeaderCellDef mat-sort-header> Date </th>
-            <td mat-cell *matCellDef="let expense"> {{expense.date | date:'medium'}} </td>
-          </ng-container>
-
-          <!-- Description Column -->
-          <ng-container matColumnDef="description">
-            <th mat-header-cell *matHeaderCellDef mat-sort-header> Description </th>
-            <td mat-cell *matCellDef="let expense"> {{expense.description}} </td>
-          </ng-container>
-
-          <!-- Amount Column -->
-          <ng-container matColumnDef="amount">
-            <th mat-header-cell *matHeaderCellDef mat-sort-header> Amount </th>
-            <td mat-cell *matCellDef="let expense">
-              {{expense.amount | number:'1.2-2'}} {{expense.currency}}
-            </td>
-          </ng-container>
-
-          <!-- Payer Column -->
-          <ng-container matColumnDef="payer">
-            <th mat-header-cell *matHeaderCellDef mat-sort-header> Paid By </th>
-            <td mat-cell *matCellDef="let expense"> {{expense.payer.name}} </td>
-          </ng-container>
-
-          <!-- Splits Column -->
-          <ng-container matColumnDef="splits">
-            <th mat-header-cell *matHeaderCellDef> Splits </th>
-            <td mat-cell *matCellDef="let expense">
-              <div class="splits-container">
-                @for (split of expense.splits; track split) {
-                  <div class="split-item" [class.paid]="split.isPaid">
-                    {{split.user.name}}: {{split.amountOwed | number:'1.2-2'}}
-                    <mat-icon *ngIf="split.isPaid" class="paid-icon">check_circle</mat-icon>
-                  </div>
-                }
-              </div>
-            </td>
-          </ng-container>
-
-          <!-- Actions Column -->
-          <ng-container matColumnDef="actions">
-            <th mat-header-cell *matHeaderCellDef> Actions </th>
-            <td mat-cell *matCellDef="let expense">
-              <button mat-icon-button color="primary"
-                      (click)="editExpense(expense)"
-                      matTooltip="Edit expense">
-                <mat-icon>edit</mat-icon>
-              </button>
-              <button mat-icon-button color="warn"
-                      (click)="deleteExpense(expense)"
-                      matTooltip="Delete expense">
-                <mat-icon>delete</mat-icon>
-              </button>
-            </td>
-          </ng-container>
-
-          <tr mat-header-row *matHeaderRowDef="displayedColumns; sticky: true"></tr>
-          <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
-        </table>
+        @for (group of groupedExpenses; track group.date) {
+          <div class="date-group">
+            <div class="date-header">
+              {{ group.date | date:'shortDate':'':'pl' }}
+            </div>
+            <div class="table-wrapper">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Description</th>
+                    <th>Amount</th>
+                    <th>Paid By</th>
+                    <th>Splits</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  @for (expense of group.expenses; track expense.id) {
+                    <tr>
+                      <td [matTooltip]="expense.date | date:'medium':'':'pl'"
+                          matTooltipPosition="above">
+                        {{expense.description}}
+                      </td>
+                      <td>{{expense.amount | number:'1.2-2'}} {{expense.currency}}</td>
+                      <td>{{expense.payer.name}}</td>
+                      <td>
+                        <div class="splits-container">
+                          @for (split of expense.splits; track split) {
+                            <div class="split-item" [class.paid]="split.isPaid">
+                              {{split.user.name}}: {{split.amountOwed | number:'1.2-2'}}
+                              <mat-icon *ngIf="split.isPaid" class="paid-icon">check_circle</mat-icon>
+                            </div>
+                          }
+                        </div>
+                      </td>
+                      <td class="actions">
+                        <button mat-icon-button color="primary"
+                                (click)="editExpense(expense)"
+                                matTooltip="Edit expense">
+                          <mat-icon>edit</mat-icon>
+                        </button>
+                        <button mat-icon-button color="warn"
+                                (click)="deleteExpense(expense)"
+                                matTooltip="Delete expense">
+                          <mat-icon>delete</mat-icon>
+                        </button>
+                      </td>
+                    </tr>
+                  }
+                </tbody>
+              </table>
+            </div>
+          </div>
+        }
       </mat-dialog-content>
     </div>
   `,
@@ -116,6 +110,10 @@ import {AddExpenseDialogComponent} from '../add-expense-dialog/add-expense-dialo
       justify-content: space-between;
       align-items: center;
       margin-bottom: 24px;
+      background: white;
+      position: sticky;
+      top: 0;
+      z-index: 3;
     }
 
     h2 {
@@ -129,37 +127,53 @@ import {AddExpenseDialogComponent} from '../add-expense-dialog/add-expense-dialo
       overflow: auto;
     }
 
-    .full-width {
-      width: 100%;
+    .table-wrapper {
+      position: relative;
+      margin: 0;
+      padding: 0;
     }
 
     table {
       width: 100%;
+      border-collapse: collapse;
+      margin-bottom: 24px;
     }
 
-    .mat-column-date {
-      min-width: 160px;
+    thead {
+      position: sticky;
+      top: 48px; /* Height of date header */
+      z-index: 2;
     }
 
-    .mat-column-description {
-      min-width: 200px;
+    th {
+      background: white;
+      padding: 12px;
+      text-align: left;
+      font-weight: 500;
+      color: rgba(0, 0, 0, 0.87);
+      border-bottom: 1px solid rgba(0, 0, 0, 0.12);
+      white-space: nowrap;
     }
 
-    .mat-column-amount {
-      min-width: 120px;
+    td {
+      padding: 12px;
+      border-bottom: 1px solid rgba(0, 0, 0, 0.12);
+      color: rgba(0, 0, 0, 0.87);
     }
 
-    .mat-column-payer {
-      min-width: 120px;
+    .date-group {
+      margin-bottom: 32px;
     }
 
-    .mat-column-splits {
-      min-width: 250px;
-    }
-
-    .mat-column-actions {
-      min-width: 100px;
-      text-align: right;
+    .date-header {
+      background: #f5f5f5;
+      padding: 12px 16px;
+      font-size: 16px;
+      font-weight: 500;
+      border-radius: 4px 4px 0 0;
+      position: sticky;
+      top: 0;
+      z-index: 2;
     }
 
     .splits-container {
@@ -186,19 +200,19 @@ import {AddExpenseDialogComponent} from '../add-expense-dialog/add-expense-dialo
       width: 16px;
     }
 
-    tr.mat-mdc-row:hover {
+    tr:hover {
       background: rgba(0, 0, 0, 0.04);
     }
 
-    th.mat-mdc-header-cell {
-      font-weight: 500;
-      color: rgba(0, 0, 0, 0.87);
+    .actions {
+      white-space: nowrap;
+      text-align: right;
     }
   `]
 })
 export class ViewExpensesDialogComponent implements OnInit {
   expenses: Expense[] = [];
-  displayedColumns: string[] = ['date', 'description', 'amount', 'payer', 'splits', 'actions'];
+  groupedExpenses: GroupedExpenses[] = [];
 
   constructor(
     private dialogRef: MatDialogRef<ViewExpensesDialogComponent>,
@@ -216,7 +230,8 @@ export class ViewExpensesDialogComponent implements OnInit {
   loadExpenses() {
     this.expenseService.getExpensesByGroup(this.data.group.id).subscribe({
       next: (expenses) => {
-        this.expenses = expenses.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+        this.expenses = expenses;
+        this.groupedExpenses = this.groupExpensesByDay(expenses);
       },
       error: (error) => {
         console.error('Error loading expenses:', error);
@@ -227,26 +242,28 @@ export class ViewExpensesDialogComponent implements OnInit {
     });
   }
 
-  sortData(sort: Sort) {
-    const data = [...this.expenses];
-    if (!sort.active || sort.direction === '') {
-      this.expenses = data;
-      return;
-    }
+  deleteExpense(expense: Expense) {
+    const dialogRef = this.dialog.open(ConfirmDeleteDialogComponent, {
+      width: '400px'
+    });
 
-    this.expenses = data.sort((a, b) => {
-      const isAsc = sort.direction === 'asc';
-      switch (sort.active) {
-        case 'date':
-          return compare(new Date(a.date).getTime(), new Date(b.date).getTime(), isAsc);
-        case 'description':
-          return compare(a.description, b.description, isAsc);
-        case 'amount':
-          return compare(a.amount, b.amount, isAsc);
-        case 'payer':
-          return compare(a.payer.name, b.payer.name, isAsc);
-        default:
-          return 0;
+    dialogRef.afterClosed().subscribe(result => {
+      if (result) {
+        this.expenseService.deleteExpense(expense.id).subscribe({
+          next: () => {
+            this.expenses = this.expenses.filter(e => e.id !== expense.id);
+            this.groupedExpenses = this.groupExpensesByDay(this.expenses);
+            this.snackBar.open('Expense deleted successfully', 'Close', {
+              duration: 3000
+            });
+          },
+          error: (error) => {
+            console.error('Error deleting expense:', error);
+            this.snackBar.open('Error deleting expense', 'Close', {
+              duration: 3000
+            });
+          }
+        });
       }
     });
   }
@@ -281,26 +298,24 @@ export class ViewExpensesDialogComponent implements OnInit {
     });
   }
 
-  deleteExpense(expense: Expense) {
-    if (confirm('Are you sure you want to delete this expense?')) {
-      this.expenseService.deleteExpense(expense.id).subscribe({
-        next: () => {
-          this.expenses = this.expenses.filter(e => e.id !== expense.id);
-          this.snackBar.open('Expense deleted successfully', 'Close', {
-            duration: 3000
-          });
-        },
-        error: (error) => {
-          console.error('Error deleting expense:', error);
-          this.snackBar.open('Error deleting expense', 'Close', {
-            duration: 3000
-          });
-        }
-      });
-    }
-  }
-}
+  private groupExpensesByDay(expenses: Expense[]): GroupedExpenses[] {
+    const groups = new Map<string, Expense[]>();
 
-function compare(a: number | string, b: number | string, isAsc: boolean) {
-  return (a < b ? -1 : 1) * (isAsc ? 1 : -1);
+    expenses.forEach(expense => {
+      const date = new Date(expense.date);
+      const dateKey = new Date(date.getFullYear(), date.getMonth(), date.getDate()).toISOString();
+
+      if (!groups.has(dateKey)) {
+        groups.set(dateKey, []);
+      }
+      groups.get(dateKey)?.push(expense);
+    });
+
+    return Array.from(groups.entries())
+      .map(([dateKey, expenses]) => ({
+        date: new Date(dateKey),
+        expenses: expenses.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+      }))
+      .sort((a, b) => b.date.getTime() - a.date.getTime());
+  }
 }

@@ -20,6 +20,9 @@ import {AddExpenseDialogComponent} from './add-expense-dialog/add-expense-dialog
 import {ExpenseService} from '../../core/services/expense.service';
 import {HttpErrorResponse} from '@angular/common/http';
 import {ViewExpensesDialogComponent} from './view-expenses-dialog/view-expenses-dialog.component';
+import {MatDatepickerModule} from '@angular/material/datepicker';
+import {MatNativeDateModule} from '@angular/material/core';
+import {DATE_PROVIDERS} from '../../core/config/date.config';
 
 @Component({
   selector: 'app-groups',
@@ -32,7 +35,14 @@ import {ViewExpensesDialogComponent} from './view-expenses-dialog/view-expenses-
     MatDialogModule,
     MatTooltipModule,
     MatSnackBarModule,
-    RouterModule
+    RouterModule,
+    MatDatepickerModule,
+    MatNativeDateModule
+  ],
+  providers: [
+    MatDatepickerModule,
+    MatNativeDateModule,
+    ...DATE_PROVIDERS
   ],
   template: `
     <div class="container mt-4">

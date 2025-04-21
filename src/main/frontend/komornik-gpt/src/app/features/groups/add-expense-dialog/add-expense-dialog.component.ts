@@ -7,12 +7,13 @@ import {MatFormFieldModule} from '@angular/material/form-field';
 import {MatInputModule} from '@angular/material/input';
 import {MatSelectModule} from '@angular/material/select';
 import {MatDatepickerModule} from '@angular/material/datepicker';
-import {MatNativeDateModule} from '@angular/material/core';
+import {DateAdapter, MatNativeDateModule} from '@angular/material/core';
 import {MatIconModule} from '@angular/material/icon';
 import {MatTooltipModule} from '@angular/material/tooltip';
 import {Group} from '../../../core/models/group.model';
 import {Currency} from '../../../core/models/currency.model';
 import {Expense} from '../../../core/models/expense.model';
+import {DATE_PROVIDERS} from '../../../core/config/date.config';
 
 @Component({
   selector: 'app-add-expense-dialog',
@@ -29,6 +30,11 @@ import {Expense} from '../../../core/models/expense.model';
     MatNativeDateModule,
     MatIconModule,
     MatTooltipModule
+  ],
+  providers: [
+    MatDatepickerModule,
+    MatNativeDateModule,
+    ...DATE_PROVIDERS
   ],
   template: `
     <div class="dialog-container">
@@ -88,6 +94,7 @@ import {Expense} from '../../../core/models/expense.model';
               <mat-form-field appearance="outline" class="full-width">
                 <mat-label>Date</mat-label>
                 <input matInput [matDatepicker]="picker" formControlName="date" required>
+                <mat-hint>DD/MM/YYYY</mat-hint>
                 <mat-datepicker-toggle matSuffix [for]="picker"></mat-datepicker-toggle>
                 <mat-datepicker #picker></mat-datepicker>
                 <mat-error *ngIf="expenseForm.get('date')?.hasError('required')">
@@ -381,6 +388,7 @@ export class AddExpenseDialogComponent {
   constructor(
     private fb: FormBuilder,
     private dialogRef: MatDialogRef<AddExpenseDialogComponent>,
+    private dateAdapter: DateAdapter<Date>,
     @Inject(MAT_DIALOG_DATA) public data: {
       group: Group;
       expense?: Expense;
@@ -388,6 +396,7 @@ export class AddExpenseDialogComponent {
     }
   ) {
     this.isEditMode = !!data.isEdit;
+    this.dateAdapter.setLocale('pl');
     this.initForm();
 
     if (this.isEditMode && data.expense) {

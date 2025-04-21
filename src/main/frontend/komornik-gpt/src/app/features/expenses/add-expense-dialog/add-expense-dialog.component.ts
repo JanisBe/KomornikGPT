@@ -132,15 +132,17 @@ import {DATE_PROVIDERS} from '../../../core/config/date.config';
               </button>
             </div>
 
-            <div class="total-info" *ngIf="totalSplitAmount > 0">
-              <span [class.error]="!isSplitValid">
-                Total split: {{totalSplitAmount | number:'1.2-2'}}
-                <span *ngIf="expenseForm.get('amount')?.value">
-                  of {{expenseForm.get('amount')?.value | number:'1.2-2'}}
-                  ({{getSplitPercentage() | number:'1.0-0'}}%)
+            @if (totalSplitAmount > 0) {
+              <div class="total-info">
+                <span [class.error]="!isSplitValid">
+                  Total split: {{totalSplitAmount | number:'1.2-2'}}
+                  @if (expenseForm.get('amount')?.value) {
+                    of {{expenseForm.get('amount')?.value | number:'1.2-2'}}
+                    ({{getSplitPercentage() | number:'1.0-0'}}%)
+                  }
                 </span>
-              </span>
-            </div>
+              </div>
+            }
 
             <div formArrayName="splits" class="splits-container">
               @for (member of data.group.members; track member.id) {
@@ -154,12 +156,12 @@ import {DATE_PROVIDERS} from '../../../core/config/date.config';
                          min="0"
                          (input)="updateTotalSplit()">
                   <mat-icon matSuffix>person_outline</mat-icon>
-                  <mat-error *ngIf="getSplitControl(member.id.toString())?.hasError('required')">
-                    Share amount is required
-                  </mat-error>
-                  <mat-error *ngIf="getSplitControl(member.id.toString())?.hasError('min')">
-                    Share amount must be greater than or equal to 0
-                  </mat-error>
+                  @if (getSplitControl(member.id.toString())?.hasError('required')) {
+                    <mat-error>Share amount is required</mat-error>
+                  }
+                  @if (getSplitControl(member.id.toString())?.hasError('min')) {
+                    <mat-error>Share amount must be greater than or equal to 0</mat-error>
+                  }
                 </mat-form-field>
               }
             </div>

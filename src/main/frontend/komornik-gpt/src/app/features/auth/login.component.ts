@@ -3,12 +3,15 @@ import {CommonModule} from '@angular/common';
 import {FormBuilder, FormGroup, ReactiveFormsModule, Validators} from '@angular/forms';
 import {Router, RouterModule} from '@angular/router';
 import {AuthService, LoginRequest} from '../../core/services/auth.service';
+import {SocialAuthService} from '../../core/services/social-auth.service';
 import {MatSnackBar} from '@angular/material/snack-bar';
 import {MatInputModule} from '@angular/material/input';
 import {MatFormFieldModule} from '@angular/material/form-field';
 import {MatButtonModule} from '@angular/material/button';
 import {MatCardModule} from '@angular/material/card';
 import {MatProgressBarModule} from '@angular/material/progress-bar';
+import {MatIconModule} from '@angular/material/icon';
+import {MatDividerModule} from '@angular/material/divider';
 
 @Component({
   selector: 'app-login',
@@ -21,7 +24,9 @@ import {MatProgressBarModule} from '@angular/material/progress-bar';
     MatFormFieldModule,
     MatButtonModule,
     MatCardModule,
-    MatProgressBarModule
+    MatProgressBarModule,
+    MatIconModule,
+    MatDividerModule
   ],
   template: `
     <div class="login-container">
@@ -35,6 +40,36 @@ import {MatProgressBarModule} from '@angular/material/progress-bar';
         }
 
         <mat-card-content>
+          <div class="social-login">
+            <button mat-raised-button
+                    class="google-btn"
+                    (click)="loginWithGoogle()"
+                    [disabled]="isLoading">
+              <img src="assets/google-logo.svg" alt="Google logo" class="social-icon">
+              Continue with Google
+            </button>
+            <button mat-raised-button
+                    class="facebook-btn"
+                    (click)="loginWithFacebook()"
+                    [disabled]="isLoading">
+              <img src="assets/facebook-logo.svg" alt="Facebook logo" class="social-icon">
+              Continue with Facebook
+            </button>
+            <button mat-raised-button
+                    class="github-btn"
+                    (click)="loginWithGithub()"
+                    [disabled]="isLoading">
+              <img src="assets/github-logo.svg" alt="GitHub logo" class="social-icon">
+              Continue with GitHub
+            </button>
+          </div>
+
+          <div class="divider">
+            <mat-divider></mat-divider>
+            <span class="divider-text">or</span>
+            <mat-divider></mat-divider>
+          </div>
+
           <form [formGroup]="loginForm" (ngSubmit)="onSubmit()">
             <mat-form-field appearance="outline">
               <mat-label>Username</mat-label>
@@ -137,6 +172,69 @@ import {MatProgressBarModule} from '@angular/material/progress-bar';
     mat-progress-bar {
       margin-bottom: 20px;
     }
+
+    .social-login {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+
+    .social-login button {
+      width: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 0 16px;
+    }
+
+    .social-icon {
+      width: 20px;
+      height: 20px;
+      object-fit: contain;
+      margin-right: 8px;
+    }
+
+    .google-btn {
+      background-color: white;
+      color: rgba(0, 0, 0, 0.87);
+      border: 1px solid #dadce0;
+      height: 40px;
+      font-family: 'Roboto', sans-serif;
+      font-weight: 500;
+    }
+
+    .facebook-btn {
+      background-color: white;
+      color: #1877f2;
+      border: 1px solid #1877f2;
+      height: 40px;
+      font-weight: 500;
+    }
+
+    .github-btn {
+      background-color: #24292F;
+      color: white;
+      height: 40px;
+      font-weight: 500;
+    }
+
+    .divider {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      margin: 24px 0;
+    }
+
+    .divider mat-divider {
+      flex: 1;
+    }
+
+    .divider-text {
+      color: rgba(0, 0, 0, 0.54);
+      font-size: 14px;
+    }
   `]
 })
 export class LoginComponent {
@@ -147,6 +245,7 @@ export class LoginComponent {
   constructor(
     private fb: FormBuilder,
     private authService: AuthService,
+    private socialAuthService: SocialAuthService,
     private router: Router,
     private snackBar: MatSnackBar
   ) {
@@ -154,6 +253,39 @@ export class LoginComponent {
       username: ['', Validators.required],
       password: ['', Validators.required]
     });
+  }
+
+  async loginWithGoogle(): Promise<void> {
+    try {
+      this.isLoading = true;
+      this.errorMessage = '';
+      await this.socialAuthService.loginWithGoogle();
+      this.showSuccessAndRedirect();
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  async loginWithFacebook(): Promise<void> {
+    try {
+      this.isLoading = true;
+      this.errorMessage = '';
+      await this.socialAuthService.loginWithFacebook();
+      this.showSuccessAndRedirect();
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  async loginWithGithub(): Promise<void> {
+    try {
+      this.isLoading = true;
+      this.errorMessage = '';
+      await this.socialAuthService.loginWithGithub();
+      this.showSuccessAndRedirect();
+    } catch (error) {
+      this.handleError(error);
+    }
   }
 
   onSubmit(): void {
@@ -164,34 +296,42 @@ export class LoginComponent {
 
       this.authService.login(credentials).subscribe({
         next: () => {
-          this.isLoading = false;
-          this.snackBar.open('Login successful', 'Close', {
-            duration: 3000,
-            horizontalPosition: 'end',
-            verticalPosition: 'top'
-          });
-          this.router.navigate(['/groups']);
+          this.showSuccessAndRedirect();
         },
         error: (error) => {
-          this.isLoading = false;
-          console.error('Login failed:', error);
-
-          if (error.status === 401) {
-            this.errorMessage = 'Invalid username or password';
-          } else if (error.status === 0) {
-            this.errorMessage = 'Unable to connect to the server';
-          } else {
-            this.errorMessage = 'An error occurred during login. Please try again.';
-          }
-
-          this.snackBar.open(this.errorMessage, 'Close', {
-            duration: 5000,
-            horizontalPosition: 'end',
-            verticalPosition: 'top',
-            panelClass: ['error-snackbar']
-          });
+          this.handleError(error);
         }
       });
     }
+  }
+
+  private showSuccessAndRedirect(): void {
+    this.isLoading = false;
+    this.snackBar.open('Login successful', 'Close', {
+      duration: 3000,
+      horizontalPosition: 'end',
+      verticalPosition: 'top'
+    });
+    this.router.navigate(['/groups']);
+  }
+
+  private handleError(error: any): void {
+    this.isLoading = false;
+    console.error('Login failed:', error);
+
+    if (error.status === 401) {
+      this.errorMessage = 'Invalid username or password';
+    } else if (error.status === 0) {
+      this.errorMessage = 'Unable to connect to the server';
+    } else {
+      this.errorMessage = 'An error occurred during login. Please try again.';
+    }
+
+    this.snackBar.open(this.errorMessage, 'Close', {
+      duration: 5000,
+      horizontalPosition: 'end',
+      verticalPosition: 'top',
+      panelClass: ['error-snackbar']
+    });
   }
 }

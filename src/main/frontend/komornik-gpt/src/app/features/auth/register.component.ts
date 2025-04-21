@@ -1,8 +1,8 @@
-import { Component } from '@angular/core';
-import { CommonModule } from '@angular/common';
-import { FormsModule } from '@angular/forms';
-import { Router } from '@angular/router';
-import { HttpClient } from '@angular/common/http';
+import {Component} from '@angular/core';
+import {CommonModule} from '@angular/common';
+import {FormsModule} from '@angular/forms';
+import {Router, RouterModule} from '@angular/router';
+import {HttpClient} from '@angular/common/http';
 
 interface RegisterRequest {
   username: string;
@@ -15,7 +15,7 @@ interface RegisterRequest {
 @Component({
   selector: 'app-register',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, RouterModule],
   template: `
     <div class="row justify-content-center">
       <div class="col-md-6 col-lg-4">
@@ -46,7 +46,7 @@ interface RegisterRequest {
               <button type="submit" class="btn btn-primary w-100">Register</button>
             </form>
             <div class="text-center mt-3">
-              <p>Already have an account? <a routerLink="/login">Login</a></p>
+              <p>Already have an account? <a [routerLink]="['/login']">Login</a></p>
             </div>
           </div>
         </div>
@@ -66,7 +66,8 @@ export class RegisterComponent {
   constructor(
     private http: HttpClient,
     private router: Router
-  ) {}
+  ) {
+  }
 
   onSubmit(): void {
     if (!this.user.name || !this.user.surname) {
@@ -84,4 +85,4 @@ export class RegisterComponent {
       }
     });
   }
-} 
+}

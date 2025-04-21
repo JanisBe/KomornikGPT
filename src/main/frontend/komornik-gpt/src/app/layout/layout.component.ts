@@ -1,7 +1,8 @@
-import { Component } from '@angular/core';
-import { CommonModule } from '@angular/common';
-import { RouterModule } from '@angular/router';
-import { AuthService } from '../core/services/auth.service';
+import {Component, OnInit} from '@angular/core';
+import {CommonModule} from '@angular/common';
+import {RouterModule} from '@angular/router';
+import {AuthService} from '../core/services/auth.service';
+import {User} from '../core/models/user.model';
 
 @Component({
   selector: 'app-layout',
@@ -26,7 +27,7 @@ import { AuthService } from '../core/services/auth.service';
           <ul class="navbar-nav">
             <ng-container *ngIf="authService.isAuthenticated()">
               <li class="nav-item">
-                <a class="nav-link" routerLink="/profile" routerLinkActive="active">Profile</a>
+                <a class="nav-link" routerLink="/profile" routerLinkActive="active">Profile ({{userName}})</a>
               </li>
               <li class="nav-item">
                 <a class="nav-link" (click)="logout()" style="cursor: pointer">Logout</a>
@@ -54,10 +55,21 @@ import { AuthService } from '../core/services/auth.service';
     }
   `]
 })
-export class LayoutComponent {
-  constructor(public authService: AuthService) {}
+export class LayoutComponent implements OnInit {
+  userName = '';
+
+  constructor(public authService: AuthService) {
+  }
+
+  ngOnInit(): void {
+    this.authService.getCurrentUser().subscribe({
+      next: (user: User) => {
+        this.userName = user.name;
+      }
+    });
+  }
 
   logout(): void {
     this.authService.logout();
   }
-} 
+}

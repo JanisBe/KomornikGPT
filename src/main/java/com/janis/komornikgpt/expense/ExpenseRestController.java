@@ -8,6 +8,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @RestController
@@ -23,9 +24,9 @@ public class ExpenseRestController {
     }
 
     @PostMapping
-    public ResponseEntity<String> createExpense(@RequestBody CreateExpenseRequest request) {
+    public ResponseEntity<Map<String, String>> createExpense(@RequestBody CreateExpenseRequest request) {
         expenseSettlementService.createExpense(request);
-        return ResponseEntity.ok("Wydatek dodany – lecimy z hajsem!");
+        return ResponseEntity.ok(Map.of("message", "Expense added successfully"));
     }
 
     @GetMapping("/groups/{groupId}")

@@ -28,7 +28,7 @@ public class ExpenseSettlementService {
     @Transactional(readOnly = true)
     public List<Settlement> settleGroupOptimized(Long groupId) {
         Group group = groupRepository.findById(groupId)
-                .orElseThrow(() -> new RuntimeException("Grupa nie istnieje – ERROR 404 jak w pustce kosmosu."));
+                .orElseThrow(() -> new RuntimeException("Grupa nie istnieje."));
 
         List<User> users = group.getUsers();
         List<Expense> expenses = expenseRepository.findAllByGroupId(groupId);
@@ -110,21 +110,22 @@ public class ExpenseSettlementService {
     @Transactional
     public void createExpense(CreateExpenseRequest request) {
         User payer = userRepository.findById(request.payerId())
-                .orElseThrow(() -> new RuntimeException("Nie znaleziono płacącego – bida z nędzą."));
+                .orElseThrow(() -> new RuntimeException("Nie znaleziono płacącego."));
         Group group = groupRepository.findById(request.groupId())
-                .orElseThrow(() -> new RuntimeException("Nie znaleziono grupy – dzwonić do NASA."));
+                .orElseThrow(() -> new RuntimeException("Nie znaleziono grupy."));
 
         Expense expense = new Expense();
         expense.setPayer(payer);
         expense.setGroup(group);
         expense.setAmount(request.amount());
+        expense.setCurrency(request.currency());
         expense.setDescription(request.description());
         expense.setDate(LocalDateTime.now());
 
         List<ExpenseSplit> splits = new ArrayList<>();
         for (CreateExpenseRequest.SplitDto splitDto : request.splits()) {
             User user = userRepository.findById(splitDto.userId())
-                    .orElseThrow(() -> new RuntimeException("Nie znaleziono użytkownika do splitu – ucieka w hyperspace."));
+                    .orElseThrow(() -> new RuntimeException("Nie znaleziono użytkownika do splitu."));
 
             ExpenseSplit split = new ExpenseSplit();
             split.setExpense(expense);

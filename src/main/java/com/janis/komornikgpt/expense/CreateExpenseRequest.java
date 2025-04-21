@@ -7,6 +7,7 @@ public record CreateExpenseRequest(
         Long payerId,
         Long groupId,
         BigDecimal amount,
+        Currency currency,
         String description,
         List<SplitDto> splits
 ) {

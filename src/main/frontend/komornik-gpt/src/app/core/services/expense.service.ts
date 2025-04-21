@@ -3,6 +3,8 @@ import {HttpClient} from '@angular/common/http';
 import {Observable} from 'rxjs';
 import {environment} from '../../../environments/environment';
 import {Expense} from '../models/expense.model';
+import {tap} from 'rxjs/operators';
+import {MatSnackBar} from '@angular/material/snack-bar';
 
 export interface ExpenseSplitDto {
   userId: number;
@@ -24,7 +26,7 @@ export interface CreateExpenseDto {
 export class ExpenseService {
   private readonly apiUrl = `${environment.apiUrl}/expenses`;
 
-  constructor(private http: HttpClient) {
+  constructor(private http: HttpClient, private snackBar: MatSnackBar) {
   }
 
   getExpensesByGroup(groupId: number): Observable<Expense[]> {
@@ -32,7 +34,17 @@ export class ExpenseService {
   }
 
   createExpense(expense: CreateExpenseDto): Observable<Expense> {
-    return this.http.post<Expense>(this.apiUrl, expense);
+    return this.http.post<Expense & { message: string }>(`${this.apiUrl}`, expense).pipe(
+      tap((response) => {
+        if (response.message) {
+          this.snackBar.open(response.message, 'Close', {
+            duration: 3000,
+            horizontalPosition: 'center',
+            verticalPosition: 'bottom',
+          });
+        }
+      })
+    );
   }
 
   updateExpense(id: number, expense: CreateExpenseDto): Observable<Expense> {

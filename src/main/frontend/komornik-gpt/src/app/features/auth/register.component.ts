@@ -3,6 +3,7 @@ import {CommonModule} from '@angular/common';
 import {FormsModule} from '@angular/forms';
 import {Router, RouterModule} from '@angular/router';
 import {HttpClient} from '@angular/common/http';
+import {MatAnchor} from '@angular/material/button';
 
 interface RegisterRequest {
   username: string;
@@ -15,7 +16,7 @@ interface RegisterRequest {
 @Component({
   selector: 'app-register',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterModule],
+  imports: [CommonModule, FormsModule, RouterModule, MatAnchor],
   template: `
     <div class="row justify-content-center">
       <div class="col-md-6 col-lg-4">
@@ -46,7 +47,7 @@ interface RegisterRequest {
               <button type="submit" class="btn btn-primary w-100">Register</button>
             </form>
             <div class="text-center mt-3">
-              <p>Already have an account? <a [routerLink]="['/login']">Login</a></p>
+              <p>Already have an account? <a mat-button color="primary" routerLink="/login">Login</a></p>
             </div>
           </div>
         </div>

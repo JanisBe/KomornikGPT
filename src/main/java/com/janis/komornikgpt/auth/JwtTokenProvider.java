@@ -1,5 +1,6 @@
 package com.janis.komornikgpt.auth;
 
+import com.janis.komornikgpt.user.User;
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.security.Keys;
 import lombok.extern.slf4j.Slf4j;
@@ -37,6 +38,19 @@ public class JwtTokenProvider {
                 .compact();
     }
 
+    public String generateToken(User user) {
+        Date now = new Date();
+        Date expiryDate = new Date(now.getTime() + jwtExpirationInMs);
+
+        return Jwts.builder()
+                .setSubject(user.getUsername())
+                .setIssuedAt(now)
+                .setExpiration(expiryDate)
+                .claim("email", user.getEmail())
+                .claim("name", user.getName())
+                .signWith(key)
+                .compact();
+    }
     public String getUsernameFromToken(String token) {
         Claims claims = Jwts.parserBuilder()
                 .setSigningKey(key)

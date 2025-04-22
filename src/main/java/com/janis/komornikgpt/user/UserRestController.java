@@ -18,6 +18,9 @@ public class UserRestController {
 
     @GetMapping("/me")
     public UserDto getCurrentUser(Authentication authentication) {
+        if (authentication == null) {
+            return null;
+        }
         User user = userService.getUserByUsername(authentication.getName());
         return UserDto.fromUser(user);
     }

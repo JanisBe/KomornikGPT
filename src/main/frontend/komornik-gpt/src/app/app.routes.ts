@@ -19,12 +19,13 @@ export const routes: Routes = [
     children: [
       {
         path: '',
-        redirectTo: '/groups',
+        redirectTo: 'login',
         pathMatch: 'full'
       },
       {
         path: 'login',
-        loadComponent: () => import('./features/auth/login.component').then(m => m.LoginComponent)
+        loadComponent: () => import('./features/auth/login.component').then(m => m.LoginComponent),
+        canActivate: [redirectToGroupsIfAuthenticated]
       },
       {
         path: 'register',

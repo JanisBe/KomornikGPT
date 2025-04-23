@@ -76,6 +76,12 @@ public class UserService implements UserDetailsService {
                 .orElseThrow(() -> new UserNotFoundException("User not found with id: " + id));
 
         // Verify current password if trying to change password
+        updateUserDetails(request, user);
+
+        return userRepository.save(user);
+    }
+
+    private void updateUserDetails(UpdateUserRequest request, User user) {
         if (request.newPassword() != null && !request.newPassword().isEmpty()) {
             if (request.currentPassword() == null || !passwordEncoder.matches(request.currentPassword(), user.getPassword())) {
                 throw new RuntimeException("Current password is incorrect");
@@ -87,8 +93,6 @@ public class UserService implements UserDetailsService {
         user.setName(request.name());
         user.setSurname(request.surname());
         user.setEmail(request.email());
-
-        return userRepository.save(user);
     }
 
     @Transactional
@@ -97,17 +101,7 @@ public class UserService implements UserDetailsService {
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
         // Verify current password if trying to change password
-        if (request.newPassword() != null && !request.newPassword().isEmpty()) {
-            if (request.currentPassword() == null || !passwordEncoder.matches(request.currentPassword(), user.getPassword())) {
-                throw new RuntimeException("Current password is incorrect");
-            }
-            user.setPassword(passwordEncoder.encode(request.newPassword()));
-        }
-
-        // Update other fields
-        user.setName(request.name());
-        user.setSurname(request.surname());
-        user.setEmail(request.email());
+        updateUserDetails(request, user);
 
         return userRepository.save(user);
     }

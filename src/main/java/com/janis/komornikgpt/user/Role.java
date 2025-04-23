@@ -2,5 +2,6 @@ package com.janis.komornikgpt.user;
 
 public enum Role {
     USER,
-    ADMIN
+    ADMIN,
+    GROUP_ADMIN
 } 

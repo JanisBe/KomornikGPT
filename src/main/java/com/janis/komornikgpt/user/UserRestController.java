@@ -5,6 +5,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken;
+import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -20,6 +22,20 @@ public class UserRestController {
     public UserDto getCurrentUser(Authentication authentication) {
         if (authentication == null) {
             return null;
+        }
+        if (authentication instanceof OAuth2AuthenticationToken) {
+            OAuth2User oauth2User = ((OAuth2AuthenticationToken) authentication).getPrincipal();
+            User user = new User();
+            String email;
+            if (oauth2User.getAttribute("email") != null) {
+                email = oauth2User.getAttribute("email");
+            } else {
+                email = oauth2User.getAttribute("sub");
+            }
+
+            user.setEmail(email);
+            user.setUsername(oauth2User.getAttribute("name"));
+            return UserDto.fromUser(user);
         }
         User user = userService.getUserByUsername(authentication.getName());
         return UserDto.fromUser(user);

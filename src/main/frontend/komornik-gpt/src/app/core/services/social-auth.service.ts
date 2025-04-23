@@ -45,6 +45,7 @@ interface GoogleTokenResponse {
 })
 export class SocialAuthService {
   private readonly apiUrl = `${environment.apiUrl}/auth`;
+  private readonly oauth2ApiUrl = `${environment.oAuth}`;
 
   constructor(
     private http: HttpClient,
@@ -56,15 +57,15 @@ export class SocialAuthService {
   }
 
   loginWithGoogle(): void {
-    window.location.href = '/oauth2/authorization/google';
+    window.location.href = `${this.oauth2ApiUrl}/google`;
   }
 
   loginWithFacebook(): void {
-    window.location.href = '/oauth2/authorization/facebook';
+    window.location.href = `${this.oauth2ApiUrl}/facebook`;
   }
 
   loginWithGithub(): void {
-    window.location.href = '/oauth2/authorization/github';
+    window.location.href = `${this.oauth2ApiUrl}/github`;
   }
 
   private checkForTokenInUrl(): void {

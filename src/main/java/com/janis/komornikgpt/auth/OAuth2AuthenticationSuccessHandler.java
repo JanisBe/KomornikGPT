@@ -2,10 +2,10 @@ package com.janis.komornikgpt.auth;
 
 import com.janis.komornikgpt.user.User;
 import com.janis.komornikgpt.user.UserRepository;
-import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken;
 import org.springframework.security.oauth2.core.user.OAuth2User;
@@ -19,6 +19,7 @@ import java.util.UUID;
 
 @Component
 @RequiredArgsConstructor
+@Slf4j
 public class OAuth2AuthenticationSuccessHandler extends SimpleUrlAuthenticationSuccessHandler {
 
     private final UserRepository userRepository;
@@ -26,7 +27,8 @@ public class OAuth2AuthenticationSuccessHandler extends SimpleUrlAuthenticationS
 
     @Override
     public void onAuthenticationSuccess(HttpServletRequest request, HttpServletResponse response,
-                                        Authentication authentication) throws IOException, ServletException {
+                                        Authentication authentication) throws IOException {
+        logger.info("OAuth2 authentication success handler invoked");
         OAuth2AuthenticationToken oauthToken = (OAuth2AuthenticationToken) authentication;
         OAuth2User oAuth2User = oauthToken.getPrincipal();
         Map<String, Object> attributes = oAuth2User.getAttributes();
@@ -36,14 +38,15 @@ public class OAuth2AuthenticationSuccessHandler extends SimpleUrlAuthenticationS
         if (email == null) {
             throw new RuntimeException("Email not found from OAuth2 provider");
         }
-
+        logger.info("User authenticated: {}", oAuth2User.getAttribute("email"));
         User user = processOAuth2User(email, name, oauthToken.getAuthorizedClientRegistrationId());
         String token = jwtTokenProvider.generateToken(user);
-
+        logger.info("OAuth2 authentication success handler invoked before redirect");
         // Redirect to frontend with token
         String targetUrl = determineTargetUrl(request, response, authentication);
         targetUrl = appendToken(targetUrl, token);
         getRedirectStrategy().sendRedirect(request, response, targetUrl);
+        logger.info("OAuth2 authentication success handler completed redirect");
     }
 
     private User processOAuth2User(String email, String name, String provider) {

@@ -73,6 +73,7 @@ export class AuthService {
 
   logout(): void {
     this.tokenService.removeToken();
+    this.http.post(`${this.apiUrl}/auth/logout`, {}, {withCredentials: true}).pipe().subscribe();
     localStorage.removeItem('currentUser');
     this.currentUserSubject.next(null);
     this.router.navigate(['/login']);

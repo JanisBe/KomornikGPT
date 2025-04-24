@@ -260,7 +260,6 @@ export class LoginComponent {
       this.isLoading = true;
       this.errorMessage = '';
       this.socialAuthService.loginWithGoogle();
-      this.showSuccessAndRedirect();
     } catch (error) {
       this.handleError(error);
     }
@@ -271,7 +270,6 @@ export class LoginComponent {
       this.isLoading = true;
       this.errorMessage = '';
       this.socialAuthService.loginWithFacebook();
-      this.showSuccessAndRedirect();
     } catch (error) {
       this.handleError(error);
     }
@@ -282,7 +280,6 @@ export class LoginComponent {
       this.isLoading = true;
       this.errorMessage = '';
       this.socialAuthService.loginWithGithub();
-      this.showSuccessAndRedirect();
     } catch (error) {
       this.handleError(error);
     }

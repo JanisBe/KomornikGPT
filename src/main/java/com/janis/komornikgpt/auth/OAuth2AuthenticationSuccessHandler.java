@@ -1,5 +1,6 @@
 package com.janis.komornikgpt.auth;
 
+import com.janis.komornikgpt.auth.service.GitHubEmailFetcher;
 import com.janis.komornikgpt.user.User;
 import com.janis.komornikgpt.user.UserRepository;
 import jakarta.servlet.http.HttpServletRequest;
@@ -24,11 +25,11 @@ public class OAuth2AuthenticationSuccessHandler extends SimpleUrlAuthenticationS
 
     private final UserRepository userRepository;
     private final JwtTokenProvider jwtTokenProvider;
-
+    private final GitHubEmailFetcher emailFetcher;
     @Override
     public void onAuthenticationSuccess(HttpServletRequest request, HttpServletResponse response,
                                         Authentication authentication) throws IOException {
-        logger.info("OAuth2 authentication success handler invoked");
+        log.info("OAuth2 authentication success handler invoked");
         OAuth2AuthenticationToken oauthToken = (OAuth2AuthenticationToken) authentication;
         OAuth2User oAuth2User = oauthToken.getPrincipal();
         Map<String, Object> attributes = oAuth2User.getAttributes();
@@ -38,15 +39,14 @@ public class OAuth2AuthenticationSuccessHandler extends SimpleUrlAuthenticationS
         if (email == null) {
             throw new RuntimeException("Email not found from OAuth2 provider");
         }
-        logger.info("User authenticated: {}", oAuth2User.getAttribute("email"));
+        log.info("User authenticated: {}", (Object) oAuth2User.getAttribute("email"));
         User user = processOAuth2User(email, name, oauthToken.getAuthorizedClientRegistrationId());
         String token = jwtTokenProvider.generateToken(user);
-        logger.info("OAuth2 authentication success handler invoked before redirect");
+        log.info("OAuth2 authentication success handler invoked before redirect");
         // Redirect to frontend with token
-        String targetUrl = determineTargetUrl(request, response, authentication);
-        targetUrl = appendToken(targetUrl, token);
+        String targetUrl = "http://localhost:4200/auth/callback?token=" + token;
         getRedirectStrategy().sendRedirect(request, response, targetUrl);
-        logger.info("OAuth2 authentication success handler completed redirect");
+        log.info("OAuth2 authentication success handler completed redirect");
     }
 
     private User processOAuth2User(String email, String name, String provider) {
@@ -71,4 +71,5 @@ public class OAuth2AuthenticationSuccessHandler extends SimpleUrlAuthenticationS
     private String appendToken(String url, String token) {
         return url + (url.contains("?") ? "&" : "?") + "token=" + token;
     }
+
 }

@@ -1,5 +1,9 @@
 package com.janis.komornikgpt.auth.service;
 
+import com.janis.komornikgpt.auth.JwtTokenProvider;
+import com.janis.komornikgpt.user.User;
+import com.janis.komornikgpt.user.UserRepository;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.oauth2.client.userinfo.DefaultOAuth2UserService;
 import org.springframework.security.oauth2.client.userinfo.OAuth2UserRequest;
 import org.springframework.security.oauth2.client.userinfo.OAuth2UserService;
@@ -10,18 +14,24 @@ import org.springframework.stereotype.Component;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
+import java.util.UUID;
 
 @Component
+@Slf4j
 public class CustomOAuth2UserService implements OAuth2UserService<OAuth2UserRequest, OAuth2User> {
-
     // "login" is default for GitHub, change to "email" if that's what you want
-    private static final String NAME_ATTRIBUTE = "login";
+    private static final String NAME_ATTRIBUTE = "name";
+    private final UserRepository userRepository;
+    private final JwtTokenProvider jwtTokenProvider;
     private static final String EMAIL_KEY = "email";
 
     private final GitHubEmailFetcher emailFetcher;
     private final OAuth2UserService<OAuth2UserRequest, OAuth2User> delegate = new DefaultOAuth2UserService();
 
-    public CustomOAuth2UserService(GitHubEmailFetcher emailFetcher) {
+    public CustomOAuth2UserService(UserRepository userRepository, JwtTokenProvider jwtTokenProvider, GitHubEmailFetcher emailFetcher) {
+        this.userRepository = userRepository;
+        this.jwtTokenProvider = jwtTokenProvider;
         this.emailFetcher = emailFetcher;
     }
 
@@ -36,10 +46,9 @@ public class CustomOAuth2UserService implements OAuth2UserService<OAuth2UserRequ
         // return oauth2User if primaryEmailAddress is null
         // alternative: Throw exception
         if (primaryEmailAddress == null) {
-            return oauth2User;
+            log.error("Email not found from OAuth2 provider");
+            throw new RuntimeException("Email not found from OAuth2 provider");
         }
-
-        // insert your createUser code here
 
         // Clone the original attributes into a mutable map
         Map<String, Object> updatedAttributes = new HashMap<>(oauth2User.getAttributes());
@@ -48,10 +57,18 @@ public class CustomOAuth2UserService implements OAuth2UserService<OAuth2UserRequ
         updatedAttributes.put(EMAIL_KEY, primaryEmailAddress);
 
         // Return a new DefaultOAuth2User with the updated attributes
-        return new DefaultOAuth2User(
+        OAuth2User oAuth2User = new DefaultOAuth2User(
                 oauth2User.getAuthorities(), // or Collections.emptyList()
                 updatedAttributes,
                 NAME_ATTRIBUTE);
+        String name = (String) updatedAttributes.get("name");
+
+
+        log.info("Processing OAuth2 user with email: {}", primaryEmailAddress);
+        User user = processOAuth2User(primaryEmailAddress, name);
+        String token = jwtTokenProvider.generateToken(user);
+
+        return oAuth2User;
     }
 
     private String extractPrimaryEmailAddress(
@@ -64,5 +81,28 @@ public class CustomOAuth2UserService implements OAuth2UserService<OAuth2UserRequ
         }
 
         return emailFetcher.fetchPrimaryEmailAddress(token);
+    }
+
+    private User processOAuth2User(String email, String name) {
+        log.info("Processing OAuth2 user. Email: {}", email);
+
+        Optional<User> userOptional = userRepository.findByEmail(email);
+        if (userOptional.isPresent()) {
+            log.info("Existing user found with email: {}", email);
+            return userOptional.get();
+        }
+
+        // Create new user
+        log.info("Creating new user for email: {}", email);
+        User user = new User();
+        user.setEmail(email);
+        user.setName(name != null ? name : email.substring(0, email.indexOf('@')));
+        user.setUsername(generateUsername(email));
+        user.setPassword(UUID.randomUUID().toString()); // Random password for OAuth2 users
+        return userRepository.save(user);
+    }
+
+    private String generateUsername(String email) {
+        return email.substring(0, email.indexOf('@')) + UUID.randomUUID().toString().substring(0, 8);
     }
 }

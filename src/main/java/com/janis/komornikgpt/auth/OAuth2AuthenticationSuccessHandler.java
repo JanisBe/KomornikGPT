@@ -1,7 +1,5 @@
 package com.janis.komornikgpt.auth;
 
-import com.janis.komornikgpt.auth.service.GitHubEmailFetcher;
-import com.janis.komornikgpt.user.Role;
 import com.janis.komornikgpt.user.User;
 import com.janis.komornikgpt.user.UserRepository;
 import jakarta.servlet.http.Cookie;
@@ -18,8 +16,6 @@ import org.springframework.stereotype.Component;
 
 import java.io.IOException;
 import java.util.Map;
-import java.util.Optional;
-import java.util.UUID;
 
 @Component
 @RequiredArgsConstructor
@@ -28,7 +24,6 @@ public class OAuth2AuthenticationSuccessHandler extends SimpleUrlAuthenticationS
 
     private final UserRepository userRepository;
     private final JwtTokenProvider jwtTokenProvider;
-    private final GitHubEmailFetcher emailFetcher;
 
     @Value("${jwt.cookie.name:JWT_TOKEN}")
     private String cookieName;
@@ -45,12 +40,14 @@ public class OAuth2AuthenticationSuccessHandler extends SimpleUrlAuthenticationS
         Map<String, Object> attributes = oAuth2User.getAttributes();
 
         String email = (String) attributes.get("email");
-        String name = (String) attributes.get("name");
         if (email == null) {
             throw new RuntimeException("Email not found from OAuth2 provider");
         }
-        log.info("User authenticated: {}", (Object) oAuth2User.getAttribute("email"));
-        User user = processOAuth2User(email, name);
+
+        log.info("User authenticated: {}", email);
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("User not found after OAuth2 authentication"));
+
         String token = jwtTokenProvider.generateToken(user);
 
         // Create secure cookie
@@ -66,25 +63,5 @@ public class OAuth2AuthenticationSuccessHandler extends SimpleUrlAuthenticationS
         String targetUrl = "http://localhost:4200/auth/callback";
         getRedirectStrategy().sendRedirect(request, response, targetUrl);
         log.info("OAuth2 authentication success handler completed redirect");
-    }
-
-    private User processOAuth2User(String email, String name) {
-        Optional<User> userOptional = userRepository.findByEmail(email);
-        if (userOptional.isPresent()) {
-            return userOptional.get();
-        }
-
-        // Create new user
-        User user = new User();
-        user.setEmail(email);
-        user.setName(name);
-        user.setUsername(generateUsername(email));
-        user.setPassword(UUID.randomUUID().toString()); // Random password for OAuth2 users
-        user.setRole(Role.USER); // Set default role
-        return userRepository.save(user);
-    }
-
-    private String generateUsername(String email) {
-        return email.substring(0, email.indexOf('@')) + UUID.randomUUID().toString().substring(0, 8);
     }
 }

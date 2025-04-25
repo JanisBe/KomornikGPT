@@ -63,7 +63,6 @@ public class CustomOAuth2UserService implements OAuth2UserService<OAuth2UserRequ
 
         log.info("Processing OAuth2 user with email: {}", primaryEmailAddress);
         processOAuth2User(primaryEmailAddress, name);
-//        String token = jwtTokenProvider.generateToken(user);
 
         return oAuth2User;
     }
@@ -86,7 +85,6 @@ public class CustomOAuth2UserService implements OAuth2UserService<OAuth2UserRequ
         Optional<User> userOptional = userRepository.findByEmail(email);
         if (userOptional.isPresent()) {
             log.info("Existing user found with email: {}", email);
-            userOptional.get();
             return;
         }
 

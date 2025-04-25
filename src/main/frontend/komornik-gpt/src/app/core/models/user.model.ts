@@ -7,6 +7,7 @@ export interface User {
   name: string;
   surname: string;
   role: string;
+  authenticated?: boolean;
   expensesPaid?: number[];
   splits?: number[];
   groups?: Group[];

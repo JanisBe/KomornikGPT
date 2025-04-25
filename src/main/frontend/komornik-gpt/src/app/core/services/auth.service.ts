@@ -1,8 +1,7 @@
 import {Injectable} from '@angular/core';
 import {HttpClient} from '@angular/common/http';
-import {BehaviorSubject, Observable, tap} from 'rxjs';
+import {BehaviorSubject, Observable, shareReplay, tap} from 'rxjs';
 import {Router} from '@angular/router';
-import {TokenService} from './token.service';
 import {User} from '../models/user.model';
 import {environment} from '../../../environments/environment';
 
@@ -12,7 +11,6 @@ export interface LoginRequest {
 }
 
 export interface LoginResponse {
-  token: string;
   user: User;
 }
 
@@ -31,63 +29,76 @@ export class AuthService {
   private readonly apiUrl = environment.apiUrl;
   private currentUserSubject = new BehaviorSubject<User | null>(null);
   public currentUser$ = this.currentUserSubject.asObservable();
+  private authCheckInProgress: Observable<User> | null = null;
 
   constructor(
     private http: HttpClient,
-    private router: Router,
-    private tokenService: TokenService
+    private router: Router
   ) {
-    // Check if user is already logged in
-    const token = this.tokenService.getToken();
-
-    if (token) {
-      this.getCurrentUser().subscribe({
-        next: (user) => {
-          this.currentUserSubject.next(user);
-          this.router.navigate(['/groups']);
-        },
-        error: (error) => {
-          console.error('Error loading user:', error);
-          this.logout();
-        }
-      });
-    }
-
-    // Try to load user from localStorage on service initialization
-    const storedUser = localStorage.getItem('currentUser');
-    if (storedUser) {
-      this.currentUserSubject.next(JSON.parse(storedUser));
-    }
+    this.checkAuthStatus();
   }
 
   login(request: LoginRequest): Observable<LoginResponse> {
-    return this.http.post<LoginResponse>(`${this.apiUrl}/auth/login`, request)
+    return this.http.post<LoginResponse>(`${this.apiUrl}/auth/login`, request, {withCredentials: true})
       .pipe(
         tap(response => {
-          this.tokenService.setToken(response.token);
-          localStorage.setItem('currentUser', JSON.stringify(response.user));
           this.currentUserSubject.next(response.user);
         })
       );
   }
 
   logout(): void {
-    this.tokenService.removeToken();
-    this.http.post(`${this.apiUrl}/auth/logout`, {}, {withCredentials: true}).pipe().subscribe();
-    localStorage.removeItem('currentUser');
-    this.currentUserSubject.next(null);
-    this.router.navigate(['/login']);
+    this.http.post(`${this.apiUrl}/auth/logout`, {}, {
+      withCredentials: true,
+      responseType: 'text'  // Expect text response instead of JSON
+    })
+      .subscribe({
+        next: () => {
+          this.clearAuthState();
+          this.router.navigate(['/login']);
+        },
+        error: () => {
+          // Even if there's an error, clear the auth state and redirect
+          this.clearAuthState();
+          this.router.navigate(['/login']);
+        }
+      });
   }
 
   getCurrentUser(): Observable<User> {
-    return this.http.get<User>(`${this.apiUrl}/users/me`);
+    // If there's already a check in progress, return that
+    if (this.authCheckInProgress) {
+      return this.authCheckInProgress;
+    }
+
+    // Start a new check
+    this.authCheckInProgress = this.http.get<User>(`${this.apiUrl}/auth/user`, {withCredentials: true})
+      .pipe(
+        tap({
+          next: (user: any) => {
+            if (user && user.authenticated) {
+              this.currentUserSubject.next(user);
+            } else {
+              this.currentUserSubject.next(null);
+            }
+          },
+          error: () => {
+            this.currentUserSubject.next(null);
+          },
+          complete: () => {
+            this.authCheckInProgress = null;
+          }
+        }),
+        shareReplay(1)
+      );
+
+    return this.authCheckInProgress;
   }
 
   updateProfile(request: UpdateUserRequest): Observable<User> {
-    return this.http.put<User>(`${this.apiUrl}/users/me`, request)
+    return this.http.put<User>(`${this.apiUrl}/users/me`, request, {withCredentials: true})
       .pipe(
         tap(user => {
-          // Update stored user data
           const currentUser = this.currentUserSubject.value;
           if (currentUser) {
             const updatedUser = {
@@ -97,7 +108,6 @@ export class AuthService {
               splits: user.splits || [],
               groups: user.groups || []
             };
-            localStorage.setItem('currentUser', JSON.stringify(updatedUser));
             this.currentUserSubject.next(updatedUser);
           }
         })
@@ -105,6 +115,29 @@ export class AuthService {
   }
 
   isAuthenticated(): boolean {
-    return this.tokenService.hasToken();
+    return this.currentUserSubject.value !== null;
+  }
+
+  clearAuthState(): void {
+    this.currentUserSubject.next(null);
+  }
+
+  private checkAuthStatus(): void {
+    this.getCurrentUser().subscribe({
+      next: (response: any) => {
+        if (response.authenticated) {
+          this.currentUserSubject.next(response);
+          // Only navigate if we're on the login page
+          if (this.router.url === '/login') {
+            this.router.navigate(['/groups']);
+          }
+        } else {
+          this.currentUserSubject.next(null);
+        }
+      },
+      error: () => {
+        this.currentUserSubject.next(null);
+      }
+    });
   }
 }

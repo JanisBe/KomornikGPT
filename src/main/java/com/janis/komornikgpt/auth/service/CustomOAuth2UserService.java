@@ -1,6 +1,5 @@
 package com.janis.komornikgpt.auth.service;
 
-import com.janis.komornikgpt.auth.JwtTokenProvider;
 import com.janis.komornikgpt.user.User;
 import com.janis.komornikgpt.user.UserRepository;
 import lombok.extern.slf4j.Slf4j;
@@ -23,15 +22,13 @@ public class CustomOAuth2UserService implements OAuth2UserService<OAuth2UserRequ
     // "login" is default for GitHub, change to "email" if that's what you want
     private static final String NAME_ATTRIBUTE = "name";
     private final UserRepository userRepository;
-    private final JwtTokenProvider jwtTokenProvider;
     private static final String EMAIL_KEY = "email";
 
     private final GitHubEmailFetcher emailFetcher;
     private final OAuth2UserService<OAuth2UserRequest, OAuth2User> delegate = new DefaultOAuth2UserService();
 
-    public CustomOAuth2UserService(UserRepository userRepository, JwtTokenProvider jwtTokenProvider, GitHubEmailFetcher emailFetcher) {
+    public CustomOAuth2UserService(UserRepository userRepository, GitHubEmailFetcher emailFetcher) {
         this.userRepository = userRepository;
-        this.jwtTokenProvider = jwtTokenProvider;
         this.emailFetcher = emailFetcher;
     }
 
@@ -65,8 +62,8 @@ public class CustomOAuth2UserService implements OAuth2UserService<OAuth2UserRequ
 
 
         log.info("Processing OAuth2 user with email: {}", primaryEmailAddress);
-        User user = processOAuth2User(primaryEmailAddress, name);
-        String token = jwtTokenProvider.generateToken(user);
+        processOAuth2User(primaryEmailAddress, name);
+//        String token = jwtTokenProvider.generateToken(user);
 
         return oAuth2User;
     }
@@ -83,13 +80,14 @@ public class CustomOAuth2UserService implements OAuth2UserService<OAuth2UserRequ
         return emailFetcher.fetchPrimaryEmailAddress(token);
     }
 
-    private User processOAuth2User(String email, String name) {
+    private void processOAuth2User(String email, String name) {
         log.info("Processing OAuth2 user. Email: {}", email);
 
         Optional<User> userOptional = userRepository.findByEmail(email);
         if (userOptional.isPresent()) {
             log.info("Existing user found with email: {}", email);
-            return userOptional.get();
+            userOptional.get();
+            return;
         }
 
         // Create new user
@@ -99,7 +97,7 @@ public class CustomOAuth2UserService implements OAuth2UserService<OAuth2UserRequ
         user.setName(name != null ? name : email.substring(0, email.indexOf('@')));
         user.setUsername(generateUsername(email));
         user.setPassword(UUID.randomUUID().toString()); // Random password for OAuth2 users
-        return userRepository.save(user);
+        userRepository.save(user);
     }
 
     private String generateUsername(String email) {

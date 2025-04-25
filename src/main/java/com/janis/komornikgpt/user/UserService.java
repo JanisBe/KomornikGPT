@@ -22,17 +22,18 @@ public class UserService implements UserDetailsService {
     private final PasswordEncoder passwordEncoder;
 
     @Override
-    public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-        return userRepository.findByUsername(username)
+    public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
+        return userRepository.findByEmail(email)
                 .map(this::mapToUserDetails)
                 .orElseThrow(() -> new UsernameNotFoundException("User not found"));
     }
 
     private UserDetails mapToUserDetails(User user) {
+        String role = user.getRole() != null ? user.getRole().name() : "USER";
         return org.springframework.security.core.userdetails.User.builder()
                 .username(user.getUsername())
                 .password(user.getPassword())
-                .authorities("ROLE_" + user.getRole().name())
+                .authorities("ROLE_" + role)
                 .build();
     }
 
@@ -70,6 +71,11 @@ public class UserService implements UserDetailsService {
                 .orElseThrow(() -> new UserNotFoundException("User not found with username: " + username));
     }
 
+    public User getUserByEmail(String email) {
+        return userRepository.findByEmail(email)
+                .orElseThrow(() -> new UserNotFoundException("User not found with email: " + email));
+    }
+
     @Transactional
     public User updateUser(Long id, UpdateUserRequest request) {
         User user = userRepository.findById(id)
@@ -83,7 +89,8 @@ public class UserService implements UserDetailsService {
 
     private void updateUserDetails(UpdateUserRequest request, User user) {
         if (request.newPassword() != null && !request.newPassword().isEmpty()) {
-            if (request.currentPassword() == null || !passwordEncoder.matches(request.currentPassword(), user.getPassword())) {
+            if (request.currentPassword() == null
+                    || !passwordEncoder.matches(request.currentPassword(), user.getPassword())) {
                 throw new RuntimeException("Current password is incorrect");
             }
             user.setPassword(passwordEncoder.encode(request.newPassword()));

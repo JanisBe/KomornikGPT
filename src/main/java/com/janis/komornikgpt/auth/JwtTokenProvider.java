@@ -26,11 +26,12 @@ public class JwtTokenProvider {
         Date expiryDate = new Date(now.getTime() + jwtExpirationMs);
 
         Key key = Keys.hmacShaKeyFor(jwtSecret.getBytes(StandardCharsets.UTF_8));
-
+        String role = user.getRole() != null ? user.getRole().name() : "USER";
         return Jwts.builder()
                 .setSubject(user.getEmail())
                 .claim("name", user.getName())
                 .claim("username", user.getUsername())
+                .claim("role", role)
                 .setIssuedAt(now)
                 .setExpiration(expiryDate)
                 .signWith(key)

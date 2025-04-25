@@ -51,13 +51,14 @@ public class SecurityConfig {
                                 "/*/*.html",
                                 "/*/*.css",
                                 "/*/*.js",
-                                "/api/auth/*",
+                                "/api/auth/login",
+                                "/api/auth/user",
+                                "/api/auth/register",
                                 "/oauth2/*",
                                 "/login/*")
                         .permitAll()
-                        .anyRequest().permitAll())
+                        .anyRequest().authenticated())
                 .oauth2Login(oauth2 -> oauth2
-                        .defaultSuccessUrl("http://localhost:4200/groups")
                         .successHandler(authenticationSuccessHandler())
                         .failureHandler((request, response, exception) -> {
                             exception.printStackTrace();
@@ -69,8 +70,8 @@ public class SecurityConfig {
                 .headers(headers ->
                         headers
                                 .xssProtection(xss -> xss.headerValue(XXssProtectionHeaderWriter.HeaderValue.ENABLED_MODE_BLOCK))
-                                .contentSecurityPolicy(cps -> cps.policyDirectives("default-src 'none'; img-src * 'self' data: https:; font-src 'self' https:; connect-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline' http: https:; object-src 'none';  manifest-src 'self'"))
-                )
+                                .contentSecurityPolicy(cps -> cps.policyDirectives(
+                                        "default-src 'none'; img-src * 'self' data: https:; font-src 'self' https:; connect-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline' http: https:; object-src 'none';  manifest-src 'self'")))
                 .logout(logout -> logout
                         .logoutSuccessUrl("http://localhost:4200/login")
                         .invalidateHttpSession(true))

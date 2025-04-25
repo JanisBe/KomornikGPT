@@ -1,12 +1,15 @@
 package com.janis.komornikgpt.auth;
 
 import com.janis.komornikgpt.auth.service.GitHubEmailFetcher;
+import com.janis.komornikgpt.user.Role;
 import com.janis.komornikgpt.user.User;
 import com.janis.komornikgpt.user.UserRepository;
+import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken;
 import org.springframework.security.oauth2.core.user.OAuth2User;
@@ -26,6 +29,13 @@ public class OAuth2AuthenticationSuccessHandler extends SimpleUrlAuthenticationS
     private final UserRepository userRepository;
     private final JwtTokenProvider jwtTokenProvider;
     private final GitHubEmailFetcher emailFetcher;
+
+    @Value("${jwt.cookie.name:JWT_TOKEN}")
+    private String cookieName;
+
+    @Value("${jwt.cookie.expiration:86400}")
+    private int cookieExpiration;
+
     @Override
     public void onAuthenticationSuccess(HttpServletRequest request, HttpServletResponse response,
                                         Authentication authentication) throws IOException {
@@ -40,16 +50,25 @@ public class OAuth2AuthenticationSuccessHandler extends SimpleUrlAuthenticationS
             throw new RuntimeException("Email not found from OAuth2 provider");
         }
         log.info("User authenticated: {}", (Object) oAuth2User.getAttribute("email"));
-        User user = processOAuth2User(email, name, oauthToken.getAuthorizedClientRegistrationId());
+        User user = processOAuth2User(email, name);
         String token = jwtTokenProvider.generateToken(user);
+
+        // Create secure cookie
+        Cookie cookie = new Cookie(cookieName, token);
+        cookie.setHttpOnly(true);
+        cookie.setSecure(true); // Enable in production
+        cookie.setPath("/");
+        cookie.setMaxAge(cookieExpiration);
+        response.addCookie(cookie);
+
         log.info("OAuth2 authentication success handler invoked before redirect");
-        // Redirect to frontend with token
-        String targetUrl = "http://localhost:4200/auth/callback?token=" + token;
+        // Redirect to frontend without token in URL
+        String targetUrl = "http://localhost:4200/auth/callback";
         getRedirectStrategy().sendRedirect(request, response, targetUrl);
         log.info("OAuth2 authentication success handler completed redirect");
     }
 
-    private User processOAuth2User(String email, String name, String provider) {
+    private User processOAuth2User(String email, String name) {
         Optional<User> userOptional = userRepository.findByEmail(email);
         if (userOptional.isPresent()) {
             return userOptional.get();
@@ -61,15 +80,11 @@ public class OAuth2AuthenticationSuccessHandler extends SimpleUrlAuthenticationS
         user.setName(name);
         user.setUsername(generateUsername(email));
         user.setPassword(UUID.randomUUID().toString()); // Random password for OAuth2 users
+        user.setRole(Role.USER); // Set default role
         return userRepository.save(user);
     }
 
     private String generateUsername(String email) {
         return email.substring(0, email.indexOf('@')) + UUID.randomUUID().toString().substring(0, 8);
     }
-
-    private String appendToken(String url, String token) {
-        return url + (url.contains("?") ? "&" : "?") + "token=" + token;
-    }
-
 }

@@ -3,6 +3,7 @@ import {HttpClient} from '@angular/common/http';
 import {environment} from '../../../environments/environment';
 import {AuthService} from './auth.service';
 import {Router} from '@angular/router';
+import {map} from 'rxjs/operators';
 
 // Add type declarations for external SDKs
 declare global {
@@ -11,35 +12,6 @@ declare global {
     FB: any;
   }
 }
-
-export interface SocialAuthResponse {
-  token: string;
-  user: {
-    id: number;
-    name: string;
-    email: string;
-  };
-}
-
-interface FacebookAuthResponse {
-  authResponse: {
-    accessToken: string;
-    userID: string;
-    expiresIn: string;
-    signedRequest: string;
-    graphDomain: string;
-    data_access_expiration_time: number;
-  };
-  status: string;
-}
-
-interface GoogleTokenResponse {
-  access_token: string;
-  token_type: string;
-  expires_in: number;
-  scope: string;
-}
-
 @Injectable({
   providedIn: 'root'
 })
@@ -52,8 +24,10 @@ export class SocialAuthService {
     private authService: AuthService,
     private router: Router
   ) {
-    // Check for token in URL parameters after OAuth2 redirect
-    this.checkForTokenInUrl();
+    // Check if we're on the callback route
+    if (window.location.pathname === '/auth/callback') {
+      this.handleAuthCallback();
+    }
   }
 
   loginWithGoogle(): void {
@@ -68,20 +42,21 @@ export class SocialAuthService {
     window.location.href = `${this.oauth2ApiUrl}/github`;
   }
 
-  private checkForTokenInUrl(): void {
-    const urlParams = new URLSearchParams(window.location.search);
-    const token = urlParams.get('token');
-
-    if (token) {
-      // Store the token
-      localStorage.setItem('token', token);
-
-      // Remove token from URL
-      const newUrl = window.location.pathname;
-      window.history.replaceState({}, document.title, newUrl);
-
-      // Navigate to the groups page
-      this.router.navigate(['/groups']);
-    }
+  private handleAuthCallback(): void {
+    // Get user info from backend which will use the HTTP-only cookie
+    this.http.get<any>(`${this.apiUrl}/user`, {withCredentials: true}).pipe(
+      map(response => {
+        if (response.authenticated) {
+          // Update current user in the auth service
+          this.authService.getCurrentUser().subscribe(() => {
+            // Navigate to groups page on success
+            this.router.navigate(['/groups']);
+          });
+        } else {
+          // Handle authentication failure
+          this.router.navigate(['/login']);
+        }
+      })
+    ).subscribe();
   }
 }

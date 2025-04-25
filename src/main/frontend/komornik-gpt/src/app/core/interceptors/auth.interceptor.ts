@@ -1,28 +1,33 @@
 import {HttpErrorResponse, HttpInterceptorFn} from '@angular/common/http';
 import {inject} from '@angular/core';
-import {TokenService} from '../services/token.service';
 import {catchError} from 'rxjs/operators';
 import {Router} from '@angular/router';
 import {throwError} from 'rxjs';
+import {AuthService} from '../services/auth.service';
+
+const PUBLIC_PATHS = ['/api/auth/login', '/api/users/register'];
 
 export const authInterceptor: HttpInterceptorFn = (req, next) => {
-  const tokenService = inject(TokenService);
   const router = inject(Router);
-  const token = tokenService.getToken();
+  const authService = inject(AuthService);
 
-  if (token) {
-    req = req.clone({
-      setHeaders: {
-        Authorization: `Bearer ${token}`
-      }
-    });
+  // Always include credentials for cookie-based auth
+  req = req.clone({
+    withCredentials: true
+  });
+
+  // Skip auth check for public paths
+  if (PUBLIC_PATHS.some(path => req.url.includes(path))) {
+    return next(req);
   }
 
   return next(req).pipe(
     catchError((error: HttpErrorResponse) => {
-      if (error.status === 403) {
-        tokenService.removeToken();
-        router.navigate(['/login']);
+      if ([401, 403].includes(error.status)) {
+        authService.clearAuthState();
+        if (!req.url.includes('/api/auth/user')) {
+          router.navigate(['/login']);
+        }
       }
       return throwError(() => error);
     })

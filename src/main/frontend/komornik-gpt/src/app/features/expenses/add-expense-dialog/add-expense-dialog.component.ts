@@ -40,7 +40,11 @@ import {AuthService} from '../../../core/services/auth.service';
   template: `
     <div class="dialog-container">
       <div class="dialog-header">
-        <h2 mat-dialog-title>Add Expense</h2>
+        @if (this.isEditMode) {
+          <h2 mat-dialog-title>Edit expense for "{{ data.expense?.description }}"</h2>
+        } @else {
+          <h2 mat-dialog-title>Add Expense</h2>
+        }
         <button mat-icon-button mat-dialog-close class="close-button">
           <mat-icon>close</mat-icon>
         </button>
@@ -79,7 +83,7 @@ import {AuthService} from '../../../core/services/auth.service';
                 <mat-label>Currency</mat-label>
                 <mat-select formControlName="currency" required>
                   <mat-option *ngFor="let currency of currencies" [value]="currency">
-                    {{currency}}
+                    {{ currency }}
                   </mat-option>
                 </mat-select>
                 <mat-icon matSuffix>currency_exchange</mat-icon>
@@ -136,10 +140,10 @@ import {AuthService} from '../../../core/services/auth.service';
 
             <div class="total-info" *ngIf="totalSplitAmount > 0">
               <span [class.error]="!isSplitValid">
-                Total split: {{totalSplitAmount | number:'1.2-2'}}
+                Total split: {{ totalSplitAmount | number:'1.2-2' }}
                 <span *ngIf="expenseForm.get('amount')?.value">
-                  of {{expenseForm.get('amount')?.value | number:'1.2-2'}}
-                  ({{getSplitPercentage() | number:'1.0-0'}}%)
+                  of {{ expenseForm.get('amount')?.value | number:'1.2-2' }}
+                  ({{ getSplitPercentage() | number:'1.0-0' }}%)
                 </span>
               </span>
             </div>
@@ -187,10 +191,6 @@ import {AuthService} from '../../../core/services/auth.service';
   styles: [`
     :host {
       display: block;
-    }
-
-    :host ::ng-deep .mat-mdc-dialog-container {
-      max-height: 90vh;
     }
 
     .dialog-container {
@@ -368,28 +368,6 @@ import {AuthService} from '../../../core/services/auth.service';
       }
     }
 
-    /* Material field customizations */
-    ::ng-deep {
-      .mat-mdc-form-field-subscript-wrapper {
-        height: 16px !important;
-      }
-
-      .mat-mdc-form-field {
-        width: 100%;
-      }
-
-      .mat-mdc-dialog-content {
-        overflow: hidden !important;
-      }
-
-      .mat-mdc-dialog-container {
-        overflow: hidden;
-      }
-
-      .mat-mdc-dialog-surface {
-        overflow: hidden;
-      }
-    }
   `]
 })
 export class AddExpenseDialogComponent {

@@ -45,29 +45,32 @@ interface GroupedExpenses {
             <div class="table-wrapper">
               <table>
                 <thead>
-                  <tr>
-                    <th>Description</th>
-                    <th>Amount</th>
-                    <th>Paid By</th>
-                    <th>Splits</th>
-                    <th>Actions</th>
-                  </tr>
+                <tr>
+                  <th>Description</th>
+                  <th>Amount</th>
+                  <th>Paid By</th>
+                  <th>Splits</th>
+                  <th>Actions</th>
+                </tr>
                 </thead>
                 <tbody>
                   @for (expense of group.expenses; track expense.id) {
                     <tr>
                       <td [matTooltip]="expense.date | date:'medium':'':'pl'"
                           matTooltipPosition="above">
-                        {{expense.description}}
+                        {{ expense.description }}
                       </td>
-                      <td>{{expense.amount | number:'1.2-2'}} {{expense.currency}}</td>
-                      <td>{{expense.payer.name}}</td>
+                      <td>{{ expense.amount | number:'1.2-2' }} {{ expense.currency }}</td>
+                      <td>{{ expense.payer.name }}</td>
                       <td>
                         <div class="splits-container">
-                          @for (split of expense.splits; track split) {
+                          @for (split of expense.splits; track split.id) {
                             <div class="split-item" [class.paid]="split.isPaid">
-                              {{split.user.name}}: {{split.amountOwed | number:'1.2-2'}}
-                              <mat-icon *ngIf="split.isPaid" class="paid-icon">check_circle</mat-icon>
+                              <span
+                                matTooltip="{{split.user.email}}">{{ split.user.name }}</span>: {{ split.amountOwed | number:'1.2-2' }}
+                              @if (split.isPaid) {
+                                <mat-icon class="paid-icon">check_circle</mat-icon>
+                              }
                             </div>
                           }
                         </div>

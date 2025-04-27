@@ -9,7 +9,7 @@ public record GroupDto(
     Long id,
     String name,
     String description,
-    List<UserDto> users,
+    List<UserDto> members,
     UserDto createdBy,
     LocalDateTime createdAt
 ) {

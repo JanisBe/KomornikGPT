@@ -48,73 +48,73 @@ import {DATE_PROVIDERS} from '../../../core/config/date.config';
       <form [formGroup]="expenseForm" (ngSubmit)="onSubmit()">
         <mat-dialog-content>
           <div class="form-field">
-            <mat-form-field appearance="outline">
+            <mat-form-field appearance="outline" class="full-width">
               <mat-label>Description</mat-label>
-              <input matInput formControlName="description" required>
-              @if (expenseForm.get('description')?.hasError('required')) {
-                <mat-error>Description is required</mat-error>
-              }
+              <input matInput formControlName="description" required placeholder="What is this expense for?">
+              <mat-icon matSuffix>description</mat-icon>
+              <mat-error *ngIf="expenseForm.get('description')?.hasError('required')">
+                Description is required
+              </mat-error>
             </mat-form-field>
           </div>
 
           <div class="form-row">
             <div class="form-field amount-field">
-              <mat-form-field appearance="outline">
+              <mat-form-field appearance="outline" class="full-width">
                 <mat-label>Amount</mat-label>
-                <input matInput type="number" formControlName="amount" required min="0">
-                @if (expenseForm.get('amount')?.hasError('required')) {
-                  <mat-error>Amount is required</mat-error>
-                }
-                @if (expenseForm.get('amount')?.hasError('min')) {
-                  <mat-error>Amount must be greater than 0</mat-error>
-                }
+                <input matInput type="number" formControlName="amount" required placeholder="0.00" step="0.01" min="0">
+                <mat-icon matSuffix>payments</mat-icon>
+                <mat-error *ngIf="expenseForm.get('amount')?.hasError('required')">
+                  Amount is required
+                </mat-error>
+                <mat-error *ngIf="expenseForm.get('amount')?.hasError('min')">
+                  Amount must be greater than 0
+                </mat-error>
               </mat-form-field>
             </div>
 
             <div class="form-field currency-field">
-              <mat-form-field appearance="outline">
+              <mat-form-field appearance="outline" class="full-width">
                 <mat-label>Currency</mat-label>
                 <mat-select formControlName="currency" required>
-                  @for (currency of currencies; track currency) {
-                    <mat-option [value]="currency">
-                      {{ currency }}
-                    </mat-option>
-                  }
+                  <mat-option *ngFor="let currency of currencies" [value]="currency">
+                    {{currency}}
+                  </mat-option>
                 </mat-select>
-                @if (expenseForm.get('currency')?.hasError('required')) {
-                  <mat-error>Currency is required</mat-error>
-                }
+                <mat-icon matSuffix>currency_exchange</mat-icon>
+                <mat-error *ngIf="expenseForm.get('currency')?.hasError('required')">
+                  Currency is required
+                </mat-error>
               </mat-form-field>
             </div>
           </div>
 
           <div class="form-row">
             <div class="form-field flex-1">
-              <mat-form-field appearance="outline">
+              <mat-form-field appearance="outline" class="full-width">
                 <mat-label>Date</mat-label>
                 <input matInput [matDatepicker]="picker" formControlName="date" required>
                 <mat-hint>DD/MM/YYYY</mat-hint>
                 <mat-datepicker-toggle matSuffix [for]="picker"></mat-datepicker-toggle>
                 <mat-datepicker #picker></mat-datepicker>
-                @if (expenseForm.get('date')?.hasError('required')) {
-                  <mat-error>Date is required</mat-error>
-                }
+                <mat-error *ngIf="expenseForm.get('date')?.hasError('required')">
+                  Date is required
+                </mat-error>
               </mat-form-field>
             </div>
 
             <div class="form-field flex-1">
-              <mat-form-field appearance="outline">
-                <mat-label>Paid By</mat-label>
+              <mat-form-field appearance="outline" class="full-width">
+                <mat-label>Paid by</mat-label>
                 <mat-select formControlName="payerId" required>
-                  @for (member of data.group.members; track member.id) {
-                    <mat-option [value]="member.id">
-                      {{ member.name }}
-                    </mat-option>
-                  }
+                  <mat-option *ngFor="let member of data.group.members" [value]="member.id">
+                    {{ member.name }}
+                  </mat-option>
                 </mat-select>
-                @if (expenseForm.get('payerId')?.hasError('required')) {
-                  <mat-error>Payer is required</mat-error>
-                }
+                <mat-icon matSuffix>person</mat-icon>
+                <mat-error *ngIf="expenseForm.get('payerId')?.hasError('required')">
+                  Payer is required
+                </mat-error>
               </mat-form-field>
             </div>
           </div>
@@ -132,20 +132,18 @@ import {DATE_PROVIDERS} from '../../../core/config/date.config';
               </button>
             </div>
 
-            @if (totalSplitAmount > 0) {
-              <div class="total-info">
-                <span [class.error]="!isSplitValid">
-                  Total split: {{totalSplitAmount | number:'1.2-2'}}
-                  @if (expenseForm.get('amount')?.value) {
-                    of {{expenseForm.get('amount')?.value | number:'1.2-2'}}
-                    ({{getSplitPercentage() | number:'1.0-0'}}%)
-                  }
+            <div class="total-info" *ngIf="totalSplitAmount > 0">
+              <span [class.error]="!isSplitValid">
+                Total split: {{totalSplitAmount | number:'1.2-2'}}
+                <span *ngIf="expenseForm.get('amount')?.value">
+                  of {{expenseForm.get('amount')?.value | number:'1.2-2'}}
+                  ({{getSplitPercentage() | number:'1.0-0'}}%)
                 </span>
-              </div>
-            }
+              </span>
+            </div>
 
             <div formArrayName="splits" class="splits-container">
-              @for (member of data.group.members; track member.id) {
+              @for (member of data.group.members; track member) {
                 <mat-form-field appearance="outline" class="full-width mb-2">
                   <mat-label>{{ member.name }}'s share</mat-label>
                   <input matInput
@@ -156,12 +154,12 @@ import {DATE_PROVIDERS} from '../../../core/config/date.config';
                          min="0"
                          (input)="updateTotalSplit()">
                   <mat-icon matSuffix>person_outline</mat-icon>
-                  @if (getSplitControl(member.id.toString())?.hasError('required')) {
-                    <mat-error>Share amount is required</mat-error>
-                  }
-                  @if (getSplitControl(member.id.toString())?.hasError('min')) {
-                    <mat-error>Share amount must be greater than or equal to 0</mat-error>
-                  }
+                  <mat-error *ngIf="getSplitControl(member.id.toString())?.hasError('required')">
+                    Share amount is required
+                  </mat-error>
+                  <mat-error *ngIf="getSplitControl(member.id.toString())?.hasError('min')">
+                    Share amount must be greater than or equal to 0
+                  </mat-error>
                 </mat-form-field>
               }
             </div>

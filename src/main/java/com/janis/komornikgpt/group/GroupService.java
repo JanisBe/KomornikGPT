@@ -131,4 +131,11 @@ public class GroupService {
         return group.getUsers().stream()
                 .anyMatch(member -> member.getId().equals(user.getId()));
     }
+
+    public List<Group> findGroupsForCurrentUser() {
+        String username = SecurityContextHolder.getContext().getAuthentication().getName();
+        User user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+        return groupRepository.findByUsers_Id(user.getId());
+    }
 }

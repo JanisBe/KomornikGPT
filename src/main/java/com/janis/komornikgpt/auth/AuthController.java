@@ -31,16 +31,30 @@ public class AuthController {
     private String cookieName;
 
     @PostMapping("/login")
-    public ResponseEntity<AuthResponse> login(@RequestBody LoginRequest request) {
+    public ResponseEntity<?> login(@RequestBody LoginRequest request, HttpServletResponse response) {
         Authentication authentication = authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(request.getUsername(), request.getPassword()));
+                new UsernamePasswordAuthenticationToken(request.getEmail(), request.getPassword()));
 
         SecurityContextHolder.getContext().setAuthentication(authentication);
-        String jwt = jwtTokenProvider.generateToken((User) authentication);
+        String username = authentication.getName();
+        User user = userService.getUserByUsername(username);
+        String jwt = jwtTokenProvider.generateToken(user);
 
-        User user = userService.getUserByUsername(request.getUsername());
+        // Set JWT as HttpOnly, Secure cookie
+        Cookie cookie = new Cookie(cookieName, jwt);
+        cookie.setHttpOnly(true);
+        cookie.setSecure(true);
+        cookie.setPath("/");
+        cookie.setMaxAge(24 * 60 * 60); // 1 day, or use your configured expiration
+        response.addCookie(cookie);
 
-        return ResponseEntity.ok(new AuthResponse(jwt, user));
+        // Return only user info (no token in body)
+        Map<String, Object> userDetails = new HashMap<>();
+        userDetails.put("name", user.getName());
+        userDetails.put("email", user.getEmail());
+        userDetails.put("username", user.getUsername());
+        userDetails.put("role", user.getRole());
+        return ResponseEntity.ok(userDetails);
     }
 
     @PostMapping("/logout")

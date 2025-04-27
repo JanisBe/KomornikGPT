@@ -48,4 +48,11 @@ public class GroupRestController {
         groupService.deleteGroup(id);
         return ResponseEntity.noContent().build();
     }
-} 
+
+    @GetMapping("/my")
+    public List<GroupDto> getMyGroups() {
+        return groupService.findGroupsForCurrentUser().stream()
+                .map(GroupDto::fromGroup)
+                .collect(Collectors.toList());
+    }
+}

@@ -1,9 +1,9 @@
 TRUNCATE TABLE expense_splits, expenses, group_users, groups, users RESTART IDENTITY CASCADE;
 -- Insert sample users
 INSERT INTO users (username, email, password, name, surname, role)
-VALUES ('a', 'john@example.com', '$2a$10$N9qo8uLOickgx2ZMRZoMyea7wdtWgtb7pfXoReLE2qQR2N4VuAbtO', 'John', 'Doe',
+VALUES ('a', 'a@a.pl', '$2a$10$N9qo8uLOickgx2ZMRZoMyea7wdtWgtb7pfXoReLE2qQR2N4VuAbtO', 'John', 'Doe',
         'USER'),
-       ('jane_smith', 'jane@example.com', '$2a$10$N9qo8uLOickgx2ZMRZoMyea7wdtWgtb7pfXoReLE2qQR2N4VuAbtO', 'Jane',
+       ('jane_smith', 'q@q.pl', '$2a$10$N9qo8uLOickgx2ZMRZoMyea7wdtWgtb7pfXoReLE2qQR2N4VuAbtO', 'Jane',
         'Smith', 'USER'),
        ('admin', 'admin@example.com', '$2a$10$N9qo8uLOickgx2ZMRZoMyea7wdtWgtb7pfXoReLE2qQR2N4VuAbtO', 'Admin', 'User',
         'ADMIN');

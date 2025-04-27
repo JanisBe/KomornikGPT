@@ -72,10 +72,12 @@ import {MatDividerModule} from '@angular/material/divider';
 
           <form [formGroup]="loginForm" (ngSubmit)="onSubmit()">
             <mat-form-field appearance="outline">
-              <mat-label>Username</mat-label>
-              <input matInput formControlName="username" required>
-              @if (loginForm.get('username')?.invalid && (loginForm.get('username')?.dirty || loginForm.get('username')?.touched)) {
-                <mat-error>Username is required</mat-error>
+              <mat-label>Email</mat-label>
+              <input matInput type="email" formControlName="email" required>
+              @if (loginForm.get('email')?.hasError('required') && (loginForm.get('email')?.dirty || loginForm.get('email')?.touched)) {
+                <mat-error>Email is required</mat-error>
+              } @else if (loginForm.get('email')?.hasError('email') && (loginForm.get('email')?.dirty || loginForm.get('email')?.touched)) {
+                <mat-error>Email is invalid</mat-error>
               }
             </mat-form-field>
 
@@ -250,7 +252,7 @@ export class LoginComponent {
     private snackBar: MatSnackBar
   ) {
     this.loginForm = this.fb.group({
-      username: ['', Validators.required],
+      email: ['', [Validators.required, Validators.email]],
       password: ['', Validators.required]
     });
   }

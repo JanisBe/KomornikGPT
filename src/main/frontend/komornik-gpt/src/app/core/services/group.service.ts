@@ -75,6 +75,10 @@ export class GroupService {
     );
   }
 
+  getMyGroups(): Observable<Group[]> {
+    return this.http.get<Group[]>(`${this.apiUrl}/my`);
+  }
+
   private mapGroupResponse(group: GroupResponse): Group {
     return {
       ...group,

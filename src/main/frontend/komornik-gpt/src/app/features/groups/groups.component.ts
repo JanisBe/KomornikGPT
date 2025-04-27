@@ -197,7 +197,7 @@ export class GroupsComponent implements OnInit {
     // Load both user and groups data in parallel
     forkJoin({
       user: this.authService.getCurrentUser(),
-      groups: this.groupService.getGroups()
+      groups: this.groupService.getMyGroups()
     }).subscribe({
       next: ({user, groups}) => {
         this.currentUser = user;

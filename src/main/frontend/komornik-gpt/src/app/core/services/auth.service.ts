@@ -6,7 +6,7 @@ import {User} from '../models/user.model';
 import {environment} from '../../../environments/environment';
 
 export interface LoginRequest {
-  username: string;
+  email: string;
   password: string;
 }
 

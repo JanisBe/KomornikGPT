@@ -63,7 +63,9 @@ export class LayoutComponent implements OnInit {
   ngOnInit(): void {
     this.authService.getCurrentUser().subscribe({
       next: (user: User) => {
-        if (!!user) this.userName = user.name;
+        if (!!user) {
+          this.userName = user.name;
+        }
       }
     });
   }

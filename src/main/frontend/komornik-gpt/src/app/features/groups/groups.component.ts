@@ -361,7 +361,6 @@ export class GroupsComponent implements OnInit {
   }
 
   addExpense(group: Group): void {
-    console.log(group)
     const dialogRef = this.dialog.open(AddExpenseDialogComponent, {
       width: '70%',
       data: {group, currentUser: this.currentUser}

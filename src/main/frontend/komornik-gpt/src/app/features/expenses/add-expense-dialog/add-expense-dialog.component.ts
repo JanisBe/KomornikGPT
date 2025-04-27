@@ -14,6 +14,7 @@ import {Group} from '../../../core/models/group.model';
 import {Currency} from '../../../core/models/currency.model';
 import {Expense} from '../../../core/models/expense.model';
 import {DATE_PROVIDERS} from '../../../core/config/date.config';
+import {AuthService} from '../../../core/services/auth.service';
 
 @Component({
   selector: 'app-add-expense-dialog',
@@ -126,6 +127,7 @@ import {DATE_PROVIDERS} from '../../../core/config/date.config';
                       mat-stroked-button
                       color="primary"
                       (click)="splitEqually()"
+                      [disabled]="!expenseForm.get('amount')?.value || expenseForm.get('amount')?.invalid"
                       matTooltip="Split the amount equally between all members">
                 <mat-icon>balance</mat-icon>
                 Split Equally
@@ -229,6 +231,18 @@ import {DATE_PROVIDERS} from '../../../core/config/date.config';
 
     mat-dialog-actions button {
       margin-left: 8px;
+    }
+
+    .dialog-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 8px; /* jak chcesz żeby było ładnie */
+    }
+
+    .close-button {
+      /* możesz coś jeszcze dodać jak ci się chce, np. */
+      margin-left: auto;
     }
 
     .form-row {
@@ -389,6 +403,7 @@ export class AddExpenseDialogComponent {
     private fb: FormBuilder,
     private dialogRef: MatDialogRef<AddExpenseDialogComponent>,
     private dateAdapter: DateAdapter<Date>,
+    private authService: AuthService,
     @Inject(MAT_DIALOG_DATA) public data: {
       group: Group;
       expense?: Expense;
@@ -409,24 +424,16 @@ export class AddExpenseDialogComponent {
     });
   }
 
-  private initForm() {
-    this.expenseForm = this.fb.group({
-      description: ['', Validators.required],
-      amount: ['', [Validators.required, Validators.min(0)]],
-      currency: [Currency.PLN, Validators.required],
-      date: [new Date(), Validators.required],
-      payerId: ['', Validators.required],
-      splits: this.fb.group({})
-    });
+  updateTotalSplit() {
+    const splits = this.expenseForm.get('splits')?.value;
+    if (!splits) return;
 
-    // Initialize split controls
-    const splitsGroup = this.expenseForm.get('splits') as FormGroup;
-    this.data.group.members.forEach(member => {
-      splitsGroup.addControl(
-        member.id.toString(),
-        this.fb.control('', [Validators.required, Validators.min(0)])
-      );
-    });
+    this.totalSplitAmount = +Object.values(splits)
+      .reduce((sum: number, value: any) => sum + (parseFloat(value) || 0), 0)
+      .toFixed(2);
+
+    const totalAmount = parseFloat(this.expenseForm.get('amount')?.value) || 0;
+    this.isSplitValid = Math.abs(this.totalSplitAmount - totalAmount) < 0.01;
   }
 
   private populateForm(expense: Expense) {
@@ -451,21 +458,10 @@ export class AddExpenseDialogComponent {
     return (this.expenseForm.get('splits') as FormGroup).get(memberId);
   }
 
-  updateTotalSplit() {
-    const splits = this.expenseForm.get('splits')?.value;
-    if (!splits) return;
-
-    this.totalSplitAmount = Object.values(splits)
-      .reduce((sum: number, value: any) => sum + (parseFloat(value) || 0), 0);
-
-    const totalAmount = parseFloat(this.expenseForm.get('amount')?.value) || 0;
-    this.isSplitValid = Math.abs(this.totalSplitAmount - totalAmount) < 0.01;
-  }
-
   getSplitPercentage(): number {
     const totalAmount = parseFloat(this.expenseForm.get('amount')?.value) || 0;
     if (totalAmount === 0) return 0;
-    return (this.totalSplitAmount / totalAmount) * 100;
+    return +((this.totalSplitAmount / totalAmount) * 100).toFixed(0);
   }
 
   splitEqually() {
@@ -476,16 +472,45 @@ export class AddExpenseDialogComponent {
 
     const memberCount = this.data.group.members.length;
     const equalShare = +(totalAmount / memberCount).toFixed(2);
-    const remainder = +(totalAmount - (equalShare * memberCount)).toFixed(2);
+    let remainder = +(totalAmount - (equalShare * memberCount)).toFixed(2);
 
     const splitsGroup = this.expenseForm.get('splits') as FormGroup;
     this.data.group.members.forEach((member, index) => {
       // Add remainder to the first person's share
-      const share = index === 0 ? equalShare + remainder : equalShare;
+      let share = equalShare;
+      if (index === 0) {
+        share = +(equalShare + remainder).toFixed(2);
+      }
       splitsGroup.get(member.id.toString())?.setValue(share);
     });
 
     this.updateTotalSplit();
+  }
+
+  private initForm() {
+    // Get current user synchronously if possible
+    let currentUserId: number | null = null;
+    const currentUser = this.authService['currentUserSubject']?.value;
+    if (currentUser && this.data.group.members.some(m => m.id === currentUser.id)) {
+      currentUserId = currentUser.id;
+    }
+    this.expenseForm = this.fb.group({
+      description: ['', Validators.required],
+      amount: ['', [Validators.required, Validators.min(0)]],
+      currency: [Currency.PLN, Validators.required],
+      date: [new Date(), Validators.required],
+      payerId: [currentUserId !== null ? currentUserId : '', Validators.required],
+      splits: this.fb.group({})
+    });
+
+    // Initialize split controls
+    const splitsGroup = this.expenseForm.get('splits') as FormGroup;
+    this.data.group.members.forEach(member => {
+      splitsGroup.addControl(
+        member.id.toString(),
+        this.fb.control('', [Validators.required, Validators.min(0)])
+      );
+    });
   }
 
   onSubmit() {

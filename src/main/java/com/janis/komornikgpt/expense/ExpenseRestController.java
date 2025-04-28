@@ -71,4 +71,10 @@ public class ExpenseRestController {
         expenseService.deleteExpense(id, principal);
         return ResponseEntity.noContent().build();
     }
+
+    @GetMapping("/recalculate/{id}")
+    public ResponseEntity<ExpenseDto> recalculateExpense(@PathVariable Long id) {
+        Expense expense = expenseService.recalculateExpenses(id);
+        return ResponseEntity.ok(ExpenseDto.fromExpense(expense));
+    }
 }

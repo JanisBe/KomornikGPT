@@ -59,21 +59,36 @@ import {DATE_PROVIDERS} from '../../core/config/date.config';
           <div class="col-md-6 mb-4">
             <mat-card class="group-card">
               <mat-card-header>
-                <mat-card-title>{{group.name}}</mat-card-title>
-                <mat-card-subtitle>{{group.description}}</mat-card-subtitle>
+                <mat-card-title>{{ group.name }}</mat-card-title>
               </mat-card-header>
               <mat-card-content>
-                <p><strong>Members:</strong></p>
-                <p class="members-list">{{getMembersList(group)}}</p>
+                <p class="mb-0">Members:</p>
+                @for (member of group.members; let isLast = $last; track member) {
+                  <span matTooltip="{{member.email}}">{{ member.name }}{{ isLast ? '' : ', ' }}</span>
+                }
               </mat-card-content>
               <mat-card-actions align="end">
-                <button mat-button color="primary" (click)="viewExpenses(group)">
-                  <mat-icon>receipt</mat-icon>
-                  View Expenses
+                <button mat-icon-button color="primary" (click)="addExpense(group)"
+                        matTooltip="Add expense">
+                  <mat-icon>add_shopping_cart</mat-icon>
                 </button>
-                <button mat-button color="accent" (click)="editGroup(group)">
+                <button mat-icon-button color="primary" (click)="editGroup(group)"
+                        [disabled]="!canEditGroup(group)"
+                        [matTooltip]="canEditGroup(group) ? 'Edit group' : 'You can only edit groups you created'">
                   <mat-icon>edit</mat-icon>
-                  Edit
+                </button>
+                <button mat-icon-button color="warn" (click)="deleteGroup(group)"
+                        [disabled]="!canDeleteGroup(group)"
+                        [matTooltip]="canDeleteGroup(group) ? 'Delete group' : 'You can only delete groups you created'">
+                  <mat-icon>delete</mat-icon>
+                </button>
+                <button mat-icon-button color="accent" (click)="viewExpenses(group)"
+                        matTooltip="View expenses">
+                  <mat-icon>receipt</mat-icon>
+                </button>
+                <button mat-icon-button color="primary" (click)="settleExpenses(group)"
+                        matTooltip="Settle expenses">
+                  <mat-icon>payments</mat-icon>
                 </button>
               </mat-card-actions>
             </mat-card>

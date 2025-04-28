@@ -14,6 +14,7 @@ import {Group} from '../../../core/models/group.model';
 import {Currency} from '../../../core/models/currency.model';
 import {Expense} from '../../../core/models/expense.model';
 import {DATE_PROVIDERS} from '../../../core/config/date.config';
+import {AuthService} from '../../../core/services/auth.service';
 
 @Component({
   selector: 'app-add-expense-dialog',
@@ -39,7 +40,11 @@ import {DATE_PROVIDERS} from '../../../core/config/date.config';
   template: `
     <div class="dialog-container">
       <div class="dialog-header">
-        <h2 mat-dialog-title>Add Expense</h2>
+        @if (this.isEditMode) {
+          <h2 mat-dialog-title>Edit expense for "{{ data.expense?.description }}"</h2>
+        } @else {
+          <h2 mat-dialog-title>Add Expense</h2>
+        }
         <button mat-icon-button mat-dialog-close class="close-button">
           <mat-icon>close</mat-icon>
         </button>
@@ -48,73 +53,73 @@ import {DATE_PROVIDERS} from '../../../core/config/date.config';
       <form [formGroup]="expenseForm" (ngSubmit)="onSubmit()">
         <mat-dialog-content>
           <div class="form-field">
-            <mat-form-field appearance="outline">
+            <mat-form-field appearance="outline" class="full-width">
               <mat-label>Description</mat-label>
-              <input matInput formControlName="description" required>
-              @if (expenseForm.get('description')?.hasError('required')) {
-                <mat-error>Description is required</mat-error>
-              }
+              <input matInput formControlName="description" required placeholder="What is this expense for?">
+              <mat-icon matSuffix>description</mat-icon>
+              <mat-error *ngIf="expenseForm.get('description')?.hasError('required')">
+                Description is required
+              </mat-error>
             </mat-form-field>
           </div>
 
           <div class="form-row">
             <div class="form-field amount-field">
-              <mat-form-field appearance="outline">
+              <mat-form-field appearance="outline" class="full-width">
                 <mat-label>Amount</mat-label>
-                <input matInput type="number" formControlName="amount" required min="0">
-                @if (expenseForm.get('amount')?.hasError('required')) {
-                  <mat-error>Amount is required</mat-error>
-                }
-                @if (expenseForm.get('amount')?.hasError('min')) {
-                  <mat-error>Amount must be greater than 0</mat-error>
-                }
+                <input matInput type="number" formControlName="amount" required placeholder="0.00" step="0.01" min="0">
+                <mat-icon matSuffix>payments</mat-icon>
+                <mat-error *ngIf="expenseForm.get('amount')?.hasError('required')">
+                  Amount is required
+                </mat-error>
+                <mat-error *ngIf="expenseForm.get('amount')?.hasError('min')">
+                  Amount must be greater than 0
+                </mat-error>
               </mat-form-field>
             </div>
 
             <div class="form-field currency-field">
-              <mat-form-field appearance="outline">
+              <mat-form-field appearance="outline" class="full-width">
                 <mat-label>Currency</mat-label>
                 <mat-select formControlName="currency" required>
-                  @for (currency of currencies; track currency) {
-                    <mat-option [value]="currency">
-                      {{ currency }}
-                    </mat-option>
-                  }
+                  <mat-option *ngFor="let currency of currencies" [value]="currency">
+                    {{ currency }}
+                  </mat-option>
                 </mat-select>
-                @if (expenseForm.get('currency')?.hasError('required')) {
-                  <mat-error>Currency is required</mat-error>
-                }
+                <mat-icon matSuffix>currency_exchange</mat-icon>
+                <mat-error *ngIf="expenseForm.get('currency')?.hasError('required')">
+                  Currency is required
+                </mat-error>
               </mat-form-field>
             </div>
           </div>
 
           <div class="form-row">
             <div class="form-field flex-1">
-              <mat-form-field appearance="outline">
+              <mat-form-field appearance="outline" class="full-width">
                 <mat-label>Date</mat-label>
                 <input matInput [matDatepicker]="picker" formControlName="date" required>
                 <mat-hint>DD/MM/YYYY</mat-hint>
                 <mat-datepicker-toggle matSuffix [for]="picker"></mat-datepicker-toggle>
                 <mat-datepicker #picker></mat-datepicker>
-                @if (expenseForm.get('date')?.hasError('required')) {
-                  <mat-error>Date is required</mat-error>
-                }
+                <mat-error *ngIf="expenseForm.get('date')?.hasError('required')">
+                  Date is required
+                </mat-error>
               </mat-form-field>
             </div>
 
             <div class="form-field flex-1">
-              <mat-form-field appearance="outline">
-                <mat-label>Paid By</mat-label>
+              <mat-form-field appearance="outline" class="full-width">
+                <mat-label>Paid by</mat-label>
                 <mat-select formControlName="payerId" required>
-                  @for (member of data.group.members; track member.id) {
-                    <mat-option [value]="member.id">
-                      {{ member.name }}
-                    </mat-option>
-                  }
+                  <mat-option *ngFor="let member of data.group.members" [value]="member.id">
+                    {{ member.name }}
+                  </mat-option>
                 </mat-select>
-                @if (expenseForm.get('payerId')?.hasError('required')) {
-                  <mat-error>Payer is required</mat-error>
-                }
+                <mat-icon matSuffix>person</mat-icon>
+                <mat-error *ngIf="expenseForm.get('payerId')?.hasError('required')">
+                  Payer is required
+                </mat-error>
               </mat-form-field>
             </div>
           </div>
@@ -126,26 +131,25 @@ import {DATE_PROVIDERS} from '../../../core/config/date.config';
                       mat-stroked-button
                       color="primary"
                       (click)="splitEqually()"
+                      [disabled]="!expenseForm.get('amount')?.value || expenseForm.get('amount')?.invalid"
                       matTooltip="Split the amount equally between all members">
                 <mat-icon>balance</mat-icon>
                 Split Equally
               </button>
             </div>
 
-            @if (totalSplitAmount > 0) {
-              <div class="total-info">
-                <span [class.error]="!isSplitValid">
-                  Total split: {{totalSplitAmount | number:'1.2-2'}}
-                  @if (expenseForm.get('amount')?.value) {
-                    of {{expenseForm.get('amount')?.value | number:'1.2-2'}}
-                    ({{getSplitPercentage() | number:'1.0-0'}}%)
-                  }
+            <div class="total-info" *ngIf="totalSplitAmount > 0">
+              <span [class.error]="!isSplitValid">
+                Total split: {{ totalSplitAmount | number:'1.2-2' }}
+                <span *ngIf="expenseForm.get('amount')?.value">
+                  of {{ expenseForm.get('amount')?.value | number:'1.2-2' }}
+                  ({{ getSplitPercentage() | number:'1.0-0' }}%)
                 </span>
-              </div>
-            }
+              </span>
+            </div>
 
             <div formArrayName="splits" class="splits-container">
-              @for (member of data.group.members; track member.id) {
+              @for (member of data.group.members; track member) {
                 <mat-form-field appearance="outline" class="full-width mb-2">
                   <mat-label>{{ member.name }}'s share</mat-label>
                   <input matInput
@@ -156,12 +160,12 @@ import {DATE_PROVIDERS} from '../../../core/config/date.config';
                          min="0"
                          (input)="updateTotalSplit()">
                   <mat-icon matSuffix>person_outline</mat-icon>
-                  @if (getSplitControl(member.id.toString())?.hasError('required')) {
-                    <mat-error>Share amount is required</mat-error>
-                  }
-                  @if (getSplitControl(member.id.toString())?.hasError('min')) {
-                    <mat-error>Share amount must be greater than or equal to 0</mat-error>
-                  }
+                  <mat-error *ngIf="getSplitControl(member.id.toString())?.hasError('required')">
+                    Share amount is required
+                  </mat-error>
+                  <mat-error *ngIf="getSplitControl(member.id.toString())?.hasError('min')">
+                    Share amount must be greater than or equal to 0
+                  </mat-error>
                 </mat-form-field>
               }
             </div>
@@ -187,10 +191,6 @@ import {DATE_PROVIDERS} from '../../../core/config/date.config';
   styles: [`
     :host {
       display: block;
-    }
-
-    :host ::ng-deep .mat-mdc-dialog-container {
-      max-height: 90vh;
     }
 
     .dialog-container {
@@ -231,6 +231,18 @@ import {DATE_PROVIDERS} from '../../../core/config/date.config';
 
     mat-dialog-actions button {
       margin-left: 8px;
+    }
+
+    .dialog-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 8px; /* jak chcesz żeby było ładnie */
+    }
+
+    .close-button {
+      /* możesz coś jeszcze dodać jak ci się chce, np. */
+      margin-left: auto;
     }
 
     .form-row {
@@ -356,28 +368,6 @@ import {DATE_PROVIDERS} from '../../../core/config/date.config';
       }
     }
 
-    /* Material field customizations */
-    ::ng-deep {
-      .mat-mdc-form-field-subscript-wrapper {
-        height: 16px !important;
-      }
-
-      .mat-mdc-form-field {
-        width: 100%;
-      }
-
-      .mat-mdc-dialog-content {
-        overflow: hidden !important;
-      }
-
-      .mat-mdc-dialog-container {
-        overflow: hidden;
-      }
-
-      .mat-mdc-dialog-surface {
-        overflow: hidden;
-      }
-    }
   `]
 })
 export class AddExpenseDialogComponent {
@@ -391,6 +381,7 @@ export class AddExpenseDialogComponent {
     private fb: FormBuilder,
     private dialogRef: MatDialogRef<AddExpenseDialogComponent>,
     private dateAdapter: DateAdapter<Date>,
+    private authService: AuthService,
     @Inject(MAT_DIALOG_DATA) public data: {
       group: Group;
       expense?: Expense;
@@ -411,24 +402,16 @@ export class AddExpenseDialogComponent {
     });
   }
 
-  private initForm() {
-    this.expenseForm = this.fb.group({
-      description: ['', Validators.required],
-      amount: ['', [Validators.required, Validators.min(0)]],
-      currency: [Currency.PLN, Validators.required],
-      date: [new Date(), Validators.required],
-      payerId: ['', Validators.required],
-      splits: this.fb.group({})
-    });
+  updateTotalSplit() {
+    const splits = this.expenseForm.get('splits')?.value;
+    if (!splits) return;
 
-    // Initialize split controls
-    const splitsGroup = this.expenseForm.get('splits') as FormGroup;
-    this.data.group.members.forEach(member => {
-      splitsGroup.addControl(
-        member.id.toString(),
-        this.fb.control('', [Validators.required, Validators.min(0)])
-      );
-    });
+    this.totalSplitAmount = +Object.values(splits)
+      .reduce((sum: number, value: any) => sum + (parseFloat(value) || 0), 0)
+      .toFixed(2);
+
+    const totalAmount = parseFloat(this.expenseForm.get('amount')?.value) || 0;
+    this.isSplitValid = Math.abs(this.totalSplitAmount - totalAmount) < 0.01;
   }
 
   private populateForm(expense: Expense) {
@@ -453,21 +436,10 @@ export class AddExpenseDialogComponent {
     return (this.expenseForm.get('splits') as FormGroup).get(memberId);
   }
 
-  updateTotalSplit() {
-    const splits = this.expenseForm.get('splits')?.value;
-    if (!splits) return;
-
-    this.totalSplitAmount = Object.values(splits)
-      .reduce((sum: number, value: any) => sum + (parseFloat(value) || 0), 0);
-
-    const totalAmount = parseFloat(this.expenseForm.get('amount')?.value) || 0;
-    this.isSplitValid = Math.abs(this.totalSplitAmount - totalAmount) < 0.01;
-  }
-
   getSplitPercentage(): number {
     const totalAmount = parseFloat(this.expenseForm.get('amount')?.value) || 0;
     if (totalAmount === 0) return 0;
-    return (this.totalSplitAmount / totalAmount) * 100;
+    return +((this.totalSplitAmount / totalAmount) * 100).toFixed(0);
   }
 
   splitEqually() {
@@ -478,16 +450,45 @@ export class AddExpenseDialogComponent {
 
     const memberCount = this.data.group.members.length;
     const equalShare = +(totalAmount / memberCount).toFixed(2);
-    const remainder = +(totalAmount - (equalShare * memberCount)).toFixed(2);
+    let remainder = +(totalAmount - (equalShare * memberCount)).toFixed(2);
 
     const splitsGroup = this.expenseForm.get('splits') as FormGroup;
     this.data.group.members.forEach((member, index) => {
       // Add remainder to the first person's share
-      const share = index === 0 ? equalShare + remainder : equalShare;
+      let share = equalShare;
+      if (index === 0) {
+        share = +(equalShare + remainder).toFixed(2);
+      }
       splitsGroup.get(member.id.toString())?.setValue(share);
     });
 
     this.updateTotalSplit();
+  }
+
+  private initForm() {
+    // Get current user synchronously if possible
+    let currentUserId: number | null = null;
+    const currentUser = this.authService['currentUserSubject']?.value;
+    if (currentUser && this.data.group.members.some(m => m.id === currentUser.id)) {
+      currentUserId = currentUser.id;
+    }
+    this.expenseForm = this.fb.group({
+      description: ['', Validators.required],
+      amount: ['', [Validators.required, Validators.min(0)]],
+      currency: [Currency.PLN, Validators.required],
+      date: [new Date(), Validators.required],
+      payerId: [currentUserId !== null ? currentUserId : '', Validators.required],
+      splits: this.fb.group({})
+    });
+
+    // Initialize split controls
+    const splitsGroup = this.expenseForm.get('splits') as FormGroup;
+    this.data.group.members.forEach(member => {
+      splitsGroup.addControl(
+        member.id.toString(),
+        this.fb.control('', [Validators.required, Validators.min(0)])
+      );
+    });
   }
 
   onSubmit() {

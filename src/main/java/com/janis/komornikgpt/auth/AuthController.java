@@ -54,6 +54,7 @@ public class AuthController {
         userDetails.put("email", user.getEmail());
         userDetails.put("username", user.getUsername());
         userDetails.put("role", user.getRole());
+        userDetails.put("id", user.getId());
         return ResponseEntity.ok(userDetails);
     }
 
@@ -90,7 +91,7 @@ public class AuthController {
         userDetails.put("email", user.getEmail());
         userDetails.put("username", user.getUsername());
         userDetails.put("role", user.getRole());
-
+        userDetails.put("id", user.getId());
         return ResponseEntity.ok(userDetails);
     }
 

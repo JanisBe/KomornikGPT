@@ -30,26 +30,9 @@ public class AuthController {
     @Value("${jwt.cookie.name:JWT_TOKEN}")
     private String cookieName;
 
-    @PostMapping("/login")
-    public ResponseEntity<?> login(@RequestBody LoginRequest request, HttpServletResponse response) {
-        Authentication authentication = authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(request.getEmail(), request.getPassword()));
-
-        SecurityContextHolder.getContext().setAuthentication(authentication);
-        String username = authentication.getName();
-        User user = userService.getUserByUsername(username);
-        String jwt = jwtTokenProvider.generateToken(user);
-
-        // Set JWT as HttpOnly, Secure cookie
-        Cookie cookie = new Cookie(cookieName, jwt);
-        cookie.setHttpOnly(true);
-        cookie.setSecure(true);
-        cookie.setPath("/");
-        cookie.setMaxAge(24 * 60 * 60); // 1 day, or use your configured expiration
-        response.addCookie(cookie);
-
-        // Return only user info (no token in body)
+    private static ResponseEntity<Map<String, Object>> getMapResponseEntity(User user) {
         Map<String, Object> userDetails = new HashMap<>();
+        userDetails.put("authenticated", true);
         userDetails.put("name", user.getName());
         userDetails.put("email", user.getEmail());
         userDetails.put("username", user.getUsername());
@@ -74,6 +57,28 @@ public class AuthController {
         return ResponseEntity.ok().build();
     }
 
+    @PostMapping("/login")
+    public ResponseEntity<?> login(@RequestBody LoginRequest request, HttpServletResponse response) {
+        Authentication authentication = authenticationManager.authenticate(
+                new UsernamePasswordAuthenticationToken(request.getEmail(), request.getPassword()));
+
+        SecurityContextHolder.getContext().setAuthentication(authentication);
+        String username = authentication.getName();
+        User user = userService.getUserByUsername(username);
+        String jwt = jwtTokenProvider.generateToken(user);
+
+        // Set JWT as HttpOnly, Secure cookie
+        Cookie cookie = new Cookie(cookieName, jwt);
+        cookie.setHttpOnly(true);
+        cookie.setSecure(true);
+        cookie.setPath("/");
+        cookie.setMaxAge(24 * 60 * 60); // 1 day, or use your configured expiration
+        response.addCookie(cookie);
+
+
+        return getMapResponseEntity(user);
+    }
+
     @GetMapping("/user")
     public ResponseEntity<?> getCurrentUser() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
@@ -85,14 +90,7 @@ public class AuthController {
         String identifier = authentication.getName();
         User user = findUserByIdentifier(identifier);
 
-        Map<String, Object> userDetails = new HashMap<>();
-        userDetails.put("authenticated", true);
-        userDetails.put("name", user.getName());
-        userDetails.put("email", user.getEmail());
-        userDetails.put("username", user.getUsername());
-        userDetails.put("role", user.getRole());
-        userDetails.put("id", user.getId());
-        return ResponseEntity.ok(userDetails);
+        return getMapResponseEntity(user);
     }
 
     private User findUserByIdentifier(String identifier) {

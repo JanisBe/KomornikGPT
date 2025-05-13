@@ -10,4 +10,5 @@ export interface Group {
   createdAt?: Date;
   updatedAt?: Date;
   createdBy?: User;
+  isPublic?: boolean;
 }

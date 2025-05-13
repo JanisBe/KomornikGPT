@@ -12,7 +12,7 @@ public record CreateGroupRequest(
         @NotBlank(message = "Group name is required") @Size(min = 2, max = 50, message = "Group name must be between 2 and 50 characters") String name,
 
         @Size(max = 1000, message = "Description must not exceed 1000 characters") String description,
-
+        boolean isPublic,
         @NotNull(message = "Members are required") List<MemberRequest> members) {
     public record MemberRequest(
             Long userId,

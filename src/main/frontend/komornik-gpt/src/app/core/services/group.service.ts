@@ -6,7 +6,13 @@ import {environment} from '../../../environments/environment';
 
 export interface UpdateGroupRequest {
   name?: string;
-  userIds?: number[];
+  description?: string;
+  isPublic?: boolean;
+  members: Array<{
+    userId?: number;
+    userName: string;
+    email: string;
+  }>;
 }
 
 export interface CreateGroupRequest {
@@ -70,21 +76,24 @@ export class GroupService {
   }
 
   updateGroup(id: number, request: UpdateGroupRequest): Observable<Group> {
-    return this.http.put<GroupResponse>(`${this.apiUrl}/${id}`, request).pipe(
+    return this.http.put<any>(`${this.apiUrl}/${id}`, request).pipe(
       map(group => this.mapGroupResponse(group))
     );
   }
 
   getMyGroups(): Observable<Group[]> {
-    return this.http.get<Group[]>(`${this.apiUrl}/my`);
+    return this.http.get<any[]>(`${this.apiUrl}/my`).pipe(
+      map(groups => groups.map(group => this.mapGroupResponse(group)))
+    );
   }
 
-  private mapGroupResponse(group: GroupResponse): Group {
+  private mapGroupResponse(group: any): Group {
     return {
       ...group,
-      members: group.users,
+      members: group.members ?? group.users ?? [],
       createdAt: group.createdAt ? new Date(group.createdAt) : undefined,
-      updatedAt: group.updatedAt ? new Date(group.updatedAt) : undefined
+      updatedAt: group.updatedAt ? new Date(group.updatedAt) : undefined,
+      isPublic: (group as any).isPublic ?? (group as any).is_public ?? false
     };
   }
 

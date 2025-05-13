@@ -41,6 +41,10 @@ export const routes: Routes = [
         canActivate: [AuthGuard]
       },
       {
+        path: 'groups/:id',
+        loadComponent: () => import('./features/groups/group-details.component').then(m => m.GroupDetailsComponent)
+      },
+      {
         path: 'profile',
         loadComponent: () => import('./features/profile/profile.component').then(m => m.ProfileComponent),
         canActivate: [AuthGuard]

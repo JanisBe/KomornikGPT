@@ -38,7 +38,7 @@ public class GroupService {
         group.setName(request.name());
         group.setDescription(request.description());
         group.setCreatedBy(creator);
-
+        group.setPublic(request.isPublic());
         List<User> users = new ArrayList<>();
 
         // Process each member request
@@ -88,18 +88,31 @@ public class GroupService {
         if (request.description() != null) {
             group.setDescription(request.description());
         }
-
-        if (request.userIds() != null) {
-            List<User> users = userRepository.findAllById(request.userIds());
-            if (users.size() != request.userIds().size()) {
-                throw new RuntimeException("Some users not found");
+        group.setPublic(request.isPublic());
+        if (request.members() != null) {
+            List<User> users = new ArrayList<>();
+            for (UpdateGroupRequest.MemberRequest memberRequest : request.members()) {
+                User user;
+                if (memberRequest.userId() != null) {
+                    // Existing user
+                    user = userRepository.findById(memberRequest.userId())
+                            .orElseThrow(
+                                    () -> new RuntimeException("User not found with id: " + memberRequest.userId()));
+                } else {
+                    // Create new user
+                    CreateUserWithoutPasswordRequest createUserRequest = new CreateUserWithoutPasswordRequest(
+                            memberRequest.userName(),
+                            "", // Empty surname for now
+                            memberRequest.userName(), // Using userName as username
+                            memberRequest.email());
+                    user = userService.createUserWithoutPassword(createUserRequest);
+                }
+                users.add(user);
             }
-
             // Make sure creator stays in the group
             if (!users.contains(group.getCreatedBy())) {
                 users.add(group.getCreatedBy());
             }
-
             group.setUsers(users);
         }
 

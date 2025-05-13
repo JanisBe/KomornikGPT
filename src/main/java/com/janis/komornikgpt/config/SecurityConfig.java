@@ -1,6 +1,7 @@
 package com.janis.komornikgpt.config;
 
 import com.janis.komornikgpt.auth.OAuth2AuthenticationSuccessHandler;
+import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -76,8 +77,14 @@ public class SecurityConfig {
                         .logoutSuccessUrl("http://localhost:4200/login")
                         .invalidateHttpSession(true))
                 .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class)
-                .addFilterAfter(new SpaWebFilter(), BasicAuthenticationFilter.class);
-
+                .addFilterAfter(new SpaWebFilter(), BasicAuthenticationFilter.class)
+                .exceptionHandling(exceptionHandling ->
+                        exceptionHandling.authenticationEntryPoint((request, response, authException) -> {
+                            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                            response.setContentType("application/json");
+                            response.getWriter().write("{\"error\": \"Unauthorized\"}");
+                        })
+                );
         return http.build();
     }
 

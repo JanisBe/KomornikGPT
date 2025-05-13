@@ -9,14 +9,18 @@ VALUES ('a', 'a@a.pl', '$2a$10$N9qo8uLOickgx2ZMRZoMyea7wdtWgtb7pfXoReLE2qQR2N4Vu
         'ADMIN');
 
 -- Insert sample group
-INSERT INTO groups (name, description, created_at, created_by_id)
-VALUES ('Family Trip', 'Expenses from our summer vacation', NOW(), 1);
+INSERT INTO groups (name, description, created_at, created_by_id, is_public)
+VALUES ('Family Trip', 'Expenses from our summer vacation', NOW(), 1, false),
+       ('Public group', 'Test public group', NOW(), 1, true);
 
 -- Insert group members
 INSERT INTO group_users (group_id, user_id)
 VALUES (1, 1),
        (1, 2),
-       (1, 3);
+       (1, 3),
+       (2, 1),
+       (2, 2),
+       (2, 3);
 
 -- Insert sample expenses
 INSERT INTO expenses (amount, description, date, group_id, payer_id, currency)

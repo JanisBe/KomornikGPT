@@ -11,7 +11,8 @@ public record GroupDto(
     String description,
     List<UserDto> members,
     UserDto createdBy,
-    LocalDateTime createdAt
+    LocalDateTime createdAt,
+    boolean isPublic
 ) {
     public static GroupDto fromGroup(Group group) {
         return new GroupDto(
@@ -22,7 +23,8 @@ public record GroupDto(
                 .map(UserDto::fromUser)
                     .toList(),
                 UserDto.fromUser(group.getCreatedBy()),
-                group.getCreatedAt()
+                group.getCreatedAt(),
+                group.isPublic()
         );
     }
 } 

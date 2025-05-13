@@ -59,7 +59,11 @@ import {DATE_PROVIDERS} from '../../core/config/date.config';
           <div class="col-md-6 mb-4">
             <mat-card class="group-card">
               <mat-card-header>
-                <mat-card-title>{{ group.name }}</mat-card-title>
+                <mat-card-title>
+                  <a [routerLink]="'/groups/' + group.id" class="hand">
+                    {{ group.name }}
+                  </a>
+                </mat-card-title>
               </mat-card-header>
               <mat-card-content>
                 <p class="mb-0">Members:</p>
@@ -154,7 +158,9 @@ import {DATE_PROVIDERS} from '../../core/config/date.config';
       justify-content: flex-end;
       flex-wrap: wrap;
     }
-
+    .hand{
+      text-decoration: none; color: inherit; display: flex; align-items: center;
+    }
     @media (max-width: 768px) {
       .col-md-6 {
         flex: 0 0 100%;
@@ -298,7 +304,8 @@ export class GroupsComponent implements OnInit {
             const index = this.groups.findIndex(g => g.id === updatedGroup.id);
             if (index !== -1) {
               this.groups[index] = updatedGroup;
-              this.groups = [...this.groups]; // Trigger change detection
+              this.groups = [...this.groups];
+              console.log(this.groups)// Trigger change detection
             }
             this.snackBar.open('Group updated successfully', 'Close', {
               duration: 3000

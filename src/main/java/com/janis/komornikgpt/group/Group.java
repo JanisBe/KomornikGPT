@@ -47,6 +47,9 @@ public class Group {
     @Column(name = "created_at")
     private LocalDateTime createdAt;
 
+    @Column(name = "is_public")
+    private boolean isPublic = false;
+
     @PrePersist
     protected void onCreate() {
         createdAt = LocalDateTime.now();

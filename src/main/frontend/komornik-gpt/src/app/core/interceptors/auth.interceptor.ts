@@ -24,6 +24,11 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
   return next(req).pipe(
     catchError((error: HttpErrorResponse) => {
       if ([401, 403].includes(error.status)) {
+        // Allow unauthenticated access to public group details
+        if (req.method === 'GET' && /\/groups\/[0-9]+$/.test(req.url)) {
+          // Don't redirect, just propagate the error
+          return throwError(() => error);
+        }
         authService.clearAuthState();
         if (!req.url.includes('/api/auth/user')) {
           router.navigate(['/login']);

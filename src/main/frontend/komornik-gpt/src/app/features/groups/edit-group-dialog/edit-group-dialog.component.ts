@@ -9,6 +9,7 @@ import {MatExpansionModule} from '@angular/material/expansion';
 import {MatDividerModule} from '@angular/material/divider';
 import {MatIconModule} from '@angular/material/icon';
 import {MatAutocompleteModule, MatAutocompleteSelectedEvent} from '@angular/material/autocomplete';
+import {MatCheckboxModule} from '@angular/material/checkbox';
 import {Group} from '../../../core/models/group.model';
 import {User} from '../../../core/models/user.model';
 import {CreateUserRequest, UserService} from '../../../core/services/user.service';
@@ -43,7 +44,8 @@ interface CreatedUserResponse {
     MatExpansionModule,
     MatDividerModule,
     MatIconModule,
-    MatAutocompleteModule
+    MatAutocompleteModule,
+    MatCheckboxModule
   ],
   template: `
     <div class="dialog-container">
@@ -69,6 +71,8 @@ interface CreatedUserResponse {
               <textarea matInput formControlName="description" rows="3" placeholder="Enter group description"></textarea>
             </mat-form-field>
           </div>
+
+          <mat-checkbox formControlName="isPublic" class="mb-2">Public group (visible to everyone)</mat-checkbox>
 
           <div formArrayName="members" class="members-container">
             <h3>Members</h3>
@@ -283,7 +287,8 @@ export class EditGroupDialogComponent implements OnInit {
     this.groupForm = this.fb.group({
       name: ['', [Validators.required, Validators.minLength(2)]],
       description: [''],
-      members: this.fb.array([])
+      members: this.fb.array([]),
+      isPublic: [false]
     });
 
     this.newUserForm = this.fb.group({
@@ -302,7 +307,8 @@ export class EditGroupDialogComponent implements OnInit {
     // Load initial form values
     this.groupForm.patchValue({
       name: this.data.group.name,
-      description: this.data.group.description
+      description: this.data.group.description,
+      isPublic: this.data.group.isPublic ?? false
     });
 
     // Load available users
@@ -446,7 +452,8 @@ export class EditGroupDialogComponent implements OnInit {
         this.dialogRef.close({
           name: formValue.name,
           description: formValue.description,
-          members: memberData
+          members: memberData,
+          isPublic: formValue.isPublic
         });
       } catch (error: unknown) {
         if (error instanceof HttpErrorResponse) {

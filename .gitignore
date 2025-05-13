@@ -32,3 +32,4 @@ build/
 ### VS Code ###
 .vscode/
 daneDoKont.properties
+"src/main/resources/daneDoKont.properties" 

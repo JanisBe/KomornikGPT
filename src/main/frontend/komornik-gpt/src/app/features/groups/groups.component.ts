@@ -50,7 +50,7 @@ import {DATE_PROVIDERS} from '../../core/config/date.config';
         <div class="col-12 mb-4">
           <button mat-raised-button color="primary" (click)="openCreateGroupDialog()">
             <mat-icon>add</mat-icon>
-            Create New Group
+            Stwórz nową grupę
           </button>
         </div>
       </div>
@@ -62,36 +62,39 @@ import {DATE_PROVIDERS} from '../../core/config/date.config';
                 <mat-card-title>
                   <a [routerLink]="'/groups/' + group.id" class="hand">
                     {{ group.name }}
+                    <span matTooltip="{{ group.isPublic ? 'Publiczna' : 'Prywatna' }}">
+                      <mat-icon>{{ group.isPublic ? 'public' : 'lock' }}</mat-icon>
+                    </span>
                   </a>
                 </mat-card-title>
               </mat-card-header>
               <mat-card-content>
-                <p class="mb-0">Members:</p>
+                <p class="mb-0">Członkowie:</p>
                 @for (member of group.members; let isLast = $last; track member) {
                   <span matTooltip="{{member.email}}">{{ member.name }}{{ isLast ? '' : ', ' }}</span>
                 }
               </mat-card-content>
               <mat-card-actions align="end">
                 <button mat-icon-button color="primary" (click)="addExpense(group)"
-                        matTooltip="Add expense">
+                        matTooltip="Dodaj wydatek">
                   <mat-icon>add_shopping_cart</mat-icon>
                 </button>
                 <button mat-icon-button color="primary" (click)="editGroup(group)"
                         [disabled]="!canEditGroup(group)"
-                        [matTooltip]="canEditGroup(group) ? 'Edit group' : 'You can only edit groups you created'">
+                        [matTooltip]="canEditGroup(group) ? 'Edytuj grupę' : 'Możesz edytkować tylko grupy, które stworzyłeś'">
                   <mat-icon>edit</mat-icon>
                 </button>
                 <button mat-icon-button color="warn" (click)="deleteGroup(group)"
                         [disabled]="!canDeleteGroup(group)"
-                        [matTooltip]="canDeleteGroup(group) ? 'Delete group' : 'You can only delete groups you created'">
+                        [matTooltip]="canDeleteGroup(group) ? 'Skasuj grupę' : 'Możesz skasować tylko grupy, które stworzyłeś'">
                   <mat-icon>delete</mat-icon>
                 </button>
                 <button mat-icon-button color="accent" (click)="viewExpenses(group)"
-                        matTooltip="View expenses">
+                        matTooltip="Zobacz wydatki">
                   <mat-icon>receipt</mat-icon>
                 </button>
                 <button mat-icon-button color="primary" (click)="settleExpenses(group)"
-                        matTooltip="Settle expenses">
+                        matTooltip="Rozlicz wydatki">
                   <mat-icon>payments</mat-icon>
                 </button>
               </mat-card-actions>
@@ -101,7 +104,7 @@ import {DATE_PROVIDERS} from '../../core/config/date.config';
           <div class="col-12">
             <mat-card>
               <mat-card-content>
-                <p class="text-center">No groups found. Create a new group to get started!</p>
+                <p class="text-center">Nie masz zarejestrowanych grup, stwórz je</p>
               </mat-card-content>
             </mat-card>
           </div>
@@ -150,6 +153,17 @@ import {DATE_PROVIDERS} from '../../core/config/date.config';
       padding: 16px;
     }
 
+    mat-card-title a {
+      display: inline-flex;
+      align-items: center;
+    }
+
+    mat-card-title mat-icon {
+      font-size: 18px;
+      margin-left: 8px;
+      vertical-align: middle;
+    }
+
     mat-card-actions {
       padding: 16px;
       margin-top: auto;
@@ -158,9 +172,14 @@ import {DATE_PROVIDERS} from '../../core/config/date.config';
       justify-content: flex-end;
       flex-wrap: wrap;
     }
-    .hand{
-      text-decoration: none; color: inherit; display: flex; align-items: center;
+
+    .hand {
+      text-decoration: none;
+      color: inherit;
+      display: flex;
+      align-items: center;
     }
+
     @media (max-width: 768px) {
       .col-md-6 {
         flex: 0 0 100%;

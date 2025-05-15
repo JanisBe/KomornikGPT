@@ -13,8 +13,7 @@ import java.util.List;
 
 @Repository
 public interface ExpenseRepository extends JpaRepository<Expense, Long> {
-    List<Expense> findAllByGroupId(Long groupId);
-    
+
     @Query("SELECT e FROM Expense e WHERE e.group.id = :groupId AND e.date BETWEEN :startDate AND :endDate")
     List<Expense> findAllByGroupIdAndDateBetween(
         @Param("groupId") Long groupId,
@@ -35,4 +34,9 @@ public interface ExpenseRepository extends JpaRepository<Expense, Long> {
     <S extends Expense> Page<S> findAll(Example<S> example, Pageable pageable);
 
     List<Expense> findAllByGroupIdOrderByDateDesc(Long groupId);
+
+    List<Expense> findAllByGroup_IdAndPaidFalse(Long groupId);
+
+
+
 }

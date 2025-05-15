@@ -30,7 +30,7 @@ interface GroupedExpenses {
   template: `
     <div class="dialog-container">
       <div class="dialog-header">
-        <h2 mat-dialog-title>Expenses for {{ data.group.name }}</h2>
+        <h2 mat-dialog-title>Wydatki dla {{ data.group.name }}</h2>
         <button mat-icon-button mat-dialog-close class="close-button">
           <mat-icon>close</mat-icon>
         </button>

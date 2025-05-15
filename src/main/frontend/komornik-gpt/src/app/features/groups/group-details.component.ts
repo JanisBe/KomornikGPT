@@ -15,32 +15,48 @@ import {MatProgressSpinner} from '@angular/material/progress-spinner';
   standalone: true,
   imports: [CommonModule, RouterModule, MatCardModule, MatIconModule, MatButtonModule, MatListModule, MatProgressSpinner],
   template: `
-    <div class="container mt-4" *ngIf="group">
-      <mat-card>
-        <mat-card-header>
-          <mat-card-title routerLink="/group/{{ group.id }}">{{ group.name }}</mat-card-title>
-        </mat-card-header>
-        <mat-card-content>
-          <p *ngIf="group.description">{{ group.description }}</p>
-          <p><strong>Members:</strong></p>
-          <mat-list>
-            <mat-list-item *ngFor="let member of group.members">
-              <mat-icon matListIcon>person</mat-icon>
-              {{ member.name }} ({{ member.email }})
-            </mat-list-item>
-          </mat-list>
-          <div *ngIf="!group.isPublic && !isAuthenticated">
-            <p class="text-danger">This group is private. Please log in to see more details.</p>
-          </div>
-        </mat-card-content>
-      </mat-card>
-    </div>
-    <div *ngIf="loading" class="text-center mt-4">
-      <mat-spinner></mat-spinner>
-    </div>
-    <div *ngIf="error" class="text-center mt-4 text-danger">
-      <p>{{ error }}</p>
-    </div>
+    @if (group; as g) {
+      <div class="container mt-4">
+        <mat-card>
+          <mat-card-header>
+            <mat-card-title routerLink="/group/{{ g.id }}">{{ g.name }}</mat-card-title>
+          </mat-card-header>
+          <mat-card-content>
+            @if (g.description) {
+              <p>{{ g.description }}</p>
+            }
+
+            <p><strong>Members:</strong></p>
+            <mat-list>
+              @for (member of g.members; track member.id) {
+                <mat-list-item>
+                  <mat-icon matListIcon>person</mat-icon>
+                  {{ member.name }} ({{ member.email }})
+                </mat-list-item>
+              }
+            </mat-list>
+
+            @if (!g.isPublic && !isAuthenticated) {
+              <div class="text-danger">
+                <p>This group is private. Please log in to see more details.</p>
+              </div>
+            }
+          </mat-card-content>
+        </mat-card>
+      </div>
+    }
+
+    @if (loading) {
+      <div class="text-center mt-4">
+        <mat-spinner></mat-spinner>
+      </div>
+    }
+
+    @if (error) {
+      <div class="text-center mt-4 text-danger">
+        <p>{{ error }}</p>
+      </div>
+    }
   `,
   styles: [`
     .container {

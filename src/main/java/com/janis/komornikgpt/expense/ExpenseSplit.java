@@ -36,8 +36,6 @@ public class ExpenseSplit {
     @Column(precision = 19, scale = 2)
     private BigDecimal amountOwed;
 
-    private boolean isPaid = false;
-
     @Override
     public final boolean equals(Object o) {
         if (this == o) return true;

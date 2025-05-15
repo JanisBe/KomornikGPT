@@ -77,4 +77,10 @@ public class ExpenseRestController {
         Expense expense = expenseService.recalculateExpenses(id);
         return ResponseEntity.ok(ExpenseDto.fromExpense(expense));
     }
+
+    @PostMapping("/groups/{groupId}/settle")
+    public ResponseEntity<Void> settleGroup(@PathVariable Long groupId) {
+        expenseSettlementService.settleGroup(groupId);
+        return ResponseEntity.noContent().build();
+    }
 }

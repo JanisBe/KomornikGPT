@@ -1,15 +1,19 @@
 package com.janis.komornikgpt;
 
+import com.janis.komornikgpt.expense.Currency;
+
 import java.math.BigDecimal;
 
 public class SettlementDto {
     public String from;
     public String to;
     public BigDecimal amount;
+    public Currency currency;
 
-    public SettlementDto(String from, String to, BigDecimal amount) {
+    public SettlementDto(String from, String to, BigDecimal amount, Currency currency) {
         this.from = from;
         this.to = to;
         this.amount = amount;
+        this.currency = currency;
     }
 }

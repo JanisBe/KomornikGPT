@@ -23,6 +23,8 @@ import {ViewExpensesDialogComponent} from '../expenses/view-expenses-dialog/view
 import {MatDatepickerModule} from '@angular/material/datepicker';
 import {MatNativeDateModule} from '@angular/material/core';
 import {DATE_PROVIDERS} from '../../core/config/date.config';
+import {SettleExpensesDialogComponent} from '../expenses/settle-expenses-dialog';
+import {CopyUrlButtonComponent} from '../expenses/copy-url-button';
 
 @Component({
   selector: 'app-groups',
@@ -37,7 +39,8 @@ import {DATE_PROVIDERS} from '../../core/config/date.config';
     MatSnackBarModule,
     RouterModule,
     MatDatepickerModule,
-    MatNativeDateModule
+    MatNativeDateModule,
+    CopyUrlButtonComponent
   ],
   providers: [
     MatDatepickerModule,
@@ -60,6 +63,7 @@ import {DATE_PROVIDERS} from '../../core/config/date.config';
             <mat-card class="group-card">
               <mat-card-header>
                 <mat-card-title>
+                  <copy-url-button/>
                   <a [routerLink]="'/groups/' + group.id" class="hand">
                     {{ group.name }}
                     <span matTooltip="{{ group.isPublic ? 'Publiczna' : 'Prywatna' }}">
@@ -383,7 +387,15 @@ export class GroupsComponent implements OnInit {
   }
 
   settleExpenses(group: Group): void {
-    // TODO: Implement expenses settlement
+    const dialogRef = this.dialog.open(SettleExpensesDialogComponent, {
+      width: '600px',
+      data: {group, currentUser: this.currentUser}
+    });
+    dialogRef.afterClosed().subscribe(result => {
+      if (result) {
+        this.snackBar.open('Wydatki zostały rozliczone!', 'Zamknij', {duration: 3000});
+      }
+    });
   }
 
   addExpense(group: Group): void {

@@ -6,15 +6,16 @@ import com.janis.komornikgpt.group.GroupRepository;
 import com.janis.komornikgpt.group.GroupService;
 import com.janis.komornikgpt.user.User;
 import com.janis.komornikgpt.user.UserRepository;
+import lombok.RequiredArgsConstructor;
+import org.springframework.security.access.AccessDeniedException;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
 import java.math.BigDecimal;
 import java.security.Principal;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
-import lombok.RequiredArgsConstructor;
-import org.springframework.security.access.AccessDeniedException;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
@@ -30,8 +31,8 @@ public class ExpenseService {
 		request.splits().forEach(splitDto -> {
 			ExpenseSplit split = new ExpenseSplit();
 			split.setUser(userRepository.findById(splitDto.userId())
-				.orElseThrow(
-					() -> new RuntimeException("User not found with id: " + splitDto.userId())));
+					.orElseThrow(
+							() -> new RuntimeException("User not found with id: " + splitDto.userId())));
 			split.setAmountOwed(splitDto.amountOwed());
 			split.setExpense(expense);
 			expense.getSplits().add(split);
@@ -46,11 +47,11 @@ public class ExpenseService {
 		}
 
 		User payer = userRepository.findById(request.payerId())
-			.orElseThrow(
-				() -> new RuntimeException("User not found with id: " + request.payerId()));
+				.orElseThrow(
+						() -> new RuntimeException("User not found with id: " + request.payerId()));
 		Group group = groupRepository.findById(request.groupId())
-			.orElseThrow(
-				() -> new RuntimeException("Group not found with id: " + request.groupId()));
+				.orElseThrow(
+						() -> new RuntimeException("Group not found with id: " + request.groupId()));
 
 		Expense expense = new Expense();
 		expense.setDescription(request.description());
@@ -63,8 +64,8 @@ public class ExpenseService {
 		request.splits().forEach(splitDto -> {
 			ExpenseSplit split = new ExpenseSplit();
 			split.setUser(userRepository.findById(splitDto.userId())
-				.orElseThrow(
-					() -> new RuntimeException("User not found with id: " + splitDto.userId())));
+					.orElseThrow(
+							() -> new RuntimeException("User not found with id: " + splitDto.userId())));
 			split.setAmountOwed(splitDto.amountOwed());
 			split.setExpense(expense);
 			expense.getSplits().add(split);
@@ -76,7 +77,7 @@ public class ExpenseService {
 	@Transactional
 	public void deleteExpense(Long id, Principal principal) {
 		Expense expense = expenseRepository.findById(id)
-			.orElseThrow(() -> new ResourceNotFoundException("Expense not found"));
+				.orElseThrow(() -> new ResourceNotFoundException("Expense not found"));
 
 		// Check if user is member of the group
 		if (!groupService.isUserMemberOfGroup(principal.getName(), expense.getGroup().getId())) {
@@ -95,7 +96,7 @@ public class ExpenseService {
 	}
 
 	public List<Expense> findAllByGroupIdAndDateBetween(Long groupId, LocalDateTime startDate,
-		LocalDateTime endDate) {
+														LocalDateTime endDate) {
 		return expenseRepository.findAllByGroupIdAndDateBetween(groupId, startDate, endDate);
 	}
 
@@ -104,16 +105,16 @@ public class ExpenseService {
 	}
 
 	public List<Expense> findAllByPayerIdAndDateBetween(Long userId, LocalDateTime startDate,
-		LocalDateTime endDate) {
+														LocalDateTime endDate) {
 		return expenseRepository.findAllByPayerIdAndDateBetween(userId, startDate, endDate);
 	}
 
 	public Expense recalculateExpenses(Long id) {
 		Expense expense = expenseRepository.findById(id)
-			.orElseThrow(() -> new ResourceNotFoundException("Expense not found"));
+				.orElseThrow(() -> new ResourceNotFoundException("Expense not found"));
 		Expense newExpense = new Expense();
 		BigDecimal expenseAmount = nbpExchangeService.callNbpApi(expense.getAmount(),
-			expense.getCurrency());
+				expense.getCurrency());
 		newExpense.setAmount(expenseAmount);
 		newExpense.setCurrency(expense.getCurrency());
 		newExpense.setDescription(expense.getDescription());
@@ -123,7 +124,7 @@ public class ExpenseService {
 		List<ExpenseSplit> splits = new ArrayList<>();
 		expense.getSplits().forEach(split -> {
 			BigDecimal splitAmount = nbpExchangeService.callNbpApi(split.getAmountOwed(),
-				expense.getCurrency());
+					expense.getCurrency());
 			ExpenseSplit newSplit = new ExpenseSplit();
 			newSplit.setUser(split.getUser());
 			newSplit.setAmountOwed(splitAmount);
@@ -136,7 +137,7 @@ public class ExpenseService {
 	@Transactional
 	public Expense updateExpense(Long id, UpdateExpenseRequest request, Principal principal) {
 		Expense expense = expenseRepository.findById(id)
-			.orElseThrow(() -> new ResourceNotFoundException("Expense not found"));
+				.orElseThrow(() -> new ResourceNotFoundException("Expense not found"));
 
 		// Check if user is member of the group
 		if (!groupService.isUserMemberOfGroup(principal.getName(), expense.getGroup().getId())) {
@@ -149,8 +150,8 @@ public class ExpenseService {
 		expense.setCurrency(request.currency());
 		expense.setDate(request.date());
 		expense.setPayer(userRepository.findById(request.payerId())
-			.orElseThrow(
-				() -> new RuntimeException("User not found with id: " + request.payerId())));
+				.orElseThrow(
+						() -> new RuntimeException("User not found with id: " + request.payerId())));
 
 		// Update splits
 		expense.getSplits().clear();
@@ -158,4 +159,4 @@ public class ExpenseService {
 
 		return expenseRepository.save(expense);
 	}
-} 
+}

@@ -27,18 +27,6 @@ public class ExpenseService {
     private final GroupService groupService;
     private final NBPExchangeService nbpExchangeService;
 
-    private void assignSplits(UpdateExpenseRequest request, Expense expense) {
-        request.splits().forEach(splitDto -> {
-            ExpenseSplit split = new ExpenseSplit();
-            split.setUser(userRepository.findById(splitDto.userId())
-                    .orElseThrow(
-                            () -> new RuntimeException("User not found with id: " + splitDto.userId())));
-            split.setAmountOwed(splitDto.amountOwed());
-            split.setExpense(expense);
-            expense.getSplits().add(split);
-        });
-    }
-
     @Transactional
     public Expense createExpense(CreateExpenseRequest request, Principal principal) {
         // Check if user is member of the group
@@ -60,18 +48,20 @@ public class ExpenseService {
         expense.setDate(request.date());
         expense.setPayer(payer);
         expense.setGroup(group);
-        assignSplits();
+        assignSplits(request, expense);
+
+        return expenseRepository.save(expense);
+    }
+
+    private void assignSplits(SplitContainer request, Expense expense) {
         request.splits().forEach(splitDto -> {
             ExpenseSplit split = new ExpenseSplit();
             split.setUser(userRepository.findById(splitDto.userId())
-                    .orElseThrow(
-                            () -> new RuntimeException("User not found with id: " + splitDto.userId())));
+                    .orElseThrow(() -> new RuntimeException("User not found with id: " + splitDto.userId())));
             split.setAmountOwed(splitDto.amountOwed());
             split.setExpense(expense);
             expense.getSplits().add(split);
         });
-
-        return expenseRepository.save(expense);
     }
 
     @Transactional

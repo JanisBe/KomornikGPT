@@ -12,10 +12,10 @@ public record UpdateExpenseRequest(
         String description,
         LocalDateTime date,
         List<SplitDto> splits
-) {
+) implements SplitContainer {
     public record SplitDto(
             Long userId,
             BigDecimal amountOwed
-    ) {
+    ) implements SplitDtoBase {
     }
 } 

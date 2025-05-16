@@ -12,10 +12,10 @@ public record CreateExpenseRequest(
         Long payerId,
         Long groupId,
         List<ExpenseSplitRequest> splits
-) {
+) implements SplitContainer {
     public record ExpenseSplitRequest(
             Long userId,
             BigDecimal amountOwed
-    ) {
+    ) implements SplitDtoBase {
     }
 }

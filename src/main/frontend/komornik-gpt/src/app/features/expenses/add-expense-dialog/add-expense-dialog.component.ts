@@ -55,11 +55,11 @@ import {AuthService} from '../../../core/services/auth.service';
           <div class="form-field">
             <mat-form-field appearance="outline" class="full-width">
               <mat-label>Description</mat-label>
-              <input matInput formControlName="description" required placeholder="What is this expense for?">
+              <input matInput formControlName="description" required placeholder="What is this expense for?"/>
               <mat-icon matSuffix>description</mat-icon>
-              <mat-error *ngIf="expenseForm.get('description')?.hasError('required')">
-                Description is required
-              </mat-error>
+              @if (expenseForm.get('description')?.errors?.['required']) {
+                <mat-error>Description is required</mat-error>
+              }
             </mat-form-field>
           </div>
 
@@ -67,14 +67,23 @@ import {AuthService} from '../../../core/services/auth.service';
             <div class="form-field amount-field">
               <mat-form-field appearance="outline" class="full-width">
                 <mat-label>Amount</mat-label>
-                <input matInput type="number" formControlName="amount" required placeholder="0.00" step="0.01" min="0">
+                <input
+                  (input)="splitEqually()"
+                  matInput
+                  type="number"
+                  formControlName="amount"
+                  required
+                  placeholder="0.00"
+                  step="0.01"
+                  min="0"
+                />
                 <mat-icon matSuffix>payments</mat-icon>
-                <mat-error *ngIf="expenseForm.get('amount')?.hasError('required')">
-                  Amount is required
-                </mat-error>
-                <mat-error *ngIf="expenseForm.get('amount')?.hasError('min')">
-                  Amount must be greater than 0
-                </mat-error>
+                @if (expenseForm.get('amount')?.errors?.['required']) {
+                  <mat-error>Amount is required</mat-error>
+                }
+                @if (expenseForm.get('amount')?.errors?.['min']) {
+                  <mat-error>Amount must be greater than 0</mat-error>
+                }
               </mat-form-field>
             </div>
 
@@ -82,14 +91,14 @@ import {AuthService} from '../../../core/services/auth.service';
               <mat-form-field appearance="outline" class="full-width">
                 <mat-label>Currency</mat-label>
                 <mat-select formControlName="currency" required>
-                  <mat-option *ngFor="let currency of currencies" [value]="currency">
-                    {{ currency }}
-                  </mat-option>
+                  @for (currency of currencies; track currency) {
+                    <mat-option [value]="currency">{{ currency }}</mat-option>
+                  }
                 </mat-select>
                 <mat-icon matSuffix>currency_exchange</mat-icon>
-                <mat-error *ngIf="expenseForm.get('currency')?.hasError('required')">
-                  Currency is required
-                </mat-error>
+                @if (expenseForm.get('currency')?.errors?.['required']) {
+                  <mat-error>Currency is required</mat-error>
+                }
               </mat-form-field>
             </div>
           </div>
@@ -98,13 +107,13 @@ import {AuthService} from '../../../core/services/auth.service';
             <div class="form-field flex-1">
               <mat-form-field appearance="outline" class="full-width">
                 <mat-label>Date</mat-label>
-                <input matInput [matDatepicker]="picker" formControlName="date" required>
+                <input matInput [matDatepicker]="picker" formControlName="date" required/>
                 <mat-hint>DD/MM/YYYY</mat-hint>
                 <mat-datepicker-toggle matSuffix [for]="picker"></mat-datepicker-toggle>
                 <mat-datepicker #picker></mat-datepicker>
-                <mat-error *ngIf="expenseForm.get('date')?.hasError('required')">
-                  Date is required
-                </mat-error>
+                @if (expenseForm.get('date')?.errors?.['required']) {
+                  <mat-error>Date is required</mat-error>
+                }
               </mat-form-field>
             </div>
 
@@ -112,14 +121,14 @@ import {AuthService} from '../../../core/services/auth.service';
               <mat-form-field appearance="outline" class="full-width">
                 <mat-label>Paid by</mat-label>
                 <mat-select formControlName="payerId" required>
-                  <mat-option *ngFor="let member of data.group.members" [value]="member.id">
-                    {{ member.name }}
-                  </mat-option>
+                  @for (member of data.group.members; track member.id) {
+                    <mat-option [value]="member.id">{{ member.name }}</mat-option>
+                  }
                 </mat-select>
                 <mat-icon matSuffix>person</mat-icon>
-                <mat-error *ngIf="expenseForm.get('payerId')?.hasError('required')">
-                  Payer is required
-                </mat-error>
+                @if (expenseForm.get('payerId')?.errors?.['required']) {
+                  <mat-error>Payer is required</mat-error>
+                }
               </mat-form-field>
             </div>
           </div>
@@ -127,45 +136,51 @@ import {AuthService} from '../../../core/services/auth.service';
           <div class="form-field splits-section">
             <div class="splits-header">
               <h3>Split between</h3>
-              <button type="button"
-                      mat-stroked-button
-                      color="primary"
-                      (click)="splitEqually()"
-                      [disabled]="!expenseForm.get('amount')?.value || expenseForm.get('amount')?.invalid"
-                      matTooltip="Split the amount equally between all members">
+              <button
+                type="button"
+                mat-stroked-button
+                color="primary"
+                (click)="splitEqually()"
+                [disabled]="!expenseForm.get('amount')?.value || expenseForm.get('amount')?.invalid"
+                matTooltip="Split the amount equally between all members"
+              >
                 <mat-icon>balance</mat-icon>
                 Split Equally
               </button>
             </div>
 
-            <div class="total-info" *ngIf="totalSplitAmount > 0">
-              <span [class.error]="!isSplitValid">
-                Total split: {{ totalSplitAmount | number:'1.2-2' }}
-                <span *ngIf="expenseForm.get('amount')?.value">
-                  of {{ expenseForm.get('amount')?.value | number:'1.2-2' }}
-                  ({{ getSplitPercentage() | number:'1.0-0' }}%)
-                </span>
-              </span>
-            </div>
+            @if (totalSplitAmount > 0) {
+              <div class="total-info">
+        <span [class.error]="!isSplitValid">
+          Total split: {{ totalSplitAmount | number: '1.2-2' }}
+          @if (expenseForm.get('amount')?.value) {
+            of {{ expenseForm.get('amount')?.value | number: '1.2-2' }}
+            ({{ getSplitPercentage() | number: '1.0-0' }}%)
+          }
+        </span>
+              </div>
+            }
 
             <div formArrayName="splits" class="splits-container">
-              @for (member of data.group.members; track member) {
+              @for (member of data.group.members; track member.id) {
                 <mat-form-field appearance="outline" class="full-width mb-2">
                   <mat-label>{{ member.name }}'s share</mat-label>
-                  <input matInput
-                         type="number"
-                         [formControlName]="member.id.toString()"
-                         required
-                         step="0.01"
-                         min="0"
-                         (input)="updateTotalSplit()">
+                  <input
+                    matInput
+                    type="number"
+                    [formControlName]="member.id.toString()"
+                    required
+                    step="0.01"
+                    min="0"
+                    (input)="updateTotalSplit()"
+                  />
                   <mat-icon matSuffix>person_outline</mat-icon>
-                  <mat-error *ngIf="getSplitControl(member.id.toString())?.hasError('required')">
-                    Share amount is required
-                  </mat-error>
-                  <mat-error *ngIf="getSplitControl(member.id.toString())?.hasError('min')">
-                    Share amount must be greater than or equal to 0
-                  </mat-error>
+                  @if (getSplitControl(member.id.toString())?.errors?.['required']) {
+                    <mat-error>Share amount is required</mat-error>
+                  }
+                  @if (getSplitControl(member.id.toString())?.errors?.['min']) {
+                    <mat-error>Share amount must be greater than or equal to 0</mat-error>
+                  }
                 </mat-form-field>
               }
             </div>
@@ -512,4 +527,5 @@ export class AddExpenseDialogComponent {
       this.dialogRef.close(expenseData);
     }
   }
+
 }

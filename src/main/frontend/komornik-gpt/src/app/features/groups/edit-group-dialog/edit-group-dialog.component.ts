@@ -56,10 +56,10 @@ interface CreatedUserResponse {
             <mat-form-field appearance="outline" class="full-width">
               <mat-label>Group Name</mat-label>
               <input matInput formControlName="name" required>
-              @if (groupForm.get('name')?.hasError('required')) {
+              @if (groupForm.get('name')?.errors?.['required']) {
                 <mat-error>Name is required</mat-error>
               }
-              @if (groupForm.get('name')?.hasError('minlength')) {
+              @if (groupForm.get('name')?.errors?.['minlength']) {
                 <mat-error>Name must be at least 3 characters long</mat-error>
               }
             </mat-form-field>
@@ -85,7 +85,7 @@ interface CreatedUserResponse {
                            formControlName="userName"
                            [matAutocomplete]="auto"
                            (input)="onUserNameInput($index)">
-                    @if (member.get('userName')?.hasError('required')) {
+                    @if (member.get('userName')?.errors?.['required']) {
                       <mat-error>Username is required</mat-error>
                     }
                     <mat-autocomplete #auto="matAutocomplete"
@@ -101,10 +101,10 @@ interface CreatedUserResponse {
                   <mat-form-field appearance="outline">
                     <mat-label>Email</mat-label>
                     <input matInput formControlName="email" type="email" required>
-                    @if (member.get('email')?.hasError('required')) {
+                    @if (member.get('email')?.errors?.['required']) {
                       <mat-error>Email is required</mat-error>
                     }
-                    @if (member.get('email')?.hasError('email')) {
+                    @if (member.get('email')?.errors?.['email']) {
                       <mat-error>Please enter a valid email address</mat-error>
                     }
                   </mat-form-field>
@@ -143,7 +143,7 @@ interface CreatedUserResponse {
                 <mat-form-field appearance="outline" class="full-width">
                   <mat-label>Name</mat-label>
                   <input matInput formControlName="name" placeholder="Enter name" required>
-                  @if (newUserForm.get('name')?.hasError('required')) {
+                  @if (newUserForm.get('name')?.errors?.['required']) {
                     <mat-error>Name is required</mat-error>
                   }
                 </mat-form-field>
@@ -153,7 +153,7 @@ interface CreatedUserResponse {
                 <mat-form-field appearance="outline" class="full-width">
                   <mat-label>Surname</mat-label>
                   <input matInput formControlName="surname" placeholder="Enter surname" required>
-                  @if (newUserForm.get('surname')?.hasError('required')) {
+                  @if (newUserForm.get('surname')?.errors?.['required']) {
                     <mat-error>Surname is required</mat-error>
                   }
                 </mat-form-field>
@@ -163,7 +163,7 @@ interface CreatedUserResponse {
                 <mat-form-field appearance="outline" class="full-width">
                   <mat-label>Username</mat-label>
                   <input matInput formControlName="username" placeholder="Enter username" required>
-                  @if (newUserForm.get('username')?.hasError('required')) {
+                  @if (newUserForm.get('username')?.errors?.['required']) {
                     <mat-error>Username is required</mat-error>
                   }
                 </mat-form-field>
@@ -173,10 +173,10 @@ interface CreatedUserResponse {
                 <mat-form-field appearance="outline" class="full-width">
                   <mat-label>Email</mat-label>
                   <input matInput formControlName="email" placeholder="Enter email" type="email" required>
-                  @if (newUserForm.get('email')?.hasError('required')) {
+                  @if (newUserForm.get('email')?.errors?.['required']) {
                     <mat-error>Email is required</mat-error>
                   }
-                  @if (newUserForm.get('email')?.hasError('email')) {
+                  @if (newUserForm.get('email')?.errors?.['email']) {
                     <mat-error>Please enter a valid email address</mat-error>
                   }
                 </mat-form-field>

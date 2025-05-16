@@ -389,7 +389,7 @@ export class GroupsComponent implements OnInit {
   settleExpenses(group: Group): void {
     const dialogRef = this.dialog.open(SettleExpensesDialogComponent, {
       width: '600px',
-      data: {group, currentUser: this.currentUser}
+      data: {group}
     });
     dialogRef.afterClosed().subscribe(result => {
       if (result) {

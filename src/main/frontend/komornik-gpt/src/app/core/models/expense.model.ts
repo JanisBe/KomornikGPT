@@ -20,6 +20,7 @@ export interface Expense {
   splits: ExpenseSplit[];
   createdAt?: Date;
   updatedAt?: Date;
+  isPaid?: boolean;
 }
 
 export interface CreateExpenseDto {

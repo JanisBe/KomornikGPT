@@ -74,9 +74,9 @@ import {MatDividerModule} from '@angular/material/divider';
             <mat-form-field appearance="outline">
               <mat-label>Email</mat-label>
               <input matInput type="email" formControlName="email" required>
-              @if (loginForm.get('email')?.hasError('required') && (loginForm.get('email')?.dirty || loginForm.get('email')?.touched)) {
+              @if (loginForm.get('email')?.errors?.['required'] && (loginForm.get('email')?.dirty || loginForm.get('email')?.touched)) {
                 <mat-error>Email is required</mat-error>
-              } @else if (loginForm.get('email')?.hasError('email') && (loginForm.get('email')?.dirty || loginForm.get('email')?.touched)) {
+              } @else if (loginForm.get('email')?.errors?.['email'] && (loginForm.get('email')?.dirty || loginForm.get('email')?.touched)) {
                 <mat-error>Email is invalid</mat-error>
               }
             </mat-form-field>

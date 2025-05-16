@@ -82,7 +82,7 @@ export class SettleExpensesDialogComponent implements OnInit {
   settling = false;
 
   constructor(
-    @Inject(MAT_DIALOG_DATA) public data: { group: any; currentUser: any },
+    @Inject(MAT_DIALOG_DATA) public data: { group: any; },
     private dialogRef: MatDialogRef<SettleExpensesDialogComponent>,
     private http: HttpClient,
     private snackBar: MatSnackBar,

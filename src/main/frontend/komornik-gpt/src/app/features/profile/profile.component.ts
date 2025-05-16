@@ -62,7 +62,7 @@ interface UpdateUserRequest {
               <mat-form-field appearance="outline">
                 <mat-label>Surname</mat-label>
                 <input matInput formControlName="surname" required>
-                @if (profileForm.get('surname')?.hasError('required') && profileForm.get('surname')?.touched) {
+                @if (profileForm.get('surname')?.errors?.['required'] && profileForm.get('surname')?.touched) {
                   <mat-error>
                     Surname is required
                   </mat-error>

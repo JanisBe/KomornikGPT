@@ -10,6 +10,7 @@ import {Expense} from '../../../core/models/expense.model';
 import {ExpenseService} from '../../../core/services/expense.service';
 import {AddExpenseDialogComponent} from '../add-expense-dialog/add-expense-dialog.component';
 import {ConfirmDeleteDialogComponent} from './confirm-delete-dialog.component';
+import {SettleExpensesDialogComponent} from '../settle-expenses-dialog';
 
 interface GroupedExpenses {
   date: Date;
@@ -31,6 +32,10 @@ interface GroupedExpenses {
     <div class="dialog-container">
       <div class="dialog-header">
         <h2 mat-dialog-title>Wydatki dla {{ data.group.name }}</h2>
+        <button mat-icon-button color="primary" (click)="settleExpenses(data.group)"
+                matTooltip="Rozlicz wydatki">
+          <mat-icon>payments</mat-icon>
+        </button>
         <button mat-icon-button mat-dialog-close class="close-button">
           <mat-icon>close</mat-icon>
         </button>
@@ -46,31 +51,32 @@ interface GroupedExpenses {
               <table>
                 <thead>
                 <tr>
-                  <th>Description</th>
-                  <th>Amount</th>
-                  <th>Paid By</th>
-                  <th>Splits</th>
-                  <th>Actions</th>
+                  <th>Opis</th>
+                  <th>Kwote</th>
+                  <th>Płacił</th>
+                  <th>Kto</th>
+                  <th>Akcje</th>
                 </tr>
                 </thead>
                 <tbody>
                   @for (expense of group.expenses; track expense.id) {
                     <tr>
-                      <td [matTooltip]="expense.date | date:'medium':'':'pl'"
-                          matTooltipPosition="above">
-                        {{ expense.description }}
+                      <td>
+                        <span [matTooltip]="expense.date | date:'medium':'':'pl'" matTooltipPosition="above">
+                          {{ expense.description | slice:0:30 }}
+                        </span>
+                        @if (expense.isPaid) {
+                          <mat-icon matTooltip="Uregulowane" class="paid-icon">check_circle</mat-icon>
+                        }
                       </td>
                       <td>{{ expense.amount | number:'1.2-2' }} {{ expense.currency }}</td>
-                      <td>{{ expense.payer.name }}</td>
+                      <td><span matTooltip="{{expense.payer.email}}">{{ expense.payer.name }}</span></td>
                       <td>
                         <div class="splits-container">
                           @for (split of expense.splits; track split.id) {
                             <div class="split-item" [class.paid]="split.isPaid">
                               <span
                                 matTooltip="{{split.user.email}}">{{ split.user.name }}</span>: {{ split.amountOwed | number:'1.2-2' }}
-                              @if (split.isPaid) {
-                                <mat-icon class="paid-icon">check_circle</mat-icon>
-                              }
                             </div>
                           }
                         </div>
@@ -78,12 +84,12 @@ interface GroupedExpenses {
                       <td class="actions">
                         <button mat-icon-button color="primary"
                                 (click)="editExpense(expense)"
-                                matTooltip="Edit expense">
+                                matTooltip="Edytuj wydatek">
                           <mat-icon>edit</mat-icon>
                         </button>
                         <button mat-icon-button color="warn"
                                 (click)="deleteExpense(expense)"
-                                matTooltip="Delete expense">
+                                matTooltip="Skasuj wydatek">
                           <mat-icon>delete</mat-icon>
                         </button>
                       </td>
@@ -320,5 +326,17 @@ export class ViewExpensesDialogComponent implements OnInit {
         expenses: expenses.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
       }))
       .sort((a, b) => b.date.getTime() - a.date.getTime());
+  }
+
+  settleExpenses(group: Group): void {
+    const dialogRef = this.dialog.open(SettleExpensesDialogComponent, {
+      width: '600px',
+      data: {group}
+    });
+    dialogRef.afterClosed().subscribe(result => {
+      if (result) {
+        this.snackBar.open('Wydatki zostały rozliczone!', 'Zamknij', {duration: 3000});
+      }
+    });
   }
 }

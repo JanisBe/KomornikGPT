@@ -9,12 +9,14 @@ services:
       - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres:5432/komornik
       - SPRING_DATASOURCE_USERNAME=root
       - SPRING_DATASOURCE_PASSWORD=password
+      - SPRING_CONFIG_IMPORT=optional:file:/app/daneDoKont.properties
     depends_on:
       postgres:
         condition: service_healthy
     networks:
       - komornik-network
-
+    volumes:
+      - /home/opc/daneDoKont.properties:/app/daneDoKont.properties
   postgres:
     image: postgres:15
     container_name: postgres

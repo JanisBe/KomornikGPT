@@ -42,25 +42,28 @@ public class SecurityConfig {
                         .sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(
-                                "/",
-                                "/index.html",
-                                "/favicon.ico",
-                                "/*/*.png",
-                                "/*/*.gif",
-                                "/*/*.svg",
-                                "/*/*.jpg",
-                                "/*/*.html",
-                                "/*/*.css",
-                                "/*/*.js",
+                                "/",                      // strona główna
+                                "/index.html",           // entry point Angulara
+                                "/favicon.ico",          // ikona
+                                "/**/*.png",             // obrazki
+                                "/**/*.gif",
+                                "/**/*.svg",
+                                "/**/*.jpg",
+                                "/**/*.html",            // może się zdarzyć np. 404.html
+                                "/**/*.css",
+                                "/**/*.js",              // Angularowy build: chunk-*.js, main*.js
+                                "/**/*.woff2",           // czcionki, jakby były
+                                "/**/*.ttf",
                                 "/api/auth/login",
                                 "/api/auth/user",
                                 "/api/auth/register",
-                                "/api/groups/*",
-                                "/.well-known/appspecific/com.chrome.devtools.json",
-                                "/oauth2/*",
-                                "/login/*")
-                        .permitAll()
-                        .anyRequest().authenticated())
+                                "/api/groups/**",        // łapie wszystko w grupach, nie tylko jeden poziom
+                                "/.well-known/**",       // szerzej, jakby coś jeszcze tam było
+                                "/oauth2/**",            // pełna ścieżka oauth2
+                                "/login/**"              // ewentualne przekierowania logowania
+                        ).permitAll()
+                        .anyRequest().authenticated()
+                )
                 .oauth2Login(oauth2 -> oauth2
                         .successHandler(authenticationSuccessHandler())
                         .failureHandler((request, response, exception) -> {

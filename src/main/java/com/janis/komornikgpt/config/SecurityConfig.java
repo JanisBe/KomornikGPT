@@ -56,6 +56,7 @@ public class SecurityConfig {
                                 "/api/auth/user",
                                 "/api/auth/register",
                                 "/api/groups/*",
+                                "/.well-known/appspecific/com.chrome.devtools.json",
                                 "/oauth2/*",
                                 "/login/*")
                         .permitAll()

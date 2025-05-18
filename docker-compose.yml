@@ -1,7 +1,7 @@
 version: "3.8"
 services:
   app:
-    build: .
+    image: janisbe/komornik-gpt:latest
     container_name: komornik-gpt
     ports:
       - "8080:8080"
@@ -10,6 +10,7 @@ services:
       - SPRING_DATASOURCE_USERNAME=root
       - SPRING_DATASOURCE_PASSWORD=password
       - SPRING_CONFIG_IMPORT=optional:file:/app/daneDoKont.properties
+      - SPRING_SQL_INIT_MODE=never
     depends_on:
       postgres:
         condition: service_healthy
@@ -29,7 +30,7 @@ services:
     volumes:
       - pgdata:/var/lib/postgresql/data
     healthcheck:
-      test: [ "CMD-SHELL", "pg_isready -U postgres" ]
+      test: [ "CMD-SHELL", "pg_isready -U root -d komornik" ]
       interval: 5s
       timeout: 5s
       retries: 5

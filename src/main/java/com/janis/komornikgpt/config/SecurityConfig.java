@@ -42,25 +42,25 @@ public class SecurityConfig {
                         .sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(
-                                "/",                      // strona główna
-                                "/index.html",           // entry point Angulara
-                                "/favicon.ico",          // ikona
-                                "/**/*.png",             // obrazki
-                                "/**/*.gif",
-                                "/**/*.svg",
-                                "/**/*.jpg",
-                                "/**/*.html",            // może się zdarzyć np. 404.html
-                                "/**/*.css",
-                                "/**/*.js",              // Angularowy build: chunk-*.js, main*.js
-                                "/**/*.woff2",           // czcionki, jakby były
-                                "/**/*.ttf",
+                                "/",
+                                "/index.html",
+                                "/favicon.ico",
+                                "/*/*.png",
+                                "/*/*.gif",
+                                "/*/*.svg",
+                                "/*/*.jpg",
+                                "/*/*.html",
+                                "/*/*.css",
+                                "/*/*.js",
                                 "/api/auth/login",
                                 "/api/auth/user",
                                 "/api/auth/register",
-                                "/api/groups/**",        // łapie wszystko w grupach, nie tylko jeden poziom
-                                "/.well-known/**",       // szerzej, jakby coś jeszcze tam było
-                                "/oauth2/**",            // pełna ścieżka oauth2
-                                "/login/**"              // ewentualne przekierowania logowania
+                                "/api/groups",           // ZMIANA: bez /** na końcu
+                                "/api/groups/**",        // ZMIANA: oddzielny wpis dla ścieżek podrzędnych
+                                "/.well-known/**",       // np. Let's Encrypt, Android app links itp.
+                                "/oauth2/**",            // callbacki do social auth
+                                "/login",                // ZMIANA: bez /** na końcu
+                                "/login/**"              // ZMIANA: oddzielny wpis dla ścieżek podrzędnych
                         ).permitAll()
                         .anyRequest().authenticated()
                 )

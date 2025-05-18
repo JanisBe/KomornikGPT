@@ -1,21 +1,17 @@
 package com.janis.komornikgpt.expense;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.Table;
-import java.time.LocalDateTime;
-import java.util.Date;
+import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
 
-@Table
+import java.math.BigDecimal;
+import java.time.LocalDate;
+
+@Table(name = "exchange_rate", uniqueConstraints = {
+        @UniqueConstraint(columnNames = {"currencyFrom", "currencyTo", "date"})
+})
 @Entity
 @Getter
 @Setter
@@ -26,12 +22,15 @@ public class ExchangeRate {
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private Long id;
 
-	private LocalDateTime date;
+    @Column(nullable = false)
+    private LocalDate date;
 
 	@Enumerated(EnumType.STRING)
 	@Column(nullable = false)
-	private Currency currencyFrom = Currency.PLN;
+    private Currency currencyFrom;
 
+    @Column(nullable = false)
+    private BigDecimal rate;
 
 	@Enumerated(EnumType.STRING)
 	@Column(nullable = false)

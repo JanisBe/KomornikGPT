@@ -15,6 +15,7 @@
     <name>KomornikGPT</name>
     <description>KomornikGPT</description>
     <properties>
+        <skipFrontend>false</skipFrontend>
         <java.version>24</java.version>
         <maven.compiler.source>${java.version}</maven.compiler.source>
         <maven.compiler.target>${java.version}</maven.compiler.target>
@@ -125,6 +126,7 @@
                 <artifactId>frontend-maven-plugin</artifactId>
                 <version>1.15.0</version>
                 <configuration>
+                    <skip>true</skip>
                     <workingDirectory>./src/main/frontend/komornik-gpt/</workingDirectory>
                     <installDirectory>target</installDirectory>
                 </configuration>
@@ -137,6 +139,7 @@
                         <configuration>
                             <nodeVersion>v18.19.1</nodeVersion>
                             <npmVersion>9.5.1</npmVersion>
+                            <skip>${skipFrontend}</skip>
                         </configuration>
                     </execution>
                     <execution>

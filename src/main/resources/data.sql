@@ -27,7 +27,7 @@ INSERT INTO expenses (amount, description, date, group_id, payer_id, currency, i
 VALUES
 -- Original expenses
 -- Additional expenses (40 more with different dates)
-(75.50, 'Grocery shopping', '2024-04-20 10:30:00', 1, 1, 'PLN', false),
+(75.50, 'Grocery shopping', '2024-04-20 10:30:00', 1, 1, 'EUR', false),
 (120.00, 'Cinema tickets', '2024-04-20 18:45:00', 1, 2, 'PLN', false),
 (45.00, 'Pizza delivery', '2024-04-20 20:15:00', 1, 3, 'PLN', false),
 (89.99, 'Gas station', '2024-04-19 11:20:00', 1, 1, 'PLN', false),
@@ -60,15 +60,15 @@ VALUES
 (82.00, 'Arcade games', '2024-04-10 16:20:00', 1, 1, 'PLN', false),
 (145.00, 'Zoo tickets', '2024-04-10 11:45:00', 1, 2, 'PLN', false),
 (67.50, 'Food truck festival', '2024-04-10 19:00:00', 1, 3, 'PLN', false),
-(225.00, 'Helicopter tour', '2024-04-09 14:30:00', 1, 1, 'PLN', false),
-(38.00, 'Museum gift shop', '2024-04-09 16:15:00', 1, 2, 'PLN', false),
-(168.00, 'Aquarium visit', '2024-04-09 11:00:00', 1, 3, 'PLN', false),
-(79.00, 'Laser tag game', '2024-04-08 18:30:00', 1, 1, 'PLN', false),
-(142.00, 'Dinner cruise', '2024-04-08 19:45:00', 1, 2, 'PLN', false),
-(93.50, 'Rock climbing', '2024-04-08 15:20:00', 1, 3, 'PLN', false),
-(185.00, 'Safari park tickets', '2024-04-07 10:30:00', 1, 1, 'PLN', false),
-(48.00, 'Board game purchase', '2024-04-07 14:15:00', 1, 2, 'PLN', false),
-(159.00, 'VR gaming session', '2024-04-07 16:45:00', 1, 3, 'PLN', false);
+(225.00, 'Helicopter tour', '2024-04-09 14:30:00', 2, 1, 'PLN', false),
+(38.00, 'Museum gift shop', '2024-04-09 16:15:00', 2, 2, 'PLN', false),
+(168.00, 'Aquarium visit', '2024-04-09 11:00:00', 2, 3, 'PLN', false),
+(79.00, 'Laser tag game', '2024-04-08 18:30:00', 2, 1, 'PLN', false),
+(142.00, 'Dinner cruise', '2024-04-08 19:45:00', 2, 2, 'PLN', false),
+(93.50, 'Rock climbing', '2024-04-08 15:20:00', 2, 3, 'PLN', false),
+(185.00, 'Safari park tickets', '2024-04-07 10:30:00', 2, 1, 'PLN', false),
+(48.00, 'Board game purchase', '2024-04-07 14:15:00', 2, 2, 'PLN', false),
+(159.00, 'VR gaming session', '2024-04-07 16:45:00', 2, 3, 'PLN', false);
 
 -- Insert expense splits
 INSERT INTO expense_splits (expense_id, user_id, amount_owed)

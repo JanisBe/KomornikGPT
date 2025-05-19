@@ -7,6 +7,7 @@ import {MatTableModule} from '@angular/material/table';
 import {MatButtonModule} from '@angular/material/button';
 import {MatProgressSpinnerModule} from '@angular/material/progress-spinner';
 import {DecimalPipe, NgTemplateOutlet} from '@angular/common';
+import {MatCheckbox, MatCheckboxChange} from '@angular/material/checkbox';
 
 export interface SettlementDto {
   from: string;
@@ -18,11 +19,14 @@ export interface SettlementDto {
 @Component({
   selector: 'app-settle-expenses-dialog',
   standalone: true,
-  imports: [MatDialogModule, MatTableModule, MatButtonModule, MatProgressSpinnerModule, DecimalPipe, NgTemplateOutlet],
+  imports: [MatDialogModule, MatTableModule, MatButtonModule, MatProgressSpinnerModule, DecimalPipe, NgTemplateOutlet, MatCheckbox],
   template: `
     <h1 mat-dialog-title>Rozliczenie grupy</h1>
     @if (!loading) {
       <div mat-dialog-content>
+        @if (hasMoreCurrencies()) {
+          <span><mat-checkbox (change)="recalculate($event)">Przelicz do DEF CURR</mat-checkbox></span>
+        }
         @if (settlements.length > 0) {
           <table mat-table [dataSource]="settlements" class="mat-elevation-z1" style="width:100%">
             <ng-container matColumnDef="from">
@@ -124,6 +128,15 @@ export class SettleExpensesDialogComponent implements OnInit {
 
   onCancel(): void {
     this.dialogRef.close(false);
+  }
+
+  hasMoreCurrencies() {
+    const currencies = new Set(this.settlements.map(s => s.currency));
+    return currencies.size > 1;
+  }
+
+  recalculate(event: MatCheckboxChange) {
+    console.log(event.checked)
   }
 }
 

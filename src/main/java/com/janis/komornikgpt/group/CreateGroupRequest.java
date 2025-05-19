@@ -2,6 +2,7 @@ package com.janis.komornikgpt.group;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.janis.komornikgpt.expense.Currency;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
@@ -13,6 +14,7 @@ public record CreateGroupRequest(
 
         @Size(max = 1000, message = "Description must not exceed 1000 characters") String description,
         boolean isPublic,
+        @NotNull(message = "Default currency is required") Currency defaultCurrency,
         @NotNull(message = "Members are required") List<MemberRequest> members) {
     public record MemberRequest(
             Long userId,

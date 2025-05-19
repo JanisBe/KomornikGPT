@@ -1,5 +1,6 @@
 import {User} from './user.model';
 import {Expense} from './expense.model';
+import {Currency} from './currency.model';
 
 export interface Group {
   id: number;
@@ -11,4 +12,5 @@ export interface Group {
   updatedAt?: Date;
   createdBy?: User;
   isPublic?: boolean;
+  defaultCurrency?: Currency;
 }

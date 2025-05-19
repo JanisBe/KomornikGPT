@@ -14,6 +14,8 @@ import {User} from '../../../core/models/user.model';
 import {CreateUserRequest, UserService} from '../../../core/services/user.service';
 import {firstValueFrom, map, Observable, startWith} from 'rxjs';
 import {HttpErrorResponse} from '@angular/common/http';
+import {MatSelectModule} from '@angular/material/select';
+import {Currency} from '../../../core/models/currency.model';
 
 interface PendingUser extends CreateUserRequest {
   tempId: string;
@@ -44,7 +46,8 @@ interface CreatedUserResponse {
     MatDividerModule,
     MatIconModule,
     MatAutocompleteModule,
-    MatCheckboxModule
+    MatCheckboxModule,
+    MatSelectModule,
   ],
   template: `
     <div class="dialog-container">
@@ -67,12 +70,27 @@ interface CreatedUserResponse {
           <div class="form-field">
             <mat-form-field appearance="outline" class="full-width">
               <mat-label>Description</mat-label>
-              <textarea matInput formControlName="description" rows="3" placeholder="Enter group description"></textarea>
+              <textarea matInput formControlName="description" rows="3"
+                        placeholder="Enter group description"></textarea>
             </mat-form-field>
           </div>
-
-          <mat-checkbox formControlName="isPublic" class="mb-2">Public group (visible to everyone)</mat-checkbox>
-
+          <div class="form-row">
+            <mat-checkbox formControlName="isPublic" class="mb-2">Public group (visible to everyone)</mat-checkbox>
+            <div class="form-field currency-field">
+              <mat-form-field appearance="outline">
+                <mat-label>Currency</mat-label>
+                <mat-select formControlName="currency" required>
+                  @for (currency of currencies; track currency) {
+                    <mat-option [value]="currency">{{ currency }}</mat-option>
+                  }
+                </mat-select>
+                <mat-icon matSuffix>currency_exchange</mat-icon>
+                @if (groupForm.get('currency')?.errors?.['required']) {
+                  <mat-error>Currency is required</mat-error>
+                }
+              </mat-form-field>
+            </div>
+          </div>
           <div formArrayName="members" class="members-container">
             <h3>Members</h3>
             @for (member of members.controls; track $index) {
@@ -88,10 +106,10 @@ interface CreatedUserResponse {
                       <mat-error>Username is required</mat-error>
                     }
                     <mat-autocomplete #auto="matAutocomplete"
-                                    (optionSelected)="onUserSelected($event, $index)">
+                                      (optionSelected)="onUserSelected($event, $index)">
                       @for (user of filteredUsers[$index] | async; track user.id) {
                         <mat-option [value]="user.name">
-                          {{user.name}}
+                          {{ user.name }}
                         </mat-option>
                       }
                     </mat-autocomplete>
@@ -248,6 +266,12 @@ interface CreatedUserResponse {
       gap: 16px;
       margin-bottom: 16px;
     }
+    .form-row {
+      display: flex;
+      align-items: baseline;
+      gap: 16px;
+      margin-bottom: 16px;
+    }
 
     .member-inputs {
       display: flex;
@@ -276,7 +300,7 @@ export class CreateGroupDialogComponent implements OnInit {
   pendingUsers: PendingUser[] = [];
   filteredUsers: Observable<User[]>[] = [];
   private tempIdCounter = 0;
-
+  currencies = Object.values(Currency);
   constructor(
     private fb: FormBuilder,
     private userService: UserService,
@@ -286,7 +310,8 @@ export class CreateGroupDialogComponent implements OnInit {
       name: ['', [Validators.required, Validators.minLength(2)]],
       description: [''],
       members: this.fb.array([]),
-      isPublic: [false]
+      isPublic: [false],
+      currency: [Currency.PLN, Validators.required]
     });
 
     this.newUserForm = this.fb.group({
@@ -317,13 +342,11 @@ export class CreateGroupDialogComponent implements OnInit {
   }
 
   createMemberFormGroup(): FormGroup {
-    const memberGroup = this.fb.group({
+    return this.fb.group({
       userName: ['', Validators.required],
       email: ['', [Validators.required, Validators.email]],
       userId: ['']
     });
-
-    return memberGroup;
   }
 
   addMember(): void {
@@ -445,7 +468,8 @@ export class CreateGroupDialogComponent implements OnInit {
           name: formValue.name,
           description: formValue.description,
           members: memberData,
-          isPublic: formValue.isPublic
+          isPublic: formValue.isPublic,
+          currency: formValue.currency
         });
       } catch (error: unknown) {
         if (error instanceof HttpErrorResponse) {

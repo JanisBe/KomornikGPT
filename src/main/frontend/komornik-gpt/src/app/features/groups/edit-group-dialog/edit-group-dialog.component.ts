@@ -15,6 +15,8 @@ import {User} from '../../../core/models/user.model';
 import {CreateUserRequest, UserService} from '../../../core/services/user.service';
 import {firstValueFrom, map, Observable, startWith} from 'rxjs';
 import {HttpErrorResponse} from '@angular/common/http';
+import {Currency} from '../../../core/models/currency.model';
+import {MatSelectModule} from '@angular/material/select';
 
 interface PendingUser extends CreateUserRequest {
   tempId: string;
@@ -45,7 +47,8 @@ interface CreatedUserResponse {
     MatDividerModule,
     MatIconModule,
     MatAutocompleteModule,
-    MatCheckboxModule
+    MatCheckboxModule,
+    MatSelectModule
   ],
   template: `
     <div class="dialog-container">
@@ -68,12 +71,28 @@ interface CreatedUserResponse {
           <div class="form-field">
             <mat-form-field appearance="outline" class="full-width">
               <mat-label>Description</mat-label>
-              <textarea matInput formControlName="description" rows="3" placeholder="Enter group description"></textarea>
+              <textarea matInput formControlName="description" rows="3"
+                        placeholder="Enter group description"></textarea>
             </mat-form-field>
           </div>
 
-          <mat-checkbox formControlName="isPublic" class="mb-2">Public group (visible to everyone)</mat-checkbox>
-
+          <div class="form-row">
+            <mat-checkbox formControlName="isPublic" class="mb-2">Public group (visible to everyone)</mat-checkbox>
+            <div class="form-field currency-field">
+              <mat-form-field appearance="outline">
+                <mat-label>Currency</mat-label>
+                <mat-select formControlName="defaultCurrency" required>
+                  @for (currency of currencies; track currency) {
+                    <mat-option [value]="currency">{{ currency }}</mat-option>
+                  }
+                </mat-select>
+                <mat-icon matSuffix>currency_exchange</mat-icon>
+                @if (groupForm.get('currency')?.errors?.['required']) {
+                  <mat-error>Currency is required</mat-error>
+                }
+              </mat-form-field>
+            </div>
+          </div>
           <div formArrayName="members" class="members-container">
             <h3>Members</h3>
             @for (member of members.controls; track $index) {
@@ -89,10 +108,10 @@ interface CreatedUserResponse {
                       <mat-error>Username is required</mat-error>
                     }
                     <mat-autocomplete #auto="matAutocomplete"
-                                    (optionSelected)="onUserSelected($event, $index)">
+                                      (optionSelected)="onUserSelected($event, $index)">
                       @for (user of filteredUsers[$index] | async; track user.id) {
                         <mat-option [value]="user.name">
-                          {{user.name}}
+                          {{ user.name }}
                         </mat-option>
                       }
                     </mat-autocomplete>
@@ -239,6 +258,13 @@ interface CreatedUserResponse {
       margin-top: 16px;
     }
 
+    .form-row {
+      display: flex;
+      align-items: baseline;
+      gap: 16px;
+      margin-bottom: 16px;
+    }
+
     .members-container {
       margin: 24px 0;
     }
@@ -277,6 +303,7 @@ export class EditGroupDialogComponent implements OnInit {
   pendingUsers: PendingUser[] = [];
   filteredUsers: Observable<User[]>[] = [];
   private tempIdCounter = 0;
+  currencies = Object.values(Currency);
 
   constructor(
     private fb: FormBuilder,
@@ -288,7 +315,8 @@ export class EditGroupDialogComponent implements OnInit {
       name: ['', [Validators.required, Validators.minLength(2)]],
       description: [''],
       members: this.fb.array([]),
-      isPublic: [false]
+      isPublic: [false],
+      defaultCurrency: [Currency.PLN, Validators.required]
     });
 
     this.newUserForm = this.fb.group({
@@ -308,7 +336,8 @@ export class EditGroupDialogComponent implements OnInit {
     this.groupForm.patchValue({
       name: this.data.group.name,
       description: this.data.group.description,
-      isPublic: this.data.group.isPublic ?? false
+      isPublic: this.data.group.isPublic ?? false,
+      defaultCurrency: this.data.group.defaultCurrency || Currency.PLN
     });
 
     // Load available users
@@ -453,7 +482,8 @@ export class EditGroupDialogComponent implements OnInit {
           name: formValue.name,
           description: formValue.description,
           members: memberData,
-          isPublic: formValue.isPublic
+          isPublic: formValue.isPublic,
+          defaultCurrency: formValue.defaultCurrency
         });
       } catch (error: unknown) {
         if (error instanceof HttpErrorResponse) {

@@ -39,6 +39,7 @@ public class GroupService {
         group.setDescription(request.description());
         group.setCreatedBy(creator);
         group.setPublic(request.isPublic());
+        group.setDefaultCurrency(request.defaultCurrency());
         List<User> users = new ArrayList<>();
 
         // Process each member request
@@ -84,7 +85,9 @@ public class GroupService {
         if (request.name() != null) {
             group.setName(request.name());
         }
-
+        if (request.defaultCurrency() != null) {
+            group.setDefaultCurrency(request.defaultCurrency());
+        }
         if (request.description() != null) {
             group.setDescription(request.description());
         }

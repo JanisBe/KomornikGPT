@@ -408,7 +408,7 @@ export class AddExpenseDialogComponent {
     this.initForm();
 
     if (this.isEditMode && data.expense) {
-      this.populateForm(data.expense);
+      this.populateForm(data.expense, data.group.defaultCurrency);
     }
 
     // Listen to amount changes to validate splits
@@ -429,11 +429,11 @@ export class AddExpenseDialogComponent {
     this.isSplitValid = Math.abs(this.totalSplitAmount - totalAmount) < 0.01;
   }
 
-  private populateForm(expense: Expense) {
+  private populateForm(expense: Expense, defaultCurrency: Currency | undefined) {
     this.expenseForm.patchValue({
       description: expense.description,
       amount: expense.amount,
-      currency: expense.currency,
+      currency: defaultCurrency,
       date: new Date(expense.date),
       payerId: expense.payer.id
     });
@@ -490,7 +490,7 @@ export class AddExpenseDialogComponent {
     this.expenseForm = this.fb.group({
       description: ['', Validators.required],
       amount: ['', [Validators.required, Validators.min(0)]],
-      currency: [Currency.PLN, Validators.required],
+      currency: [this.data.group.defaultCurrency || Currency.PLN, Validators.required],
       date: [new Date(), Validators.required],
       payerId: [currentUserId !== null ? currentUserId : '', Validators.required],
       splits: this.fb.group({})

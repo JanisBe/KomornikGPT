@@ -1,5 +1,6 @@
 package com.janis.komornikgpt.group;
 
+import com.janis.komornikgpt.expense.Currency;
 import com.janis.komornikgpt.user.UserDto;
 
 import java.time.LocalDateTime;
@@ -12,7 +13,8 @@ public record GroupDto(
     List<UserDto> members,
     UserDto createdBy,
     LocalDateTime createdAt,
-    boolean isPublic
+    boolean isPublic,
+    Currency defaultCurrency
 ) {
     public static GroupDto fromGroup(Group group) {
         return new GroupDto(
@@ -24,7 +26,8 @@ public record GroupDto(
                     .toList(),
                 UserDto.fromUser(group.getCreatedBy()),
                 group.getCreatedAt(),
-                group.isPublic()
+                group.isPublic(),
+                group.getDefaultCurrency()
         );
     }
 } 

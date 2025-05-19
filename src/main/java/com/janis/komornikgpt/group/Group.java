@@ -1,6 +1,7 @@
 package com.janis.komornikgpt.group;
 
 import com.fasterxml.jackson.annotation.JsonManagedReference;
+import com.janis.komornikgpt.expense.Currency;
 import com.janis.komornikgpt.user.User;
 import jakarta.persistence.*;
 import lombok.Getter;
@@ -27,6 +28,10 @@ public class Group {
 
     private String name;
 
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private Currency defaultCurrency = Currency.PLN;
+
     @Column(length = 1000)
     private String description;
 
@@ -42,6 +47,7 @@ public class Group {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "created_by_id")
+    @ToString.Exclude
     private User createdBy;
 
     @Column(name = "created_at")

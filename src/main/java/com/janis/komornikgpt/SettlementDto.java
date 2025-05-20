@@ -1,9 +1,11 @@
 package com.janis.komornikgpt;
 
 import com.janis.komornikgpt.expense.Currency;
+import lombok.Data;
 
 import java.math.BigDecimal;
 
+@Data
 public class SettlementDto {
     public String from;
     public String to;

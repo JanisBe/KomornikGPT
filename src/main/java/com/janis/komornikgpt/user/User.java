@@ -6,10 +6,7 @@ import com.janis.komornikgpt.expense.Expense;
 import com.janis.komornikgpt.expense.ExpenseSplit;
 import com.janis.komornikgpt.group.Group;
 import jakarta.persistence.*;
-import lombok.Getter;
-import lombok.RequiredArgsConstructor;
-import lombok.Setter;
-import lombok.ToString;
+import lombok.*;
 import org.hibernate.proxy.HibernateProxy;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -25,6 +22,8 @@ import java.util.Objects;
 @Setter
 @ToString
 @RequiredArgsConstructor
+@Builder
+@AllArgsConstructor
 public class User implements UserDetails {
 
     @Id

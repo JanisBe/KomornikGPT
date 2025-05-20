@@ -32,10 +32,12 @@ interface GroupedExpenses {
     <div class="dialog-container">
       <div class="dialog-header">
         <h2 mat-dialog-title>Wydatki dla {{ data.group.name }}</h2>
-        <button mat-icon-button color="primary" (click)="settleExpenses(data.group)"
+        <div class="row" (click)="settleExpenses(data.group)"> Rozlicz wydatki
+          <button mat-icon-button color="primary"
                 matTooltip="Rozlicz wydatki">
           <mat-icon>payments</mat-icon>
         </button>
+        </div>
         <button mat-icon-button mat-dialog-close class="close-button">
           <mat-icon>close</mat-icon>
         </button>
@@ -114,10 +116,16 @@ interface GroupedExpenses {
       box-sizing: border-box;
     }
 
-    .dialog-header {
+    .row {
       display: flex;
       justify-content: space-between;
       align-items: center;
+      cursor: pointer;
+    }
+    .dialog-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
       margin-bottom: 24px;
       background: white;
       position: sticky;

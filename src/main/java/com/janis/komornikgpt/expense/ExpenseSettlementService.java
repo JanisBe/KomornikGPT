@@ -18,13 +18,13 @@ public class ExpenseSettlementService {
     private final ExpenseRepository expenseRepository;
     private final NBPExchangeService nbpExchangeService;
 
-    public List<SettlementDto> getSettlementDtos(Long groupId) {
-        return processSettlementsForGroup(groupId).stream()
+    public List<SettlementDto> getSettlementDtos(Long groupId, boolean recalculate) {
+        return processSettlementsForGroup(groupId, recalculate).stream()
                 .map(s -> new SettlementDto(s.from().getName(), s.to().getName(), s.amount(), s.currency()))
                 .toList();
     }
 
-    public List<Settlement> processSettlementsForGroup(Long groupId) {
+    public List<Settlement> processSettlementsForGroup(Long groupId, boolean recalculate) {
 
         List<Expense> expenses = expenseRepository.findAllByGroup_IdAndPaidFalse(groupId);
         Map<Currency, List<Expense>> expensesByCurrency = expenses.stream()
@@ -39,6 +39,33 @@ public class ExpenseSettlementService {
             List<Settlement> settlements = settlePerCurrency(currencyExpenses, currency);
             allSettlements.addAll(settlements);
         }
+        if (recalculate) {
+            Map<String, Settlement> plnMap = new HashMap<>();
+
+            for (Settlement settlement : allSettlements) {
+                if (settlement.currency() == Currency.PLN) {
+                    String key = settlement.from().getId() + "->" + settlement.to().getId();
+                    plnMap.put(key, settlement);
+                }
+            }
+
+            for (Settlement settlement : allSettlements) {
+                if (settlement.currency() != Currency.PLN) {
+                    BigDecimal convertedAmount = nbpExchangeService.convertToPln(settlement.amount(), settlement.currency());
+                    String key = settlement.from().getId() + "->" + settlement.to().getId();
+
+                    if (plnMap.containsKey(key)) {
+                        Settlement updated = plnMap.get(key).withAddedPLNAmount(convertedAmount);
+                        plnMap.put(key, updated);
+                    } else {
+                        Settlement newPln = new Settlement(settlement.from(), settlement.to(), convertedAmount, Currency.PLN);
+                        plnMap.put(key, newPln);
+                    }
+                }
+            }
+
+            return simplifySettlements(new ArrayList<>(plnMap.values()));
+        }
 
         return allSettlements;
     }
@@ -50,13 +77,11 @@ public class ExpenseSettlementService {
             User payer = expense.getPayer();
             BigDecimal amount = expense.getAmount();
 
-            // Dodajemy zapłaconą kwotę do salda płacącego
             balances.merge(payer, amount, BigDecimal::add);
 
-            // Odejmujemy udziały uczestników
             for (ExpenseSplit split : expense.getSplits()) {
                 User participant = split.getUser();
-                BigDecimal share = split.getAmountOwed(); // ile ten konkretny user jest winien z tej faktury
+                BigDecimal share = split.getAmountOwed();
                 balances.merge(participant, share.negate(), BigDecimal::add);
             }
         }
@@ -64,10 +89,36 @@ public class ExpenseSettlementService {
         return minimizeTransfers(balances, currency);
     }
 
+    public List<Settlement> simplifySettlements(List<Settlement> settlements) {
+        Map<Currency, Map<User, BigDecimal>> balancesPerCurrency = new HashMap<>();
+
+        for (Settlement settlement : settlements) {
+            Currency currency = settlement.currency();
+            balancesPerCurrency.putIfAbsent(currency, new HashMap<>());
+
+            Map<User, BigDecimal> balances = balancesPerCurrency.get(currency);
+
+            balances.put(settlement.from(),
+                    balances.getOrDefault(settlement.from(), BigDecimal.ZERO).subtract(settlement.amount()));
+
+            balances.put(settlement.to(),
+                    balances.getOrDefault(settlement.to(), BigDecimal.ZERO).add(settlement.amount()));
+        }
+
+        List<Settlement> minimized = new ArrayList<>();
+        for (var entry : balancesPerCurrency.entrySet()) {
+            Currency currency = entry.getKey();
+            Map<User, BigDecimal> balances = entry.getValue();
+
+            minimized.addAll(minimizeTransfers(balances, currency));
+        }
+
+        return minimized;
+    }
+
     private List<Settlement> minimizeTransfers(Map<User, BigDecimal> balances, Currency currency) {
         List<Settlement> settlements = new ArrayList<>();
 
-        // Kolejki dłużników i wierzycieli
         PriorityQueue<Map.Entry<User, BigDecimal>> debtors = new PriorityQueue<>(Map.Entry.comparingByValue());
         PriorityQueue<Map.Entry<User, BigDecimal>> creditors = new PriorityQueue<>((a, b) -> b.getValue().compareTo(a.getValue()));
 

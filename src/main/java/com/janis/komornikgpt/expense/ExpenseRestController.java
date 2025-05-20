@@ -17,8 +17,9 @@ public class ExpenseRestController {
     private final ExpenseService expenseService;
 
     @GetMapping("/groups/{groupId}/settlement")
-    public List<SettlementDto> getSettlement(@PathVariable Long groupId) {
-        return expenseSettlementService.getSettlementDtos(groupId);
+    public List<SettlementDto> getSettlement(@PathVariable Long groupId,
+                                             @RequestParam(defaultValue = "false") boolean recalculate) {
+        return expenseSettlementService.getSettlementDtos(groupId, recalculate);
     }
 
     @PostMapping

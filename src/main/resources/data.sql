@@ -66,9 +66,9 @@ VALUES
 (79.00, 'Laser tag game', '2024-04-08 18:30:00', 2, 1, 'PLN', false),
 (142.00, 'Dinner cruise', '2024-04-08 19:45:00', 2, 2, 'PLN', false),
 (93.50, 'Rock climbing', '2024-04-08 15:20:00', 2, 3, 'PLN', false),
-(185.00, 'Safari park tickets', '2024-04-07 10:30:00', 2, 1, 'PLN', false),
-(48.00, 'Board game purchase', '2024-04-07 14:15:00', 2, 2, 'PLN', false),
-(159.00, 'VR gaming session', '2024-04-07 16:45:00', 2, 3, 'PLN', false);
+(185.00, 'Safari park tickets', '2024-04-07 10:30:00', 2, 1, 'EUR', false),
+(48.00, 'Board game purchase', '2024-04-07 14:15:00', 2, 2, 'EUR', false),
+(159.00, 'VR gaming session', '2024-04-07 16:45:00', 2, 3, 'EUR', false);
 
 -- Insert expense splits
 INSERT INTO expense_splits (expense_id, user_id, amount_owed)

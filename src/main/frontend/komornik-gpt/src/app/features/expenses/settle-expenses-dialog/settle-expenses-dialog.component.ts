@@ -8,6 +8,7 @@ import {MatButtonModule} from '@angular/material/button';
 import {MatProgressSpinnerModule} from '@angular/material/progress-spinner';
 import {DecimalPipe, NgTemplateOutlet} from '@angular/common';
 import {MatCheckbox, MatCheckboxChange} from '@angular/material/checkbox';
+import {Group} from '../../../core/models/group.model';
 
 export interface SettlementDto {
   from: string;
@@ -25,7 +26,8 @@ export interface SettlementDto {
     @if (!loading) {
       <div mat-dialog-content>
         @if (hasMoreCurrencies()) {
-          <span><mat-checkbox (change)="recalculate($event)">Przelicz do DEF CURR</mat-checkbox></span>
+          <span><mat-checkbox [checked]="this.checkboxState"
+            (change)="recalculate($event)">Przelicz wszystkie wydatki do {{ data.group.defaultCurrency }}</mat-checkbox></span>
         }
         @if (settlements.length > 0) {
           <table mat-table [dataSource]="settlements" class="mat-elevation-z1" style="width:100%">
@@ -81,12 +83,16 @@ export interface SettlementDto {
 })
 export class SettleExpensesDialogComponent implements OnInit {
   settlements: SettlementDto[] = [];
+  originalSettlements: SettlementDto[] = [];
+  recalculatedSettlements: SettlementDto[] = [];
   displayedColumns = ['from', 'to', 'amount'];
   loading = true;
   settling = false;
+  checkboxState = false;
+  recalculated = false;
 
   constructor(
-    @Inject(MAT_DIALOG_DATA) public data: { group: any; },
+    @Inject(MAT_DIALOG_DATA) public data: { group: Group; },
     private dialogRef: MatDialogRef<SettleExpensesDialogComponent>,
     private http: HttpClient,
     private snackBar: MatSnackBar,
@@ -97,6 +103,7 @@ export class SettleExpensesDialogComponent implements OnInit {
   ngOnInit(): void {
     this.http.get<SettlementDto[]>(`${environment.apiUrl}/expenses/groups/${this.data.group.id}/settlement`).subscribe({
       next: settlements => {
+        this.originalSettlements = settlements;
         this.settlements = settlements;
         this.loading = false;
       },
@@ -131,12 +138,44 @@ export class SettleExpensesDialogComponent implements OnInit {
   }
 
   hasMoreCurrencies() {
-    const currencies = new Set(this.settlements.map(s => s.currency));
+    const currencies = new Set(this.originalSettlements.map(s => s.currency));
     return currencies.size > 1;
   }
 
   recalculate(event: MatCheckboxChange) {
-    console.log(event.checked)
+    this.checkboxState = event.checked;
+    if (event.checked) {
+
+      this.loading = true;
+      if (this.recalculated) {
+        this.snackBar.open('Rozliczenia zostały już przeliczone', 'Zamknij', {duration: 3000});
+        this.settlements = this.recalculatedSettlements;
+        this.loading = false;
+        return;
+      }
+      this.http.get<SettlementDto[]>(
+        `${environment.apiUrl}/expenses/groups/${this.data.group.id}/settlement`,
+        {
+          params: {
+            recalculate: true,
+          }
+        }
+      ).subscribe({
+        next: recalculatedSettlements => {
+          this.settlements = recalculatedSettlements;
+          this.recalculatedSettlements = recalculatedSettlements;
+          this.loading = false;
+          this.recalculated = true;
+        },
+        error: () => {
+          this.snackBar.open('Błąd podczas przeliczania rozliczeń', 'Zamknij', {duration: 3000});
+          this.loading = false;
+          this.recalculated = false;
+        }
+      });
+    } else {
+      this.settlements = this.originalSettlements;
+    }
   }
 }
 

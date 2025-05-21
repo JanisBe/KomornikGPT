@@ -1,6 +1,6 @@
 import {Injectable} from '@angular/core';
 import {HttpClient} from '@angular/common/http';
-import {BehaviorSubject, filter, Observable, shareReplay, tap} from 'rxjs';
+import {BehaviorSubject, filter, Observable, shareReplay, take, tap} from 'rxjs';
 import {Router} from '@angular/router';
 import {User} from '../models/user.model';
 import {environment} from '../../../environments/environment';
@@ -28,13 +28,13 @@ export interface UpdateUserRequest {
 export class AuthService {
   private readonly apiUrl = environment.apiUrl;
   private currentUserSubject = new BehaviorSubject<User | null>(null);
-  public currentUser$ = this.currentUserSubject.asObservable();
   private authCheckInProgress: Observable<User> | null = null;
 
   constructor(
     private http: HttpClient,
     private router: Router
   ) {
+    console.log('AuthService initialized');
     this.checkAuthStatus();
   }
 
@@ -72,7 +72,8 @@ export class AuthService {
     }
     if (!!this.currentUserSubject.value) {
       return this.currentUserSubject.asObservable().pipe(
-        filter((user): user is User => user !== null)
+        filter((user): user is User => user !== null),
+        take(1)
       );
     }
     // Start a new check
@@ -129,6 +130,7 @@ export class AuthService {
   getLoggedUser() {
     return this.currentUserSubject.value;
   }
+
   private checkAuthStatus(): void {
     this.getCurrentUser().subscribe({
       next: (response: any) => {

@@ -15,7 +15,6 @@ import {AuthService} from '../../core/services/auth.service';
 import {MatSnackBar, MatSnackBarModule} from '@angular/material/snack-bar';
 import {User} from '../../core/models/user.model';
 import {forkJoin} from 'rxjs';
-import {UserService} from '../../core/services/user.service';
 import {AddExpenseDialogComponent} from '../expenses/add-expense-dialog/add-expense-dialog.component';
 import {ExpenseService} from '../../core/services/expense.service';
 import {HttpErrorResponse} from '@angular/common/http';
@@ -209,18 +208,6 @@ import {CopyUrlButtonComponent} from '../expenses/copy-url-button';
         padding: 8px;
       }
     }
-
-    .d-flex {
-      display: flex !important;
-    }
-
-    .justify-content-between {
-      justify-content: space-between !important;
-    }
-
-    .align-items-center {
-      align-items: center !important;
-    }
   `]
 })
 export class GroupsComponent implements OnInit {
@@ -232,7 +219,6 @@ export class GroupsComponent implements OnInit {
     private dialog: MatDialog,
     private authService: AuthService,
     private snackBar: MatSnackBar,
-    private userService: UserService,
     private expenseService: ExpenseService
   ) {
   }

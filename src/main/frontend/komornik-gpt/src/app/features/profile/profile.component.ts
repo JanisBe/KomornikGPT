@@ -43,29 +43,27 @@ interface UpdateUserRequest {
     <div class="profile-container">
       <mat-card class="profile-card">
         <mat-card-header>
-          <mat-card-title>Profile Settings</mat-card-title>
+          <mat-card-title>Twój profil</mat-card-title>
         </mat-card-header>
 
         <mat-card-content>
           <form [formGroup]="profileForm" (ngSubmit)="onSubmit()">
             <div class="form-field">
               <mat-form-field appearance="outline">
-                <mat-label>Name</mat-label>
+                <mat-label>Imię</mat-label>
                 <input matInput formControlName="name" required>
                 @if (profileForm.get('name')?.errors?.['required'] && profileForm.get('name')?.touched) {
-                  <mat-error>Name is required</mat-error>
+                  <mat-error>Imię jest wymagane</mat-error>
                 }
               </mat-form-field>
             </div>
 
             <div class="form-field">
               <mat-form-field appearance="outline">
-                <mat-label>Surname</mat-label>
+                <mat-label>Nazwisko</mat-label>
                 <input matInput formControlName="surname" required>
                 @if (profileForm.get('surname')?.errors?.['required'] && profileForm.get('surname')?.touched) {
-                  <mat-error>
-                    Surname is required
-                  </mat-error>
+                  <mat-error> Nazwisko jest wymagane</mat-error>
                 }
               </mat-form-field>
             </div>
@@ -75,10 +73,10 @@ interface UpdateUserRequest {
                 <mat-label>Email</mat-label>
                 <input matInput formControlName="email" type="email" required>
                 @if (profileForm.get('email')?.errors?.['required'] && profileForm.get('email')?.touched) {
-                  <mat-error>Email is required</mat-error>
+                  <mat-error>Email jest wymagany</mat-error>
                 }
                 @if (profileForm.get('email')?.errors?.['email'] && profileForm.get('email')?.touched) {
-                  <mat-error>Please enter a valid email address</mat-error>
+                  <mat-error>Wprowadź poprawny adres email</mat-error>
                 }
               </mat-form-field>
             </div>
@@ -86,26 +84,26 @@ interface UpdateUserRequest {
             <mat-expansion-panel>
               <mat-expansion-panel-header>
                 <mat-panel-title>
-                  Change Password
+                  Zmień hasło
                 </mat-panel-title>
               </mat-expansion-panel-header>
 
               <div class="form-field">
                 <mat-form-field appearance="outline">
-                  <mat-label>Current Password</mat-label>
+                  <mat-label>Obecne hasło</mat-label>
                   <input matInput type="password" formControlName="currentPassword">
                   @if (profileForm.get('currentPassword')?.errors?.['required'] && profileForm.get('currentPassword')?.touched) {
-                    <mat-error>Current password is required to make changes</mat-error>
+                    <mat-error>Obecne hasło jest wymagane</mat-error>
                   }
                 </mat-form-field>
               </div>
 
               <div class="form-field">
                 <mat-form-field appearance="outline">
-                  <mat-label>New Password</mat-label>
+                  <mat-label>Nowe hasło</mat-label>
                   <input matInput type="password" formControlName="newPassword">
                   @if (profileForm.get('newPassword')?.errors?.['minlength'] && profileForm.get('newPassword')?.touched) {
-                    <mat-error>Password must be at least 6 characters long</mat-error>
+                    <mat-error>Nowe hasło musi mieć conajmniej 8 znaków</mat-error>
                   }
                 </mat-form-field>
               </div>
@@ -121,7 +119,7 @@ interface UpdateUserRequest {
 
           <mat-divider class="my-4"></mat-divider>
 
-          <h3>My Groups</h3>
+          <h3>Moje grupy</h3>
           <mat-list>
             @for (group of userGroups; track group.id) {
               <mat-list-item class="group-item">
@@ -132,7 +130,7 @@ interface UpdateUserRequest {
             }
             @if (userGroups.length === 0) {
               <mat-list-item>
-                You are not a member of any groups
+                Nie należysz do żadnej grupy.
               </mat-list-item>
             }
           </mat-list>

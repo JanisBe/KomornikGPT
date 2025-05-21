@@ -1,6 +1,6 @@
 import {Injectable} from '@angular/core';
 import {HttpClient} from '@angular/common/http';
-import {BehaviorSubject, Observable, shareReplay, tap} from 'rxjs';
+import {BehaviorSubject, filter, Observable, shareReplay, tap} from 'rxjs';
 import {Router} from '@angular/router';
 import {User} from '../models/user.model';
 import {environment} from '../../../environments/environment';
@@ -70,7 +70,11 @@ export class AuthService {
     if (this.authCheckInProgress) {
       return this.authCheckInProgress;
     }
-
+    if (!!this.currentUserSubject.value) {
+      return this.currentUserSubject.asObservable().pipe(
+        filter((user): user is User => user !== null)
+      );
+    }
     // Start a new check
     this.authCheckInProgress = this.http.get<User>(`${this.apiUrl}/auth/user`, {withCredentials: true})
       .pipe(
@@ -122,6 +126,9 @@ export class AuthService {
     this.currentUserSubject.next(null);
   }
 
+  getLoggedUser() {
+    return this.currentUserSubject.value;
+  }
   private checkAuthStatus(): void {
     this.getCurrentUser().subscribe({
       next: (response: any) => {

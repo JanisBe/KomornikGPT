@@ -1,7 +1,7 @@
-import {Component} from '@angular/core';
+import {Component, OnInit} from '@angular/core';
 import {CommonModule} from '@angular/common';
 import {FormBuilder, FormGroup, ReactiveFormsModule, Validators} from '@angular/forms';
-import {Router, RouterModule} from '@angular/router';
+import {ActivatedRoute, Router, RouterModule} from '@angular/router';
 import {AuthService, LoginRequest} from '../../core/services/auth.service';
 import {SocialAuthService} from '../../core/services/social-auth.service';
 import {MatSnackBar} from '@angular/material/snack-bar';
@@ -90,7 +90,7 @@ import {MatDividerModule} from '@angular/material/divider';
             </mat-form-field>
 
             @if (errorMessage) {
-              <div class="error-message">{{errorMessage}}</div>
+              <div class="error-message">{{ errorMessage }}</div>
             }
 
             <div class="form-actions">
@@ -239,7 +239,7 @@ import {MatDividerModule} from '@angular/material/divider';
     }
   `]
 })
-export class LoginComponent {
+export class LoginComponent implements OnInit {
   loginForm: FormGroup;
   isLoading = false;
   errorMessage = '';
@@ -249,11 +249,24 @@ export class LoginComponent {
     private authService: AuthService,
     private socialAuthService: SocialAuthService,
     private router: Router,
+    private route: ActivatedRoute,
     private snackBar: MatSnackBar
   ) {
     this.loginForm = this.fb.group({
       email: ['', [Validators.required, Validators.email]],
       password: ['', Validators.required]
+    });
+  }
+
+  ngOnInit(): void {
+    console.log("LoginComponent initialized");
+    this.route.queryParams.subscribe(params => {
+      const requiresPassword = params['requiresPassword'] === 'true';
+      if (requiresPassword) {
+        this.router.navigate(['/set-password']);
+      } else {
+        // this.router.navigate(['/groups']);
+      }
     });
   }
 
@@ -316,7 +329,7 @@ export class LoginComponent {
 
   private handleError(error: any): void {
     this.isLoading = false;
-    console.error('Login failed:', error);
+    console.error(error);
 
     if (error.status === 401) {
       this.errorMessage = 'Invalid username or password';

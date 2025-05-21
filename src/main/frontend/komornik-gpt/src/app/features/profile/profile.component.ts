@@ -232,7 +232,7 @@ export class ProfileComponent implements OnInit {
         });
       },
       error: (error) => {
-        console.error('Error loading user data:', error);
+        console.error(error);
         this.snackBar.open('Error loading user data', 'Close', {
           duration: 3000
         });
@@ -245,7 +245,7 @@ export class ProfileComponent implements OnInit {
         this.userGroups = groups;
       },
       error: (error) => {
-        console.error('Error loading groups:', error);
+        console.error(error);
         this.snackBar.open('Error loading groups', 'Close', {
           duration: 3000
         });
@@ -297,7 +297,7 @@ export class ProfileComponent implements OnInit {
             duration: 3000,
             panelClass: ['error-snackbar']
           });
-          console.error('Profile update error:', error);
+          console.error(error);
         }
       });
     }

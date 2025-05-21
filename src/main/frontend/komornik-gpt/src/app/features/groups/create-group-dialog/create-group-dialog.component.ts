@@ -336,7 +336,7 @@ export class CreateGroupDialogComponent implements OnInit {
         this.availableUsers = users;
       },
       error: (error: unknown) => {
-        console.error('Error loading users:', error);
+        console.error(error);
       }
     });
   }
@@ -473,7 +473,7 @@ export class CreateGroupDialogComponent implements OnInit {
         });
       } catch (error: unknown) {
         if (error instanceof HttpErrorResponse) {
-          console.error('Error creating users:', error);
+          console.error(error);
         }
       }
     }

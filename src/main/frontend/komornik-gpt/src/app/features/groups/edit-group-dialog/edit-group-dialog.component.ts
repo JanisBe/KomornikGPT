@@ -350,7 +350,7 @@ export class EditGroupDialogComponent implements OnInit {
         });
       },
       error: (error: HttpErrorResponse) => {
-        console.error('Error loading users:', error);
+        console.error(error);
       }
     });
   }
@@ -487,7 +487,7 @@ export class EditGroupDialogComponent implements OnInit {
         });
       } catch (error: unknown) {
         if (error instanceof HttpErrorResponse) {
-          console.error('Error updating group:', error);
+          console.error(error);
         }
       }
     }

@@ -1,6 +1,9 @@
 package com.janis.komornikgpt.user;
 
 import com.janis.komornikgpt.exception.ResourceAlreadyExistsException;
+import com.janis.komornikgpt.mail.EmailService;
+import com.janis.komornikgpt.mail.VerificationToken;
+import com.janis.komornikgpt.mail.VerificationTokenRepository;
 import com.janis.komornikgpt.user.exception.UserAlreadyExistsException;
 import com.janis.komornikgpt.user.exception.UserNotFoundException;
 import com.janis.komornikgpt.user.exception.UsernameAlreadyExistsException;
@@ -12,6 +15,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 
@@ -20,6 +24,8 @@ import java.util.UUID;
 public class UserService implements UserDetailsService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
+    private final VerificationTokenRepository verificationTokenRepository;
+    private final EmailService emailService;
 
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
@@ -47,6 +53,12 @@ public class UserService implements UserDetailsService {
         user.setName(request.getName());
         user.setSurname(request.getSurname());
         user.setRole(Role.USER);
+        user.setEnabled(false);
+        String token = UUID.randomUUID().toString();
+        VerificationToken vt = new VerificationToken(token, user, LocalDateTime.now().plusHours(24));
+        verificationTokenRepository.save(vt);
+
+        emailService.sendVerificationEmail(user.getEmail(), token);
 
         return userRepository.save(user);
     }

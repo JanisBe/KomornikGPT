@@ -42,7 +42,8 @@ public class User implements UserDetails {
 
     private String name;
     private String surname;
-
+    private boolean enabled = false;
+    private boolean requiresPasswordSetup = false;
     @Enumerated(EnumType.STRING)
     private Role role;
 
@@ -125,6 +126,6 @@ public class User implements UserDetails {
     @Override
     @JsonIgnore
     public boolean isEnabled() {
-        return true;
+        return enabled;
     }
 }

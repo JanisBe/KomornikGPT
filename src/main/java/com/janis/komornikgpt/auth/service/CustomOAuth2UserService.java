@@ -2,6 +2,8 @@ package com.janis.komornikgpt.auth.service;
 
 import com.janis.komornikgpt.user.User;
 import com.janis.komornikgpt.user.UserRepository;
+import lombok.Getter;
+import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.oauth2.client.userinfo.DefaultOAuth2UserService;
 import org.springframework.security.oauth2.client.userinfo.OAuth2UserRequest;
@@ -18,12 +20,14 @@ import java.util.UUID;
 
 @Component
 @Slf4j
+@Getter
+@Setter
 public class CustomOAuth2UserService implements OAuth2UserService<OAuth2UserRequest, OAuth2User> {
     // "login" is default for GitHub, change to "email" if that's what you want
     private static final String NAME_ATTRIBUTE = "name";
     private final UserRepository userRepository;
     private static final String EMAIL_KEY = "email";
-
+    private boolean requiresPasswordSetup = false;
     private final GitHubEmailFetcher emailFetcher;
     private final OAuth2UserService<OAuth2UserRequest, OAuth2User> delegate = new DefaultOAuth2UserService();
 
@@ -94,7 +98,9 @@ public class CustomOAuth2UserService implements OAuth2UserService<OAuth2UserRequ
         user.setEmail(email);
         user.setName(name != null ? name : email.substring(0, email.indexOf('@')));
         user.setUsername(generateUsername(email));
-        user.setPassword(UUID.randomUUID().toString()); // Random password for OAuth2 users
+        user.setPassword(UUID.randomUUID().toString());
+        user.setEnabled(true);
+        user.setRequiresPasswordSetup(true);
         userRepository.save(user);
     }
 

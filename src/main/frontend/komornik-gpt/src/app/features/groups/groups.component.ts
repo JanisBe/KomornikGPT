@@ -248,7 +248,7 @@ export class GroupsComponent implements OnInit {
         this.groups = groups;
       },
       error: (error: HttpErrorResponse) => {
-        console.error('Error loading data:', error);
+        console.error(error);
         this.snackBar.open('Error loading data', 'Close', {
           duration: 3000
         });
@@ -282,7 +282,7 @@ export class GroupsComponent implements OnInit {
             });
           },
           error: (error) => {
-            console.error('Error creating group:', error);
+            console.error(error);
             this.snackBar.open('Error creating group', 'Close', {
               duration: 3000
             });
@@ -335,7 +335,7 @@ export class GroupsComponent implements OnInit {
             });
           },
           error: (error) => {
-            console.error('Error updating group:', error);
+            console.error(error);
             this.snackBar.open('Error updating group', 'Close', {
               duration: 3000
             });
@@ -368,7 +368,7 @@ export class GroupsComponent implements OnInit {
             });
           },
           error: (error: HttpErrorResponse) => {
-            console.error('Error deleting group:', error);
+            console.error(error);
             this.snackBar.open('Error deleting group', 'Close', {
               duration: 3000
             });
@@ -413,7 +413,7 @@ export class GroupsComponent implements OnInit {
             });
           },
           error: (error: HttpErrorResponse) => {
-            console.error('Error adding expense:', error);
+            console.error(error);
             this.snackBar.open('Error adding expense', 'Close', {
               duration: 3000
             });

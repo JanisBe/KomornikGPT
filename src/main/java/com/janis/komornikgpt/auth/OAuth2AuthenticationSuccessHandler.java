@@ -8,11 +8,14 @@ import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.security.web.authentication.SimpleUrlAuthenticationSuccessHandler;
 import org.springframework.stereotype.Component;
+import org.springframework.web.util.UriComponentsBuilder;
 
 import java.io.IOException;
 import java.util.Map;
@@ -47,19 +50,27 @@ public class OAuth2AuthenticationSuccessHandler extends SimpleUrlAuthenticationS
         log.info("User authenticated: {}", email);
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("User not found after OAuth2 authentication"));
+        UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
+                user, null, user.getAuthorities());
+        SecurityContextHolder.getContext().setAuthentication(authToken);
 
         String token = jwtTokenProvider.generateToken(user);
 
-        // Create secure cookie
         Cookie cookie = new Cookie(cookieName, token);
         cookie.setHttpOnly(true);
-        cookie.setSecure(true); // Enable in production
+        cookie.setSecure(true);
         cookie.setPath("/");
         cookie.setMaxAge(cookieExpiration);
         response.addCookie(cookie);
 
         log.info("OAuth2 authentication success handler invoked before redirect");
-        // Redirect to frontend without token in URL
+        if (user.isRequiresPasswordSetup()) {
+            String targetUrl = UriComponentsBuilder.fromUriString("http://localhost:4200/auth/callback")
+                    .queryParam("requiresPassword", user.isRequiresPasswordSetup())
+                    .build().toUriString();
+            getRedirectStrategy().sendRedirect(request, response, targetUrl);
+            return;
+        }
         String targetUrl = "http://localhost:4200/auth/callback";
         getRedirectStrategy().sendRedirect(request, response, targetUrl);
         log.info("OAuth2 authentication success handler completed redirect");

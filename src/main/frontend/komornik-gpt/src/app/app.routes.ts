@@ -28,6 +28,11 @@ export const routes: Routes = [
         canActivate: [redirectToGroupsIfAuthenticated]
       },
       {
+        path: 'set-password',
+        loadComponent: () => import('./features/auth/set-password.component').then(m => m.SetPasswordComponent),
+        canActivate: [AuthGuard]
+      },
+      {
         path: 'auth/callback',
         loadComponent: () => import('./features/auth/login.component').then(m => m.LoginComponent)
       },

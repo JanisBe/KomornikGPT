@@ -251,7 +251,7 @@ export class ViewExpensesDialogComponent implements OnInit {
         this.groupedExpenses = this.groupExpensesByDay(expenses);
       },
       error: (error) => {
-        console.error('Error loading expenses:', error);
+        console.error(error);
         this.snackBar.open('Error loading expenses', 'Close', {
           duration: 3000
         });
@@ -275,7 +275,7 @@ export class ViewExpensesDialogComponent implements OnInit {
             });
           },
           error: (error) => {
-            console.error('Error deleting expense:', error);
+            console.error(error);
             this.snackBar.open('Error deleting expense', 'Close', {
               duration: 3000
             });
@@ -305,7 +305,7 @@ export class ViewExpensesDialogComponent implements OnInit {
             this.loadExpenses();
           },
           error: (error) => {
-            console.error('Error updating expense:', error);
+            console.error(error);
             this.snackBar.open('Error updating expense', 'Close', {
               duration: 3000
             });

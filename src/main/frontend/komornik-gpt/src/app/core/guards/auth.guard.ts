@@ -29,7 +29,7 @@ export class AuthGuard implements CanActivate {
     // Default: require authentication
     return this.authService.getCurrentUser().pipe(
       map(user => {
-        if (user) {
+        if (user.authenticated) {
           return true;
         }
         return this.router.createUrlTree(['/login']);

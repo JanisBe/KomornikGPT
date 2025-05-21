@@ -35,14 +35,36 @@ jobs:
       - name: Build with Maven
         run: mvn -B package --file pom.xml
 
+      - name: Set version variables
+        id: vars
+        run: |
+          echo "SHORT_SHA=$(echo ${{ github.sha }} | cut -c1-7)" >> $GITHUB_OUTPUT
+          echo "VERSION=$(mvn help:evaluate -Dexpression=project.version -q -DforceStdout)" >> $GITHUB_OUTPUT
+          echo "BUILD_DATE=$(date +'%Y%m%d')" >> $GITHUB_OUTPUT
+
       - name: Log in to Docker Hub
         uses: docker/login-action@v3
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-      - name: Build Docker image
-        run: docker build -t ${{ secrets.DOCKERHUB_USERNAME }}/komornik-gpt:latest .
+      - name: Build and tag Docker images
+        run: |
+          # Build the image
+          docker build -t ${{ secrets.DOCKERHUB_USERNAME }}/komornik-gpt:latest .
+          
+          # Tag with version from pom.xml
+          docker tag ${{ secrets.DOCKERHUB_USERNAME }}/komornik-gpt:latest ${{ secrets.DOCKERHUB_USERNAME }}/komornik-gpt:${{ steps.vars.outputs.VERSION }}
+          
+          # Tag with commit SHA
+          docker tag ${{ secrets.DOCKERHUB_USERNAME }}/komornik-gpt:latest ${{ secrets.DOCKERHUB_USERNAME }}/komornik-gpt:${{ steps.vars.outputs.SHORT_SHA }}
+          
+          # Tag with date and commit SHA
+          docker tag ${{ secrets.DOCKERHUB_USERNAME }}/komornik-gpt:latest ${{ secrets.DOCKERHUB_USERNAME }}/komornik-gpt:${{ steps.vars.outputs.BUILD_DATE }}-${{ steps.vars.outputs.SHORT_SHA }}
 
-      - name: Push Docker image
-        run: docker push ${{ secrets.DOCKERHUB_USERNAME }}/komornik-gpt:latest
+      - name: Push Docker images
+        run: |
+          docker push ${{ secrets.DOCKERHUB_USERNAME }}/komornik-gpt:latest
+          docker push ${{ secrets.DOCKERHUB_USERNAME }}/komornik-gpt:${{ steps.vars.outputs.VERSION }}
+          docker push ${{ secrets.DOCKERHUB_USERNAME }}/komornik-gpt:${{ steps.vars.outputs.SHORT_SHA }}
+          docker push ${{ secrets.DOCKERHUB_USERNAME }}/komornik-gpt:${{ steps.vars.outputs.BUILD_DATE }}-${{ steps.vars.outputs.SHORT_SHA }}

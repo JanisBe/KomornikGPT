@@ -55,6 +55,8 @@ public class SecurityConfig {
                                 "/api/auth/login",
                                 "/api/auth/user",
                                 "/api/auth/register",
+                                "/api/forgot-password",
+                                "/api/reset-password",
                                 "/api/groups",           // ZMIANA: bez /** na końcu
                                 "/api/groups/**",        // ZMIANA: oddzielny wpis dla ścieżek podrzędnych
                                 "/.well-known/**",       // np. Let's Encrypt, Android app links itp.

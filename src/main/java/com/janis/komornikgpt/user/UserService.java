@@ -129,25 +129,21 @@ public class UserService implements UserDetailsService {
 
     @Transactional
     public User createUserWithoutPassword(CreateUserWithoutPasswordRequest request) {
-        // Check if username is already taken
         if (userRepository.existsByUsername(request.username())) {
             throw new ResourceAlreadyExistsException("Username is already taken");
         }
 
-        // Check if email is already taken
         if (userRepository.existsByEmail(request.email())) {
             throw new ResourceAlreadyExistsException("Email is already taken");
         }
 
-        // Create user with a random password
         User user = new User();
         user.setName(request.name());
         user.setSurname(request.surname());
         user.setUsername(request.username());
         user.setEmail(request.email());
         user.setRole(Role.USER);
-
-        // Generate a random password that the user will need to change later
+        user.setRequiresPasswordSetup(true);
         String randomPassword = UUID.randomUUID().toString();
         user.setPassword(passwordEncoder.encode(randomPassword));
 
@@ -162,5 +158,26 @@ public class UserService implements UserDetailsService {
     public User findByEmail(String email) {
         return userRepository.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("User not found"));
+    }
+
+    public User saveUser(User user) {
+        return userRepository.save(user);
+    }
+
+    @Transactional
+    public boolean handleForgotPasswordRequest(String email) {
+        try {
+            User user = getUserByEmail(email);
+            String token = UUID.randomUUID().toString();
+
+            VerificationToken verificationToken = new VerificationToken(token, user, LocalDateTime.now().plusHours(24));
+            verificationTokenRepository.save(verificationToken);
+
+            emailService.sendPasswordResetEmail(user.getEmail(), token);
+
+            return true;
+        } catch (UserNotFoundException e) {
+            return false;
+        }
     }
 }

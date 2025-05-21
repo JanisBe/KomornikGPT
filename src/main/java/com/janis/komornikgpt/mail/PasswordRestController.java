@@ -2,7 +2,7 @@ package com.janis.komornikgpt.mail;
 
 import com.janis.komornikgpt.auth.JwtTokenProvider;
 import com.janis.komornikgpt.user.User;
-import com.janis.komornikgpt.user.UserRepository;
+import com.janis.komornikgpt.user.UserService;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -16,9 +16,9 @@ import java.time.LocalDateTime;
 @RestController
 @RequestMapping("/api/")
 @RequiredArgsConstructor
-public class VerificationRestController {
+public class PasswordRestController {
     private final VerificationTokenRepository tokenRepo;
-    private final UserRepository userRepository;
+    private final UserService userService;
     private final JwtTokenProvider jwtService;
     private final PasswordEncoder passwordEncoder;
 
@@ -33,7 +33,7 @@ public class VerificationRestController {
 
         User user = vt.getUser();
         user.setEnabled(true);
-        userRepository.save(user);
+        userService.saveUser(user);
         tokenRepo.delete(vt);
 
         return ResponseEntity.ok("Konto aktywowane");
@@ -50,12 +50,43 @@ public class VerificationRestController {
         }
 
         String email = jwtService.extractUsername(token);
-        User user = userRepository.findByEmail(email).orElseThrow();
+        User user = userService.findByEmail(email);
         user.setRequiresPasswordSetup(false);
         user.setPassword(passwordEncoder.encode(request.password()));
-        userRepository.save(user);
+        userService.saveUser(user);
 
         return ResponseEntity.ok().build();
+    }
+
+    @PostMapping("/forgot-password")
+    public ResponseEntity<Void> forgotPassword(@RequestBody ForgotPasswordRequest request) {
+        boolean emailSent = userService.handleForgotPasswordRequest(request.email());
+
+        if (!emailSent) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+        }
+
+        return ResponseEntity.ok().build();
+    }
+
+    @PostMapping("/reset-password")
+    public ResponseEntity<String> resetPassword(
+            @RequestParam String token,
+            @RequestBody SetPasswordRequest request
+    ) {
+        VerificationToken vt = tokenRepo.findByToken(token)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Token not found"));
+
+        if (vt.getExpiryDate().isBefore(LocalDateTime.now())) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Token expired");
+        }
+
+        User user = vt.getUser();
+        user.setPassword(passwordEncoder.encode(request.password()));
+        userService.saveUser(user);
+        tokenRepo.delete(vt);
+
+        return ResponseEntity.ok("Password has been reset successfully");
     }
 
 }

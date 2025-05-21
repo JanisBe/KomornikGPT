@@ -100,13 +100,23 @@ import {MatDividerModule} from '@angular/material/divider';
                       [disabled]="loginForm.invalid || isLoading">
                 {{ isLoading ? 'Logging in...' : 'Login' }}
               </button>
+              <button mat-button
+                      type="button"
+                      [routerLink]="['/register']">
+                Zarejestruj się
+              </button>
+              <button mat-button
+                      type="button"
+                      [routerLink]="['/forgot-password']">
+                Przypomnij hasło
+              </button>
             </div>
           </form>
         </mat-card-content>
 
         <mat-card-actions>
           <div class="register-link">
-            Don't have an account? <a mat-button color="primary" routerLink="/register">Register</a>
+            Nie masz konta? <a mat-button color="primary" routerLink="/register">Zarejestruj się</a>
           </div>
         </mat-card-actions>
       </mat-card>
@@ -124,7 +134,7 @@ import {MatDividerModule} from '@angular/material/divider';
 
     .login-card {
       width: 100%;
-      max-width: 400px;
+      max-width: 430px;
     }
 
     mat-card-header {
@@ -135,10 +145,6 @@ import {MatDividerModule} from '@angular/material/divider';
     mat-card-title {
       font-size: 24px;
       margin: 0;
-    }
-
-    .form-field {
-      margin-bottom: 16px;
     }
 
     mat-form-field {
@@ -180,6 +186,7 @@ import {MatDividerModule} from '@angular/material/divider';
       flex-direction: column;
       gap: 16px;
       margin-bottom: 24px;
+      width: 400px;
     }
 
     .social-login button {

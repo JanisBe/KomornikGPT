@@ -5,6 +5,7 @@ import {environment} from '../../../environments/environment';
 import {Expense} from '../models/expense.model';
 import {tap} from 'rxjs/operators';
 import {MatSnackBar} from '@angular/material/snack-bar';
+import {GroupExpenses} from '../models/group.model';
 
 export interface ExpenseSplitDto {
   userId: number;
@@ -61,5 +62,9 @@ export class ExpenseService {
 
   deleteExpense(id: number): Observable<void> {
     return this.http.delete<void>(`${this.apiUrl}/${id}`);
+  }
+
+  getExpenseForUser(userId: number): Observable<GroupExpenses[]> {
+    return this.http.get<GroupExpenses[]>(`${this.apiUrl}/user/${userId}`);
   }
 }

@@ -41,9 +41,9 @@ import {AuthService} from '../../../core/services/auth.service';
     <div class="dialog-container">
       <div class="dialog-header">
         @if (this.isEditMode) {
-          <h2 mat-dialog-title>Edit expense for "{{ data.expense?.description }}"</h2>
+          <h2 mat-dialog-title>Edytuj wydatek dla "{{ data.expense?.description }}"</h2>
         } @else {
-          <h2 mat-dialog-title>Add Expense</h2>
+          <h2 mat-dialog-title>Dodaj wydatek</h2>
         }
         <button mat-icon-button mat-dialog-close class="close-button">
           <mat-icon>close</mat-icon>
@@ -54,11 +54,11 @@ import {AuthService} from '../../../core/services/auth.service';
         <mat-dialog-content>
           <div class="form-field">
             <mat-form-field appearance="outline" class="full-width">
-              <mat-label>Description</mat-label>
-              <input matInput formControlName="description" required placeholder="What is this expense for?"/>
+              <mat-label>Nazwa wydatku</mat-label>
+              <input matInput formControlName="description" required placeholder="Nazwa wydatku"/>
               <mat-icon matSuffix>description</mat-icon>
               @if (expenseForm.get('description')?.errors?.['required']) {
-                <mat-error>Description is required</mat-error>
+                <mat-error>Nazwa wydatku jest wymagana</mat-error>
               }
             </mat-form-field>
           </div>
@@ -66,7 +66,7 @@ import {AuthService} from '../../../core/services/auth.service';
           <div class="form-row">
             <div class="form-field amount-field">
               <mat-form-field appearance="outline" class="full-width">
-                <mat-label>Amount</mat-label>
+                <mat-label>Kwota</mat-label>
                 <input
                   (input)="splitEqually()"
                   matInput
@@ -79,17 +79,17 @@ import {AuthService} from '../../../core/services/auth.service';
                 />
                 <mat-icon matSuffix>payments</mat-icon>
                 @if (expenseForm.get('amount')?.errors?.['required']) {
-                  <mat-error>Amount is required</mat-error>
+                  <mat-error>Kwota jest wymagana</mat-error>
                 }
                 @if (expenseForm.get('amount')?.errors?.['min']) {
-                  <mat-error>Amount must be greater than 0</mat-error>
+                  <mat-error>Kwota musi być większa niż 0</mat-error>
                 }
               </mat-form-field>
             </div>
 
             <div class="form-field currency-field">
               <mat-form-field appearance="outline" class="full-width">
-                <mat-label>Currency</mat-label>
+                <mat-label>Waluta</mat-label>
                 <mat-select formControlName="currency" required>
                   @for (currency of currencies; track currency) {
                     <mat-option [value]="currency">{{ currency }}</mat-option>
@@ -97,7 +97,7 @@ import {AuthService} from '../../../core/services/auth.service';
                 </mat-select>
                 <mat-icon matSuffix>currency_exchange</mat-icon>
                 @if (expenseForm.get('currency')?.errors?.['required']) {
-                  <mat-error>Currency is required</mat-error>
+                  <mat-error>Waluta jest wymagana</mat-error>
                 }
               </mat-form-field>
             </div>
@@ -106,20 +106,20 @@ import {AuthService} from '../../../core/services/auth.service';
           <div class="form-row">
             <div class="form-field flex-1">
               <mat-form-field appearance="outline" class="full-width">
-                <mat-label>Date</mat-label>
+                <mat-label>Data</mat-label>
                 <input matInput [matDatepicker]="picker" formControlName="date" required/>
                 <mat-hint>DD/MM/YYYY</mat-hint>
                 <mat-datepicker-toggle matSuffix [for]="picker"></mat-datepicker-toggle>
                 <mat-datepicker #picker></mat-datepicker>
                 @if (expenseForm.get('date')?.errors?.['required']) {
-                  <mat-error>Date is required</mat-error>
+                  <mat-error>Data jest wymagana</mat-error>
                 }
               </mat-form-field>
             </div>
 
             <div class="form-field flex-1">
               <mat-form-field appearance="outline" class="full-width">
-                <mat-label>Paid by</mat-label>
+                <mat-label>Kto zapłaci</mat-label>
                 <mat-select formControlName="payerId" required>
                   @for (member of data.group.members; track member.id) {
                     <mat-option [value]="member.id">{{ member.name }}</mat-option>
@@ -127,7 +127,7 @@ import {AuthService} from '../../../core/services/auth.service';
                 </mat-select>
                 <mat-icon matSuffix>person</mat-icon>
                 @if (expenseForm.get('payerId')?.errors?.['required']) {
-                  <mat-error>Payer is required</mat-error>
+                  <mat-error>Pole jest wymagane</mat-error>
                 }
               </mat-form-field>
             </div>
@@ -135,26 +135,26 @@ import {AuthService} from '../../../core/services/auth.service';
 
           <div class="form-field splits-section">
             <div class="splits-header">
-              <h3>Split between</h3>
+              <h3>Rozdziel pomiędzy</h3>
               <button
                 type="button"
                 mat-stroked-button
                 color="primary"
                 (click)="splitEqually()"
                 [disabled]="!expenseForm.get('amount')?.value || expenseForm.get('amount')?.invalid"
-                matTooltip="Split the amount equally between all members"
+                matTooltip="Rozdziel po równo pomiędzy wszystkich"
               >
                 <mat-icon>balance</mat-icon>
-                Split Equally
+                Rozdziel po równo
               </button>
             </div>
 
             @if (totalSplitAmount > 0) {
               <div class="total-info">
         <span [class.error]="!isSplitValid">
-          Total split: {{ totalSplitAmount | number: '1.2-2' }}
+          W sumie: {{ totalSplitAmount | number: '1.2-2' }}
           @if (expenseForm.get('amount')?.value) {
-            of {{ expenseForm.get('amount')?.value | number: '1.2-2' }}
+            z {{ expenseForm.get('amount')?.value | number: '1.2-2' }}
             ({{ getSplitPercentage() | number: '1.0-0' }}%)
           }
         </span>
@@ -164,7 +164,7 @@ import {AuthService} from '../../../core/services/auth.service';
             <div formArrayName="splits" class="splits-container">
               @for (member of data.group.members; track member.id) {
                 <mat-form-field appearance="outline" class="full-width mb-2">
-                  <mat-label>{{ member.name }}'s share</mat-label>
+                  <mat-label>{{ member.name }} - udział</mat-label>
                   <input
                     matInput
                     type="number"
@@ -176,10 +176,10 @@ import {AuthService} from '../../../core/services/auth.service';
                   />
                   <mat-icon matSuffix>person_outline</mat-icon>
                   @if (getSplitControl(member.id.toString())?.errors?.['required']) {
-                    <mat-error>Share amount is required</mat-error>
+                    <mat-error>Kwota wymagana</mat-error>
                   }
                   @if (getSplitControl(member.id.toString())?.errors?.['min']) {
-                    <mat-error>Share amount must be greater than or equal to 0</mat-error>
+                    <mat-error>Kwota musi być większa niż lub równa 0</mat-error>
                   }
                 </mat-form-field>
               }
@@ -190,14 +190,14 @@ import {AuthService} from '../../../core/services/auth.service';
         <mat-dialog-actions align="end">
           <button mat-button mat-dialog-close type="button">
             <mat-icon>close</mat-icon>
-            Cancel
+            Anuluj
           </button>
           <button mat-raised-button
                   color="primary"
                   type="submit"
                   [disabled]="!expenseForm.valid || !isSplitValid">
             <mat-icon>add_circle</mat-icon>
-            Add Expense
+            Dodaj wydatek
           </button>
         </mat-dialog-actions>
       </form>

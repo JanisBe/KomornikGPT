@@ -26,7 +26,7 @@ import {MatProgressSpinner} from '@angular/material/progress-spinner';
               <p>{{ g.description }}</p>
             }
 
-            <p><strong>Members:</strong></p>
+            <p><strong>Członkowie:</strong></p>
             <mat-list>
               @for (member of g.members; track member.id) {
                 <mat-list-item>
@@ -38,7 +38,7 @@ import {MatProgressSpinner} from '@angular/material/progress-spinner';
 
             @if (!g.isPublic && !isAuthenticated) {
               <div class="text-danger">
-                <p>This group is private. Please log in to see more details.</p>
+                <p>Ta grupa jest prywatna. Zaloguj się, aby do niej wejść</p>
               </div>
             }
           </mat-card-content>

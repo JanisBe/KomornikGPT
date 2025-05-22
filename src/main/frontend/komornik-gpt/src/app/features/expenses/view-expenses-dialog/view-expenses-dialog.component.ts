@@ -54,7 +54,7 @@ interface GroupedExpenses {
                 <thead>
                 <tr>
                   <th>Opis</th>
-                  <th>Kwote</th>
+                  <th>Kwota</th>
                   <th>Płacił</th>
                   <th>Kto</th>
                   <th>Akcje</th>

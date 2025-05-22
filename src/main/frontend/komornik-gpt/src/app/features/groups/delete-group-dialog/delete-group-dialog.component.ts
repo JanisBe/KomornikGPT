@@ -1,6 +1,6 @@
 import {Component, Inject} from '@angular/core';
 import {CommonModule} from '@angular/common';
-import {MAT_DIALOG_DATA, MatDialogModule, MatDialogRef} from '@angular/material/dialog';
+import {MAT_DIALOG_DATA, MatDialogModule} from '@angular/material/dialog';
 import {MatButtonModule} from '@angular/material/button';
 import {Group} from '../../../core/models/group.model';
 
@@ -10,13 +10,13 @@ import {Group} from '../../../core/models/group.model';
   imports: [CommonModule, MatDialogModule, MatButtonModule],
   template: `
     <div class="dialog-container">
-      <h2 mat-dialog-title>Delete Group</h2>
+      <h2 mat-dialog-title>Skasuj grupę</h2>
       <mat-dialog-content>
-        Are you sure you want to delete group "{{ data.name }}"?
+        Czy na pewno chcesz skasować grupę "{{ data.name }}"?
       </mat-dialog-content>
       <mat-dialog-actions align="end">
-        <button mat-button mat-dialog-close>Cancel</button>
-        <button mat-raised-button color="warn" [mat-dialog-close]="true">Delete</button>
+        <button mat-button mat-dialog-close>Anuluj</button>
+        <button mat-raised-button color="warn" [mat-dialog-close]="true">Skasuj</button>
       </mat-dialog-actions>
     </div>
   `,
@@ -42,7 +42,6 @@ import {Group} from '../../../core/models/group.model';
 })
 export class DeleteGroupDialogComponent {
   constructor(
-    public dialogRef: MatDialogRef<DeleteGroupDialogComponent>,
     @Inject(MAT_DIALOG_DATA) public data: Group
   ) {
   }

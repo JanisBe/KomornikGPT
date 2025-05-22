@@ -3,6 +3,7 @@ import {CommonModule} from '@angular/common';
 import {RouterModule} from '@angular/router';
 import {AuthService} from '../core/services/auth.service';
 import {User} from '../core/models/user.model';
+import {ExpenseService} from '../core/services/expense.service';
 
 @Component({
   selector: 'app-layout',
@@ -17,27 +18,29 @@ import {User} from '../core/models/user.model';
         </button>
         <div class="collapse navbar-collapse" id="navbarNav">
           <ul class="navbar-nav me-auto">
-            <li class="nav-item">
-              <a class="nav-link" routerLink="/groups" routerLinkActive="active">Groups</a>
-            </li>
-            <li class="nav-item">
-              <a class="nav-link" routerLink="/expenses" routerLinkActive="active">Expenses</a>
-            </li>
+            @if (authService.isAuthenticated()) {
+              <li class="nav-item">
+                <a class="nav-link" routerLink="/groups" routerLinkActive="active">Grupy</a>
+              </li>
+              <li class="nav-item">
+                <a class="nav-link" routerLink="/expenses" routerLinkActive="active">Moje wydatki</a>
+              </li>
+            }
           </ul>
           <ul class="navbar-nav">
             @if (authService.isAuthenticated()) {
               <li class="nav-item">
-                <a class="nav-link" routerLink="/profile" routerLinkActive="active">Profile ({{userName}})</a>
+                <a class="nav-link" routerLink="/profile" routerLinkActive="active">Profil ({{ userName }})</a>
               </li>
               <li class="nav-item">
                 <a class="nav-link" (click)="logout()" style="cursor: pointer">Logout</a>
               </li>
             } @else {
               <li class="nav-item">
-                <a class="nav-link" routerLink="/login" routerLinkActive="active">Login</a>
+                <a class="nav-link" routerLink="/login" routerLinkActive="active">Zaloguj</a>
               </li>
               <li class="nav-item">
-                <a class="nav-link" routerLink="/register" routerLinkActive="active">Register</a>
+                <a class="nav-link" routerLink="/register" routerLinkActive="active">Zarejestruj</a>
               </li>
             }
           </ul>
@@ -57,16 +60,15 @@ import {User} from '../core/models/user.model';
 export class LayoutComponent implements OnInit {
   userName = '';
 
-  constructor(public authService: AuthService) {
+  constructor(public authService: AuthService,
+              public expensesService: ExpenseService) {
   }
 
   ngOnInit(): void {
     this.userName = this.authService.getLoggedUser()?.name ?? '';
     this.authService.getCurrentUser().subscribe({
-      next: (user: User) => {
-        if (!!user) {
-          this.userName = user.name;
-        }
+      next: (user: User | null) => {
+        this.userName = user?.name ?? '';
       }
     });
   }

@@ -2,6 +2,7 @@ package com.janis.komornikgpt.expense;
 
 import com.janis.komornikgpt.exception.ResourceNotFoundException;
 import com.janis.komornikgpt.group.Group;
+import com.janis.komornikgpt.group.GroupDto;
 import com.janis.komornikgpt.group.GroupRepository;
 import com.janis.komornikgpt.group.GroupService;
 import com.janis.komornikgpt.user.User;
@@ -16,6 +17,8 @@ import java.security.Principal;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -90,8 +93,17 @@ public class ExpenseService {
         return expenseRepository.findAllByGroupIdAndDateBetween(groupId, startDate, endDate);
     }
 
-    public List<Expense> findAllByPayerId(Long userId) {
-        return expenseRepository.findAllByPayerId(userId);
+    public Map<GroupDto, List<ExpenseDto>> findAllByPayerId(Long userId) {
+        Map<Group, List<Expense>> expenses = expenseRepository.findAllByPayerIdOrderByDateDesc(userId).stream()
+                .filter(e -> e.getGroup() != null)
+                .collect(Collectors.groupingBy(Expense::getGroup));
+        return expenses.entrySet().stream()
+                .collect(Collectors.toMap(
+                        entry -> GroupDto.fromGroup(entry.getKey()), // konwersja Group -> GroupDto
+                        entry -> entry.getValue().stream()
+                                .map(ExpenseDto::fromExpense)
+                                .toList()
+                ));
     }
 
     public List<Expense> findAllByPayerIdAndDateBetween(Long userId, LocalDateTime startDate,

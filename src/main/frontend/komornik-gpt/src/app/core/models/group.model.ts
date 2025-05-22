@@ -14,3 +14,8 @@ export interface Group {
   isPublic?: boolean;
   defaultCurrency?: Currency;
 }
+
+export interface GroupExpenses {
+  group: Group;
+  expenses: Expense[];
+}

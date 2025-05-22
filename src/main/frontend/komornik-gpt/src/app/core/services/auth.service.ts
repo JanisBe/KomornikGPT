@@ -34,7 +34,6 @@ export class AuthService {
     private http: HttpClient,
     private router: Router
   ) {
-    console.log('AuthService initialized');
     this.checkAuthStatus();
   }
 
@@ -120,7 +119,7 @@ export class AuthService {
   }
 
   isAuthenticated(): boolean {
-    return this.currentUserSubject.value !== null;
+    return !!this.currentUserSubject.value;
   }
 
   clearAuthState(): void {

@@ -1,13 +1,16 @@
 package com.janis.komornikgpt.expense;
 
 import com.janis.komornikgpt.SettlementDto;
+import com.janis.komornikgpt.group.GroupDto;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.security.Principal;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/expenses")
@@ -44,9 +47,12 @@ public class ExpenseRestController {
     }
 
     @GetMapping("/user/{userId}")
-    public ResponseEntity<List<ExpenseDto>> getExpensesByPayerId(@PathVariable Long userId) {
-        List<Expense> expenses = expenseService.findAllByPayerId(userId);
-        return ResponseEntity.ok(expenses.stream().map(ExpenseDto::fromExpense).toList());
+    public ResponseEntity<List<GroupExpensesDto>> getExpensesByPayerId(@PathVariable Long userId) {
+        Map<GroupDto, List<ExpenseDto>> allExpenses = expenseService.findAllByPayerId(userId);
+        List<GroupExpensesDto> result = new ArrayList<>();
+        allExpenses.forEach((groupDto, expenses) ->
+                result.add(new GroupExpensesDto(groupDto, expenses)));
+        return ResponseEntity.ok(result);
     }
 
     @GetMapping("/user/{userId}/between")

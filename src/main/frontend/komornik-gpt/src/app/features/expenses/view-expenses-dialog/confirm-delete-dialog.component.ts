@@ -1,6 +1,6 @@
 import {Component, Inject} from '@angular/core';
 import {CommonModule} from '@angular/common';
-import {MAT_DIALOG_DATA, MatDialogModule, MatDialogRef} from '@angular/material/dialog';
+import {MAT_DIALOG_DATA, MatDialogModule} from '@angular/material/dialog';
 import {MatButtonModule} from '@angular/material/button';
 
 @Component({
@@ -13,13 +13,13 @@ import {MatButtonModule} from '@angular/material/button';
   ],
   template: `
     <div class="dialog-container">
-      <h2 mat-dialog-title>Confirm Delete</h2>
+      <h2 mat-dialog-title>Kasowanie wydatku</h2>
       <mat-dialog-content>
-        Are you sure you want to delete this expense?
+        Czy na pewno chcesz usunąć ten wydatek?
       </mat-dialog-content>
       <mat-dialog-actions align="end">
-        <button mat-button mat-dialog-close>Cancel</button>
-        <button mat-raised-button color="warn" [mat-dialog-close]="true">Delete</button>
+        <button mat-button mat-dialog-close>Anuluj</button>
+        <button mat-raised-button color="warn" [mat-dialog-close]="true">Skasuj</button>
       </mat-dialog-actions>
     </div>
   `,
@@ -30,10 +30,9 @@ import {MatButtonModule} from '@angular/material/button';
     }
 
     h2 {
-      margin: 0;
       font-size: 20px;
       font-weight: 500;
-      margin-bottom: 16px;
+      margin: 0 0 16px;
     }
 
     mat-dialog-content {
@@ -49,7 +48,6 @@ import {MatButtonModule} from '@angular/material/button';
 })
 export class ConfirmDeleteDialogComponent {
   constructor(
-    public dialogRef: MatDialogRef<ConfirmDeleteDialogComponent>,
     @Inject(MAT_DIALOG_DATA) public data: any
   ) {
   }

@@ -247,7 +247,7 @@ import {MatDividerModule} from '@angular/material/divider';
   `]
 })
 export class LoginComponent implements OnInit {
-  loginForm: FormGroup;
+  loginForm!: FormGroup;
   isLoading = false;
   errorMessage = '';
 
@@ -259,21 +259,20 @@ export class LoginComponent implements OnInit {
     private route: ActivatedRoute,
     private snackBar: MatSnackBar
   ) {
-    this.loginForm = this.fb.group({
-      email: ['', [Validators.required, Validators.email]],
-      password: ['', Validators.required]
-    });
   }
 
   ngOnInit(): void {
-    console.log("LoginComponent initialized");
     this.route.queryParams.subscribe(params => {
       const requiresPassword = params['requiresPassword'] === 'true';
       if (requiresPassword) {
         this.router.navigate(['/set-password']);
       } else {
-        // this.router.navigate(['/groups']);
+        this.router.navigate(['/groups']);
       }
+    });
+    this.loginForm = this.fb.group({
+      email: ['', [Validators.required, Validators.email]],
+      password: ['', Validators.required]
     });
   }
 

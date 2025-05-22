@@ -1,8 +1,5 @@
 package com.janis.komornikgpt.expense;
 
-import org.springframework.data.domain.Example;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -20,8 +17,8 @@ public interface ExpenseRepository extends JpaRepository<Expense, Long> {
         @Param("startDate") LocalDateTime startDate,
         @Param("endDate") LocalDateTime endDate
     );
-    
-    List<Expense> findAllByPayerId(Long userId);
+
+    List<Expense> findAllByPayerIdOrderByDateDesc(Long userId);
     
     @Query("SELECT e FROM Expense e WHERE e.payer.id = :userId AND e.date BETWEEN :startDate AND :endDate")
     List<Expense> findAllByPayerIdAndDateBetween(
@@ -30,9 +27,6 @@ public interface ExpenseRepository extends JpaRepository<Expense, Long> {
         @Param("endDate") LocalDateTime endDate
     );
     
-    // Query by Example support
-    <S extends Expense> Page<S> findAll(Example<S> example, Pageable pageable);
-
     List<Expense> findAllByGroupIdOrderByDateDesc(Long groupId);
 
     List<Expense> findAllByGroup_IdAndPaidFalse(Long groupId);

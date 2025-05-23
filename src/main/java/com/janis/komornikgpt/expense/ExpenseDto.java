@@ -18,7 +18,8 @@ public record ExpenseDto(
         List<ExpenseSplitDto> splits,
         LocalDateTime createdAt,
         LocalDateTime updatedAt,
-        Boolean isPaid
+        Boolean isPaid,
+        ExpenseCategory category
 ) {
     public static ExpenseDto fromExpense(Expense expense) {
         return new ExpenseDto(
@@ -34,7 +35,8 @@ public record ExpenseDto(
                         .toList(),
                 expense.getCreatedAt(),
                 expense.getUpdatedAt(),
-                expense.getPaid()
+                expense.getPaid(),
+                expense.getCategory()
         );
     }
 

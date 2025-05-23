@@ -79,8 +79,6 @@ export class SetPasswordComponent implements OnInit {
 
   comparePasswords() {
     const {newPassword, confirmPassword} = this.form.value;
-    console.log(newPassword, confirmPassword);
-
     if (newPassword !== confirmPassword) {
       this.form.controls['confirmPassword'].setErrors({'incorrect': true});
       return;

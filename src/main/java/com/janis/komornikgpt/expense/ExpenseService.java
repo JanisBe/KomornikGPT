@@ -50,6 +50,7 @@ public class ExpenseService {
         expense.setCurrency(request.currency());
         expense.setDate(request.date());
         expense.setPayer(payer);
+        expense.setCategory(request.category());
         expense.setGroup(group);
         assignSplits(request, expense);
 
@@ -122,6 +123,7 @@ public class ExpenseService {
         newExpense.setDescription(expense.getDescription());
         newExpense.setDate(expense.getDate());
         newExpense.setPayer(expense.getPayer());
+        newExpense.setCategory(expense.getCategory());
         newExpense.setGroup(expense.getGroup());
         List<ExpenseSplit> splits = new ArrayList<>();
         expense.getSplits().forEach(split -> {
@@ -151,6 +153,7 @@ public class ExpenseService {
         expense.setAmount(request.amount());
         expense.setCurrency(request.currency());
         expense.setDate(request.date());
+        expense.setCategory(request.category());
         expense.setPayer(userRepository.findById(request.payerId())
                 .orElseThrow(
                         () -> new RuntimeException("User not found with id: " + request.payerId())));

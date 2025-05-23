@@ -1,4 +1,4 @@
-import {Component, Inject} from '@angular/core';
+import {Component, ElementRef, Inject, ViewChild} from '@angular/core';
 import {CommonModule} from '@angular/common';
 import {FormBuilder, FormGroup, ReactiveFormsModule, Validators} from '@angular/forms';
 import {MAT_DIALOG_DATA, MatDialogModule, MatDialogRef} from '@angular/material/dialog';
@@ -15,6 +15,17 @@ import {Currency} from '../../../core/models/currency.model';
 import {Expense} from '../../../core/models/expense.model';
 import {DATE_PROVIDERS} from '../../../core/config/date.config';
 import {AuthService} from '../../../core/services/auth.service';
+import {
+  categoryToEnumValue,
+  DEFAULT_CATEGORY,
+  ENTERTAINMENT,
+  EXPENSE_CATEGORIES,
+  ExpenseCategory,
+  FOOD_DRINKS,
+  HOME,
+  LIFE,
+  NO_CATEGORY
+} from '../../../core/models/expense-category.model';
 
 @Component({
   selector: 'app-add-expense-dialog',
@@ -52,15 +63,50 @@ import {AuthService} from '../../../core/services/auth.service';
 
       <form [formGroup]="expenseForm" (ngSubmit)="onSubmit()">
         <mat-dialog-content>
-          <div class="form-field">
-            <mat-form-field appearance="outline" class="full-width">
-              <mat-label>Nazwa wydatku</mat-label>
-              <input matInput formControlName="description" required placeholder="Nazwa wydatku"/>
-              <mat-icon matSuffix>description</mat-icon>
-              @if (expenseForm.get('description')?.errors?.['required']) {
-                <mat-error>Nazwa wydatku jest wymagana</mat-error>
-              }
-            </mat-form-field>
+          <div class="form-row">
+            <div class="category-selector" #categorySelector>
+              <div class="category-icon-container" (mouseenter)="openMainMenu()">
+                <mat-icon class="category-main-icon">{{ selectedCategoryIcon }}</mat-icon>
+
+                <div class="category-dropdown" *ngIf="showMainCategories" (mouseleave)="closeMenus()">
+                  <div class="category-list">
+                    @for (mainCategory of getMainCategories(); track mainCategory) {
+                      <div class="category-item"
+                           (mouseenter)="showSubcategories(mainCategory)"
+                           [class.active]="selectedCategory.mainCategory === mainCategory">
+                        <mat-icon>{{ getMainCategoryIcon(mainCategory) }}</mat-icon>
+                        <span>{{ mainCategory }}</span>
+                      </div>
+                    }
+                  </div>
+
+                  <!-- Subcategories dropdown -->
+                  <div class="subcategory-dropdown" *ngIf="activeMainCategory && showSubcategoriesMenu">
+                    <div class="category-list">
+                      @for (subcategory of getSubcategoriesFor(activeMainCategory); track subcategory.subCategory) {
+                        <div class="category-item"
+                             (click)="selectCategory(subcategory)"
+                             [class.active]="isSelectedCategory(subcategory)">
+                          <mat-icon>{{ subcategory.icon }}</mat-icon>
+                          <span>{{ subcategory.subCategory }}</span>
+                        </div>
+                      }
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="selected-category-name">{{ selectedCategoryName }}</div>
+            </div>
+            <div class="form-field flex-1">
+              <mat-form-field appearance="outline" class="full-width">
+                <mat-label>Nazwa wydatku</mat-label>
+                <input matInput formControlName="description" required placeholder="Nazwa wydatku"/>
+                <mat-icon matSuffix>description</mat-icon>
+                @if (expenseForm.get('description')?.errors?.['required']) {
+                  <mat-error>Nazwa wydatku jest wymagana</mat-error>
+                }
+              </mat-form-field>
+            </div>
           </div>
 
           <div class="form-row">
@@ -122,17 +168,16 @@ import {AuthService} from '../../../core/services/auth.service';
                 <mat-label>Kto zapłaci</mat-label>
                 <mat-select formControlName="payerId" required>
                   @for (member of data.group.members; track member.id) {
-                    <mat-option [value]="member.id">{{ member.name }}</mat-option>
+                    <mat-option [value]="member.id">{{ member.username }}</mat-option>
                   }
                 </mat-select>
                 <mat-icon matSuffix>person</mat-icon>
                 @if (expenseForm.get('payerId')?.errors?.['required']) {
-                  <mat-error>Pole jest wymagane</mat-error>
+                  <mat-error>Płatnik jest wymagany</mat-error>
                 }
               </mat-form-field>
             </div>
           </div>
-
           <div class="form-field splits-section">
             <div class="splits-header">
               <h3>Rozdziel pomiędzy</h3>
@@ -252,12 +297,104 @@ import {AuthService} from '../../../core/services/auth.service';
       display: flex;
       align-items: center;
       justify-content: space-between;
-      padding: 8px; /* jak chcesz żeby było ładnie */
+      padding: 8px;
     }
 
     .close-button {
-      /* możesz coś jeszcze dodać jak ci się chce, np. */
       margin-left: auto;
+    }
+
+    /* Category selector styles */
+    .category-selector {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      width: 80px;
+      position: relative;
+    }
+
+    .category-icon-container {
+      position: relative;
+      cursor: pointer;
+    }
+
+    .category-main-icon {
+      font-size: 50px;
+      width: 50px;
+      height: 50px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #1976d2;
+    }
+
+    .selected-category-name {
+      font-size: 12px;
+      text-align: center;
+      margin-top: 4px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 80px;
+    }
+
+    .category-dropdown {
+      position: absolute;
+      top: 60px;
+      left: 0;
+      width: 250px;
+      background: white;
+      border-radius: 4px;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+      z-index: 1000;
+      display: flex;
+      padding: 8px 0;
+    }
+
+    .subcategory-dropdown {
+      position: absolute;
+      top: 0;
+      left: 250px;
+      width: 250px;
+      background: white;
+      border-radius: 4px;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+      z-index: 1001;
+    }
+
+    .category-list {
+      width: 100%;
+      max-height: 300px;
+      overflow-y: auto;
+    }
+
+    .category-item {
+      display: flex;
+      align-items: center;
+      padding: 12px 16px;
+      cursor: pointer;
+      height: 50px;
+      box-sizing: border-box;
+    }
+
+    .category-item:hover {
+      background-color: rgba(0, 0, 0, 0.04);
+    }
+
+    .category-item.active {
+      background-color: rgba(25, 118, 210, 0.1);
+    }
+
+    .category-item mat-icon {
+      margin-right: 12px;
+      color: #1976d2;
+    }
+
+    .category-item span {
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
     }
 
     .form-row {
@@ -391,6 +528,52 @@ export class AddExpenseDialogComponent {
   totalSplitAmount = 0;
   isSplitValid = false;
   isEditMode = false;
+  group!: Group;
+  expense?: Expense;
+  isEdit?: boolean;
+  selectedCategory: ExpenseCategory = DEFAULT_CATEGORY;
+  showMainCategories = false;
+  showSubcategoriesMenu = false;
+  activeMainCategory: string | null = null;
+  @ViewChild('categorySelector') categorySelector!: ElementRef;
+
+  get selectedCategoryName(): string {
+    return `${this.selectedCategory.mainCategory} - ${this.selectedCategory.subCategory}`;
+  }
+
+  get selectedCategoryIcon(): string {
+    return this.selectedCategory.icon;
+  }
+
+  getMainCategories(): string[] {
+    return [HOME, ENTERTAINMENT, LIFE, FOOD_DRINKS, NO_CATEGORY];
+  }
+
+  getMainCategoryIcon(mainCategory: string): string {
+    const subcategories = this.getSubcategoriesFor(mainCategory);
+    return subcategories.length > 0 ? subcategories[0].icon : 'category';
+  }
+
+  getSubcategoriesFor(mainCategory: string): ExpenseCategory[] {
+    return EXPENSE_CATEGORIES.filter(cat => cat.mainCategory === mainCategory);
+  }
+
+  showSubcategories(mainCategory: string): void {
+    this.activeMainCategory = mainCategory;
+    this.showSubcategoriesMenu = true;
+  }
+
+  openMainMenu(): void {
+    this.showMainCategories = true;
+  }
+
+  closeMenus(): void {
+    setTimeout(() => {
+      this.showMainCategories = false;
+      this.showSubcategoriesMenu = false;
+      this.activeMainCategory = null;
+    }, 300);
+  }
 
   constructor(
     private fb: FormBuilder,
@@ -411,7 +594,6 @@ export class AddExpenseDialogComponent {
       this.populateForm(data.expense, data.group.defaultCurrency);
     }
 
-    // Listen to amount changes to validate splits
     this.expenseForm.get('amount')?.valueChanges.subscribe(() => {
       this.updateTotalSplit();
     });
@@ -429,22 +611,29 @@ export class AddExpenseDialogComponent {
     this.isSplitValid = Math.abs(this.totalSplitAmount - totalAmount) < 0.01;
   }
 
-  private populateForm(expense: Expense, defaultCurrency: Currency | undefined) {
-    this.expenseForm.patchValue({
-      description: expense.description,
-      amount: expense.amount,
-      currency: defaultCurrency,
-      date: new Date(expense.date),
-      payerId: expense.payer.id
-    });
+  onSubmit() {
+    if (this.expenseForm.valid && this.isSplitValid) {
+      const formValue = this.expenseForm.value;
+      const splits = Object.entries(formValue.splits).map(([userId, amountOwed]) => ({
+        userId: parseInt(userId),
+        amountOwed: parseFloat(amountOwed as string)
+      }));
 
-    // Populate splits
-    const splitsGroup = this.expenseForm.get('splits') as FormGroup;
-    expense.splits.forEach(split => {
-      splitsGroup.get(split.user.id.toString())?.setValue(split.amountOwed);
-    });
+      const categoryEnumValue = categoryToEnumValue(this.selectedCategory);
 
-    this.updateTotalSplit();
+      const expenseData = {
+        description: formValue.description,
+        amount: parseFloat(formValue.amount),
+        currency: formValue.currency,
+        date: formValue.date.toISOString(),
+        payerId: parseInt(formValue.payerId),
+        groupId: this.data.group.id,
+        splits,
+        category: categoryEnumValue
+      };
+
+      this.dialogRef.close(expenseData);
+    }
   }
 
   getSplitControl(memberId: string) {
@@ -469,7 +658,6 @@ export class AddExpenseDialogComponent {
 
     const splitsGroup = this.expenseForm.get('splits') as FormGroup;
     this.data.group.members.forEach((member, index) => {
-      // Add remainder to the first person's share
       let share = equalShare;
       if (index === 0) {
         share = +(equalShare + remainder).toFixed(2);
@@ -480,8 +668,38 @@ export class AddExpenseDialogComponent {
     this.updateTotalSplit();
   }
 
+  isSelectedCategory(category: ExpenseCategory): boolean {
+    return this.selectedCategory.mainCategory === category.mainCategory &&
+      this.selectedCategory.subCategory === category.subCategory;
+  }
+
+  selectCategory(category: ExpenseCategory): void {
+    this.selectedCategory = category;
+    this.closeMenus();
+  }
+
+  private populateForm(expense: Expense, defaultCurrency: Currency | undefined) {
+    this.expenseForm.patchValue({
+      description: expense.description,
+      amount: expense.amount,
+      currency: defaultCurrency,
+      date: new Date(expense.date),
+      payerId: expense.payer.id
+    });
+
+    const splitsGroup = this.expenseForm.get('splits') as FormGroup;
+    expense.splits.forEach(split => {
+      splitsGroup.get(split.user.id.toString())?.setValue(split.amountOwed);
+    });
+
+    if (expense.category) {
+      this.selectedCategory = expense.category;
+    }
+
+    this.updateTotalSplit();
+  }
+
   private initForm() {
-    // Get current user synchronously if possible
     let currentUserId: number | null = null;
     const currentUser = this.authService['currentUserSubject']?.value;
     if (currentUser && this.data.group.members.some(m => m.id === currentUser.id)) {
@@ -493,10 +711,10 @@ export class AddExpenseDialogComponent {
       currency: [this.data.group.defaultCurrency || Currency.PLN, Validators.required],
       date: [new Date(), Validators.required],
       payerId: [currentUserId !== null ? currentUserId : '', Validators.required],
-      splits: this.fb.group({})
+      splits: this.fb.group({}),
+      category: ['']
     });
 
-    // Initialize split controls
     const splitsGroup = this.expenseForm.get('splits') as FormGroup;
     this.data.group.members.forEach(member => {
       splitsGroup.addControl(
@@ -504,28 +722,6 @@ export class AddExpenseDialogComponent {
         this.fb.control('', [Validators.required, Validators.min(0)])
       );
     });
-  }
-
-  onSubmit() {
-    if (this.expenseForm.valid && this.isSplitValid) {
-      const formValue = this.expenseForm.value;
-      const splits = Object.entries(formValue.splits).map(([userId, amountOwed]) => ({
-        userId: parseInt(userId),
-        amountOwed: parseFloat(amountOwed as string)
-      }));
-
-      const expenseData = {
-        description: formValue.description,
-        amount: parseFloat(formValue.amount),
-        currency: formValue.currency,
-        date: formValue.date.toISOString(),
-        payerId: parseInt(formValue.payerId),
-        groupId: this.data.group.id,
-        splits
-      };
-
-      this.dialogRef.close(expenseData);
-    }
   }
 
 }

@@ -1,6 +1,7 @@
 import {User} from './user.model';
 import {Group} from './group.model';
 import {Currency} from './currency.model';
+import {ExpenseCategory} from './expense-category.model';
 
 export interface ExpenseSplit {
   id: number;
@@ -21,6 +22,7 @@ export interface Expense {
   createdAt?: Date;
   updatedAt?: Date;
   isPaid?: boolean;
+  category?: ExpenseCategory;
 }
 
 export interface CreateExpenseDto {
@@ -31,6 +33,10 @@ export interface CreateExpenseDto {
   payerId: number;
   groupId: number;
   splits: ExpenseSplitDto[];
+  category?: {
+    mainCategory: string;
+    subCategory: string;
+  };
 }
 
 export interface ExpenseSplitDto {

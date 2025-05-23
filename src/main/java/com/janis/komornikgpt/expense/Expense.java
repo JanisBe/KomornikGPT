@@ -62,6 +62,10 @@ public class Expense {
     @Column(name = "is_paid")
     private Boolean paid = false;
 
+    @Enumerated(EnumType.STRING)
+    @Column(name = "category")
+    private ExpenseCategory category = ExpenseCategory.NO_CATEGORY_GENERAL;
+
     @PrePersist
     protected void onCreate() {
         createdAt = LocalDateTime.now();

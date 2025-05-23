@@ -11,7 +11,8 @@ public record CreateExpenseRequest(
         LocalDateTime date,
         Long payerId,
         Long groupId,
-        List<ExpenseSplitRequest> splits
+        List<ExpenseSplitRequest> splits,
+        ExpenseCategory category
 ) implements SplitContainer {
     public record ExpenseSplitRequest(
             Long userId,

@@ -11,7 +11,8 @@ public record UpdateExpenseRequest(
         Currency currency,
         String description,
         LocalDateTime date,
-        List<SplitDto> splits
+        List<SplitDto> splits,
+        ExpenseCategory category
 ) implements SplitContainer {
     public record SplitDto(
             Long userId,

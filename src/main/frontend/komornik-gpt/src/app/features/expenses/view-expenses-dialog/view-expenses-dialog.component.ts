@@ -1,6 +1,6 @@
 import {Component, Inject, OnInit} from '@angular/core';
 import {CommonModule} from '@angular/common';
-import {MAT_DIALOG_DATA, MatDialog, MatDialogModule, MatDialogRef} from '@angular/material/dialog';
+import {MAT_DIALOG_DATA, MatDialog, MatDialogModule} from '@angular/material/dialog';
 import {MatButtonModule} from '@angular/material/button';
 import {MatIconModule} from '@angular/material/icon';
 import {MatTooltipModule} from '@angular/material/tooltip';
@@ -11,6 +11,7 @@ import {ExpenseService} from '../../../core/services/expense.service';
 import {AddExpenseDialogComponent} from '../add-expense-dialog/add-expense-dialog.component';
 import {ConfirmDeleteDialogComponent} from './confirm-delete-dialog.component';
 import {SettleExpensesDialogComponent} from '../settle-expenses-dialog';
+import {DEFAULT_CATEGORY} from '../../../core/models/expense-category.model';
 
 interface GroupedExpenses {
   date: Date;
@@ -54,6 +55,7 @@ interface GroupedExpenses {
                 <thead>
                 <tr>
                   <th>Opis</th>
+                  <th>Kategoria</th>
                   <th>Kwota</th>
                   <th>Płacił</th>
                   <th>Kto</th>
@@ -70,6 +72,15 @@ interface GroupedExpenses {
                         @if (expense.isPaid) {
                           <mat-icon matTooltip="Uregulowane" class="paid-icon">check_circle</mat-icon>
                         }
+                      </td>
+                      <td>
+                        <div class="category-cell">
+                          <mat-icon
+                            [matTooltip]="(expense.category?.mainCategory || 'Bez Kategorii') + ' - ' + (expense.category?.subCategory || 'Ogólne')">
+                            {{ expense.category?.icon || 'category' }}
+                          </mat-icon>
+                          <span class="category-name">{{ expense.category?.subCategory || 'Ogólne' }}</span>
+                        </div>
                       </td>
                       <td>{{ expense.amount | number:'1.2-2' }} {{ expense.currency }}</td>
                       <td><span matTooltip="{{expense.payer.email}}">{{ expense.payer.name }}</span></td>
@@ -217,6 +228,20 @@ interface GroupedExpenses {
       width: 16px;
     }
 
+    .category-cell {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .category-name {
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 80px;
+      font-size: 0.9em;
+    }
+
     tr:hover {
       background: rgba(0, 0, 0, 0.04);
     }
@@ -232,7 +257,6 @@ export class ViewExpensesDialogComponent implements OnInit {
   groupedExpenses: GroupedExpenses[] = [];
 
   constructor(
-    private dialogRef: MatDialogRef<ViewExpensesDialogComponent>,
     @Inject(MAT_DIALOG_DATA) public data: { group: Group },
     private expenseService: ExpenseService,
     private snackBar: MatSnackBar,
@@ -247,8 +271,11 @@ export class ViewExpensesDialogComponent implements OnInit {
   loadExpenses() {
     this.expenseService.getExpensesByGroup(this.data.group.id).subscribe({
       next: (expenses) => {
-        this.expenses = expenses;
-        this.groupedExpenses = this.groupExpensesByDay(expenses);
+        this.expenses = expenses.map(expense => ({
+          ...expense,
+          category: expense.category || DEFAULT_CATEGORY
+        }));
+        this.groupedExpenses = this.groupExpensesByDay(this.expenses);
       },
       error: (error) => {
         console.error(error);

@@ -14,6 +14,7 @@ import {MatIconButton} from '@angular/material/button';
 import {MatIconModule} from '@angular/material/icon';
 import {MatTooltipModule} from '@angular/material/tooltip';
 import {MatDividerModule} from '@angular/material/divider';
+import {DEFAULT_CATEGORY} from '../../../core/models/expense-category.model';
 
 @Component({
   selector: 'app-my-expenses',
@@ -73,6 +74,23 @@ import {MatDividerModule} from '@angular/material/divider';
       text-overflow: ellipsis;
     }
 
+    .expense-table .mat-column-category {
+      width: 120px;
+    }
+
+    .category-cell {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .category-name {
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 80px;
+    }
+
     .expense-table .mat-column-amount {
       width: 100px;
       text-align: right;
@@ -113,6 +131,24 @@ import {MatDividerModule} from '@angular/material/divider';
                 </span>
             </td>
           </ng-container>
+          <ng-container matColumnDef="category">
+            <th mat-header-cell *matHeaderCellDef>Kategoria</th>
+            <td mat-cell *matCellDef="let expense">
+              @if (expense.category) {
+                <span class="cell category-cell">
+        <mat-icon [matTooltip]="expense.category.mainCategory + ' - ' + expense.category.subCategory">
+          {{ expense.category.icon }}
+        </mat-icon>
+        <span class="category-name">{{ expense.category.subCategory }}</span>
+      </span>
+              } @else {
+                <span class="cell category-cell">
+        <mat-icon matTooltip="Bez kategorii">category</mat-icon>
+        <span class="category-name">Ogólne</span>
+      </span>
+              }
+            </td>
+          </ng-container>
           <ng-container matColumnDef="amount">
             <th mat-header-cell *matHeaderCellDef> Kwota</th>
             <td mat-cell *matCellDef="let expense"> {{ expense.amount }} {{ expense.currency }}</td>
@@ -148,7 +184,7 @@ import {MatDividerModule} from '@angular/material/divider';
         <mat-divider class="expense-group-divider"/>
       }
     } @else {
-      <p>Ładowanie wydatków</p>
+      <p>{{ msg }}</p>
     }
   `
 })
@@ -156,7 +192,8 @@ export class MyExpensesComponent implements OnInit {
   currentUserId: number = 0;
   expensesByGroup = signal<Map<Group, Expense[]>>(new Map());
   expensesByGroupKeys = signal<Group[]>([]);
-  columns = ['description', 'amount', 'date', 'actions'];
+  columns = ['description', 'category', 'amount', 'date', 'actions'];
+  msg: string = 'Ładowanie wydatków...';
   private expenseService = inject(ExpenseService);
   private authService = inject(AuthService);
 
@@ -242,10 +279,15 @@ export class MyExpensesComponent implements OnInit {
             const expenses = item.expenses;
 
             if (group && expenses) {
-              const processedExpenses = expenses.map(expense => ({
-                ...expense,
-                date: new Date(expense.date)
-              }));
+              const processedExpenses = expenses.map(expense => {
+                // Ensure each expense has a category, use DEFAULT_CATEGORY if none exists
+                const expenseWithCategory = {
+                  ...expense,
+                  date: new Date(expense.date),
+                  category: expense.category || DEFAULT_CATEGORY
+                };
+                return expenseWithCategory;
+              });
 
               newMap.set(group, processedExpenses);
               groupKeys.push(group);
@@ -254,7 +296,7 @@ export class MyExpensesComponent implements OnInit {
             }
           });
         } else {
-          console.warn("API returned empty or null groupExpensesList:", groupExpensesList);
+          this.msg = 'Nie ma żadnych wydatków 😥';
         }
 
         this.expensesByGroup.set(newMap);

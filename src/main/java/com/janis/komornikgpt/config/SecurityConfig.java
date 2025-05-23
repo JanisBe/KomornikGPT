@@ -4,6 +4,7 @@ import com.janis.komornikgpt.auth.OAuth2AuthenticationSuccessHandler;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
@@ -35,28 +36,30 @@ public class SecurityConfig {
                 .sessionManagement(session -> session
                         .sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers(
+                        .requestMatchers(HttpMethod.GET,
                                 "/",
                                 "/index.html",
                                 "/favicon.ico",
-                                "/*/*.png",
-                                "/*/*.gif",
-                                "/*/*.svg",
-                                "/*/*.jpg",
-                                "/*/*.html",
-                                "/*/*.css",
-                                "/*/*.js",
+                                "/*.png",
+                                "/*.gif",
+                                "/*.svg",
+                                "/*.jpg",
+                                "/*.html",
+                                "/*.css",
+                                "/*.js",
                                 "/api/auth/login",
                                 "/api/auth/user",
                                 "/api/auth/register",
                                 "/api/forgot-password",
                                 "/api/reset-password",
-                                "/api/groups",           // ZMIANA: bez /** na końcu
-                                "/api/groups/**",        // ZMIANA: oddzielny wpis dla ścieżek podrzędnych
-                                "/.well-known/**",       // np. Let's Encrypt, Android app links itp.
-                                "/oauth2/**",            // callbacki do social auth
-                                "/login",                // ZMIANA: bez /** na końcu
-                                "/login/**"              // ZMIANA: oddzielny wpis dla ścieżek podrzędnych
+                                "/api/groups",
+                                "/api/groups/**",
+                                "/.well-known/**",
+                                "/oauth2/**",
+                                "/login",
+                                "/login/**",
+                                "/manifest.webmanifest",
+                                "/assets/**"
                         ).permitAll()
                         .anyRequest().authenticated()
                 )

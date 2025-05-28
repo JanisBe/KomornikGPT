@@ -11,7 +11,7 @@ import {ExpenseService} from '../../../core/services/expense.service';
 import {AddExpenseDialogComponent} from '../add-expense-dialog/add-expense-dialog.component';
 import {ConfirmDeleteDialogComponent} from './confirm-delete-dialog.component';
 import {SettleExpensesDialogComponent} from '../settle-expenses-dialog';
-import {DEFAULT_CATEGORY} from '../../../core/models/expense-category.model';
+import {DEFAULT_CATEGORY, enumValueToCategory} from '../../../core/models/expense-category.model';
 
 interface GroupedExpenses {
   date: Date;
@@ -271,10 +271,17 @@ export class ViewExpensesDialogComponent implements OnInit {
   loadExpenses() {
     this.expenseService.getExpensesByGroup(this.data.group.id).subscribe({
       next: (expenses) => {
-        this.expenses = expenses.map(expense => ({
-          ...expense,
-          category: expense.category || DEFAULT_CATEGORY
-        }));
+        this.expenses = expenses.map(expense => {
+          // Convert backend category enum to frontend category object if it's a string
+          const category = typeof expense.category === 'string'
+            ? enumValueToCategory(expense.category as string)
+            : expense.category || DEFAULT_CATEGORY;
+
+          return {
+            ...expense,
+            category: category
+          };
+        });
         this.groupedExpenses = this.groupExpensesByDay(this.expenses);
       },
       error: (error) => {

@@ -136,5 +136,26 @@ export function categoryToEnumValue(category: ExpenseCategory): string {
   return enumValue;
 }
 
+// Convert backend enum value to frontend category object
+export function enumValueToCategory(enumValue: string): ExpenseCategory {
+  // Reverse mapping from backend enum to frontend category
+  const reverseMap: { [key: string]: ExpenseCategory } = {};
+
+  // Build the reverse mapping
+  EXPENSE_CATEGORIES.forEach(category => {
+    const key = `${category.mainCategory}-${category.subCategory}`;
+    const enumVal = categoryToEnumValue(category);
+    reverseMap[enumVal] = category;
+  });
+
+  // Return the matching category or default
+  if (enumValue && reverseMap[enumValue]) {
+    return reverseMap[enumValue];
+  }
+
+  console.warn(`No matching category found for enum value: ${enumValue}`);
+  return DEFAULT_CATEGORY;
+}
+
 // Default category
 export const DEFAULT_CATEGORY: ExpenseCategory = EXPENSE_CATEGORIES[0];

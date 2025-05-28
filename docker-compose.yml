@@ -10,6 +10,9 @@ services:
       - SPRING_DATASOURCE_PASSWORD=hasloKOMORNIK
       - SPRING_CONFIG_IMPORT=optional:file:/app/daneDoKont.properties
       - SPRING_SQL_INIT_MODE=never
+      - CORS_ALLOWED_ORIGINS=http://localhost,http://localhost:80,http://127.0.0.1,http://localhost:4200
+      - LOGGING_LEVEL_COM_JANIS_KOMORNIKGPT=DEBUG
+      - LOGGING_LEVEL_ORG_SPRINGFRAMEWORK_SECURITY=DEBUG
     networks:
       - komornik-network
     volumes:

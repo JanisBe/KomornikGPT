@@ -14,7 +14,7 @@ import {MatIconButton} from '@angular/material/button';
 import {MatIconModule} from '@angular/material/icon';
 import {MatTooltipModule} from '@angular/material/tooltip';
 import {MatDividerModule} from '@angular/material/divider';
-import {DEFAULT_CATEGORY} from '../../../core/models/expense-category.model';
+import {DEFAULT_CATEGORY, enumValueToCategory} from '../../../core/models/expense-category.model';
 
 @Component({
   selector: 'app-my-expenses',
@@ -280,19 +280,22 @@ export class MyExpensesComponent implements OnInit {
 
             if (group && expenses) {
               const processedExpenses = expenses.map(expense => {
-                // Ensure each expense has a category, use DEFAULT_CATEGORY if none exists
-                const expenseWithCategory = {
+                // Convert backend category enum to frontend category object if it's a string
+                const category = typeof expense.category === 'string'
+                  ? enumValueToCategory(expense.category as string)
+                  : expense.category || DEFAULT_CATEGORY;
+
+                return {
                   ...expense,
                   date: new Date(expense.date),
-                  category: expense.category || DEFAULT_CATEGORY
+                  category: category
                 };
-                return expenseWithCategory;
               });
 
               newMap.set(group, processedExpenses);
               groupKeys.push(group);
             } else {
-              console.warn("Item in groupExpensesList is missing group or expenses property:", item);
+              this.msg = 'Nie ma żadnych wydatków 😥';
             }
           });
         } else {

@@ -242,7 +242,11 @@ import {
                   type="submit"
                   [disabled]="!expenseForm.valid || !isSplitValid">
             <mat-icon>add_circle</mat-icon>
-            Dodaj wydatek
+            @if (this.isEditMode) {
+              Zapisz wydatek
+            } @else {
+              Dodaj wydatek
+            }
           </button>
         </mat-dialog-actions>
       </form>

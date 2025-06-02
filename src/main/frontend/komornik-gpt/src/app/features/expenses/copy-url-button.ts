@@ -3,14 +3,13 @@ import {Clipboard, ClipboardModule} from '@angular/cdk/clipboard';
 import {MatSnackBar, MatSnackBarModule} from '@angular/material/snack-bar';
 import {MatIconModule} from '@angular/material/icon';
 import {MatButtonModule} from '@angular/material/button';
-import {CommonModule} from '@angular/common';
+
 import {MatTooltipModule} from '@angular/material/tooltip';
 
 @Component({
   selector: 'copy-url-button',
   standalone: true,
   imports: [
-    CommonModule,
     ClipboardModule,
     MatIconModule,
     MatButtonModule,

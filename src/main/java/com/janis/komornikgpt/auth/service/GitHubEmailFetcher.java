@@ -1,39 +1,47 @@
 package com.janis.komornikgpt.auth.service;
 
-import org.springframework.core.ParameterizedTypeReference;
+import java.util.List;
 import org.springframework.http.HttpHeaders;
 import org.springframework.stereotype.Service;
-import org.springframework.web.client.RestClient;
-
-import java.util.List;
+import org.springframework.web.reactive.function.client.WebClient;
+import reactor.core.publisher.Mono;
 
 @Service
-public record GitHubEmailFetcher(RestClient restClient) {
-    private static final String EMAILS_URL = "https://api.github.com/user/emails";
-    private static final String BEARER_PREFIX = "Bearer ";
+public class GitHubEmailFetcher {
 
-    public String fetchPrimaryEmailAddress(String token) {
+	private static final String EMAILS_URL = "https://api.github.com/user/emails";
+	private static final String BEARER_PREFIX = "Bearer ";
 
-        List<GitHubEmailVm> emailVmList = restClient
-                .get()
-                .uri(EMAILS_URL)
-                .header(HttpHeaders.AUTHORIZATION, BEARER_PREFIX + token)
-                .header(HttpHeaders.ACCEPT, "application/vnd.github+json")
-                .retrieve()
-                .body(new ParameterizedTypeReference<>() {
-                });
+	private final WebClient webClient;
 
-        if (emailVmList == null || emailVmList.isEmpty()) {
-            return null;
-        }
+	public GitHubEmailFetcher(WebClient.Builder webClientBuilder) {
+		this.webClient = webClientBuilder.build();
+	}
 
-        return emailVmList.stream()
-                .filter(GitHubEmailVm::primary)
-                .findFirst()
-                .map(GitHubEmailVm::email)
-                .orElse(null);
-    }
+	public String fetchPrimaryEmailAddress(String token) {
+		Mono<List<GitHubEmailVm>> responseMono = webClient
+			.get()
+			.uri(EMAILS_URL)
+			.header(HttpHeaders.AUTHORIZATION, BEARER_PREFIX + token)
+			.header(HttpHeaders.ACCEPT, "application/vnd.github+json")
+			.retrieve()
+			.bodyToFlux(GitHubEmailVm.class)
+			.collectList();
 
-    private record GitHubEmailVm(String email, Boolean primary) {
-    }
+		List<GitHubEmailVm> emailVmList = responseMono.block();
+
+		if (emailVmList == null || emailVmList.isEmpty()) {
+			return null;
+		}
+
+		return emailVmList.stream()
+			.filter(GitHubEmailVm::primary)
+			.findFirst()
+			.map(GitHubEmailVm::email)
+			.orElse(null);
+	}
+
+	private record GitHubEmailVm(String email, Boolean primary) {
+
+	}
 }

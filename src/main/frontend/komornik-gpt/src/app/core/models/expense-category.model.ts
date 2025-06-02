@@ -143,7 +143,6 @@ export function enumValueToCategory(enumValue: string): ExpenseCategory {
 
   // Build the reverse mapping
   EXPENSE_CATEGORIES.forEach(category => {
-    const key = `${category.mainCategory}-${category.subCategory}`;
     const enumVal = categoryToEnumValue(category);
     reverseMap[enumVal] = category;
   });

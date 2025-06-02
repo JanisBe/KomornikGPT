@@ -1,22 +1,15 @@
-import {Injectable, OnInit} from '@angular/core';
+import {Injectable} from '@angular/core';
 import {HttpClient} from '@angular/common/http';
 import {environment} from '../../../environments/environment';
 import {AuthService} from './auth.service';
 import {Router} from '@angular/router';
 import {map} from 'rxjs/operators';
 
-// Add type declarations for external SDKs
-declare global {
-  interface Window {
-    google: any;
-    FB: any;
-  }
-}
 
 @Injectable({
   providedIn: 'root'
 })
-export class SocialAuthService implements OnInit {
+export class SocialAuthService {
   private readonly apiUrl = `${environment.apiUrl}/auth`;
   private readonly oauth2ApiUrl = `${environment.oAuth}`;
 
@@ -25,10 +18,6 @@ export class SocialAuthService implements OnInit {
     private authService: AuthService,
     private router: Router
   ) {
-
-  }
-
-  ngOnInit(): void {
     if (window.location.pathname === '/auth/callback') {
       this.handleAuthCallback();
     }

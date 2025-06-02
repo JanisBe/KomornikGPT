@@ -1,5 +1,5 @@
 import {Component, OnInit} from '@angular/core';
-import {CommonModule} from '@angular/common';
+
 import {MatCardModule} from '@angular/material/card';
 import {MatIconModule} from '@angular/material/icon';
 import {MatButtonModule} from '@angular/material/button';
@@ -15,10 +15,14 @@ import {AuthService} from '../../core/services/auth.service';
 import {MatSnackBar, MatSnackBarModule} from '@angular/material/snack-bar';
 import {User} from '../../core/models/user.model';
 import {forkJoin} from 'rxjs';
-import {AddExpenseDialogComponent} from '../expenses/add-expense-dialog/add-expense-dialog.component';
+import {
+  AddExpenseDialogComponent
+} from '../expenses/add-expense-dialog/add-expense-dialog.component';
 import {ExpenseService} from '../../core/services/expense.service';
 import {HttpErrorResponse} from '@angular/common/http';
-import {ViewExpensesDialogComponent} from '../expenses/view-expenses-dialog/view-expenses-dialog.component';
+import {
+  ViewExpensesDialogComponent
+} from '../expenses/view-expenses-dialog/view-expenses-dialog.component';
 import {MatDatepickerModule} from '@angular/material/datepicker';
 import {MatNativeDateModule} from '@angular/material/core';
 import {DATE_PROVIDERS} from '../../core/config/date.config';
@@ -29,7 +33,6 @@ import {CopyUrlButtonComponent} from '../expenses/copy-url-button';
   selector: 'app-groups',
   standalone: true,
   imports: [
-    CommonModule,
     MatCardModule,
     MatIconModule,
     MatButtonModule,

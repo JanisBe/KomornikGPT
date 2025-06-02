@@ -3,39 +3,40 @@ import {HttpClient} from '@angular/common/http';
 import {map, Observable} from 'rxjs';
 import {Group} from '../models/group.model';
 import {environment} from '../../../environments/environment';
+import {Expense} from '../models/expense.model';
 
 export interface UpdateGroupRequest {
   name?: string;
   description?: string;
   isPublic?: boolean;
-  members: Array<{
+  members: {
     userId?: number;
     userName: string;
     email: string;
-  }>;
+  }[];
 }
 
 export interface CreateGroupRequest {
   name: string;
-  members: Array<{
+  members: {
     userId?: number;
     userName: string;
     email: string;
-  }>;
+  }[];
 }
 
 interface GroupResponse {
   id: number;
   name: string;
-  users: Array<{
+  users: {
     id: number;
     username: string;
     email: string;
     name: string;
     surname: string;
     role: string;
-  }>;
-  expenses?: any[];
+  }[];
+  expenses?: Expense[];
   createdAt?: string;
   updatedAt?: string;
   createdBy?: {

@@ -6,7 +6,9 @@ import {AuthService} from '../../../core/services/auth.service';
 import {Expense} from '../../../core/models/expense.model';
 import {Group, GroupExpenses} from '../../../core/models/group.model';
 import {RouterLink} from '@angular/router';
-import {ConfirmDeleteDialogComponent} from '../view-expenses-dialog/confirm-delete-dialog.component';
+import {
+  ConfirmDeleteDialogComponent
+} from '../view-expenses-dialog/confirm-delete-dialog.component';
 import {AddExpenseDialogComponent} from '../add-expense-dialog/add-expense-dialog.component';
 import {MatSnackBar} from '@angular/material/snack-bar';
 import {MatDialog} from '@angular/material/dialog';
@@ -189,11 +191,11 @@ import {DEFAULT_CATEGORY, enumValueToCategory} from '../../../core/models/expens
   `
 })
 export class MyExpensesComponent implements OnInit {
-  currentUserId: number = 0;
+  currentUserId = 0;
   expensesByGroup = signal<Map<Group, Expense[]>>(new Map());
   expensesByGroupKeys = signal<Group[]>([]);
   columns = ['description', 'category', 'amount', 'date', 'actions'];
-  msg: string = 'Ładowanie wydatków...';
+  msg = 'Ładowanie wydatków...';
   private expenseService = inject(ExpenseService);
   private authService = inject(AuthService);
 

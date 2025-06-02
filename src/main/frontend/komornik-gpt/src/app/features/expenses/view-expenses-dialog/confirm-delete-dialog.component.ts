@@ -1,5 +1,5 @@
 import {Component, Inject} from '@angular/core';
-import {CommonModule} from '@angular/common';
+
 import {MAT_DIALOG_DATA, MatDialogModule} from '@angular/material/dialog';
 import {MatButtonModule} from '@angular/material/button';
 
@@ -7,7 +7,6 @@ import {MatButtonModule} from '@angular/material/button';
   selector: 'app-confirm-delete-dialog',
   standalone: true,
   imports: [
-    CommonModule,
     MatDialogModule,
     MatButtonModule
   ],

@@ -1,6 +1,6 @@
 import {Component, OnInit} from '@angular/core';
-import {CommonModule} from '@angular/common';
-import {ActivatedRoute, Router, RouterModule} from '@angular/router';
+
+import {ActivatedRoute, RouterModule} from '@angular/router';
 import {GroupService} from '../../core/services/group.service';
 import {Group} from '../../core/models/group.model';
 import {MatCardModule} from '@angular/material/card';
@@ -13,7 +13,7 @@ import {MatProgressSpinner} from '@angular/material/progress-spinner';
 @Component({
   selector: 'app-group-details',
   standalone: true,
-  imports: [CommonModule, RouterModule, MatCardModule, MatIconModule, MatButtonModule, MatListModule, MatProgressSpinner],
+  imports: [RouterModule, MatCardModule, MatIconModule, MatButtonModule, MatListModule, MatProgressSpinner],
   template: `
     @if (group; as g) {
       <div class="container mt-4">
@@ -87,8 +87,7 @@ export class GroupDetailsComponent implements OnInit {
   constructor(
     private route: ActivatedRoute,
     private groupService: GroupService,
-    private authService: AuthService,
-    private router: Router
+    private authService: AuthService
   ) {
   }
 

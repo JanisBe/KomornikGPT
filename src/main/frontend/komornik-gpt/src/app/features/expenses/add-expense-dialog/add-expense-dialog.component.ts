@@ -68,32 +68,36 @@ import {
               <div class="category-icon-container" (mouseenter)="openMainMenu()">
                 <mat-icon class="category-main-icon">{{ selectedCategoryIcon }}</mat-icon>
 
-                <div class="category-dropdown" *ngIf="showMainCategories" (mouseleave)="closeMenus()">
-                  <div class="category-list">
-                    @for (mainCategory of getMainCategories(); track mainCategory) {
-                      <div class="category-item"
-                           (mouseenter)="showSubcategories(mainCategory)"
-                           [class.active]="selectedCategory.mainCategory === mainCategory">
-                        <mat-icon>{{ getMainCategoryIcon(mainCategory) }}</mat-icon>
-                        <span>{{ mainCategory }}</span>
-                      </div>
-                    }
-                  </div>
-
-                  <!-- Subcategories dropdown -->
-                  <div class="subcategory-dropdown" *ngIf="activeMainCategory && showSubcategoriesMenu">
+                @if (showMainCategories) {
+                  <div class="category-dropdown" (mouseleave)="closeMenus()">
                     <div class="category-list">
-                      @for (subcategory of getSubcategoriesFor(activeMainCategory); track subcategory.subCategory) {
+                      @for (mainCategory of getMainCategories(); track mainCategory) {
                         <div class="category-item"
-                             (click)="selectCategory(subcategory)"
-                             [class.active]="isSelectedCategory(subcategory)">
-                          <mat-icon>{{ subcategory.icon }}</mat-icon>
-                          <span>{{ subcategory.subCategory }}</span>
+                             (mouseenter)="showSubcategories(mainCategory)"
+                             [class.active]="selectedCategory.mainCategory === mainCategory">
+                          <mat-icon>{{ getMainCategoryIcon(mainCategory) }}</mat-icon>
+                          <span>{{ mainCategory }}</span>
                         </div>
                       }
                     </div>
+                    <!-- Subcategories dropdown -->
+                    @if (activeMainCategory && showSubcategoriesMenu) {
+                      <div class="subcategory-dropdown">
+                        <div class="category-list">
+                          @for (subcategory of getSubcategoriesFor(
+                            activeMainCategory); track subcategory.subCategory) {
+                            <div class="category-item"
+                                 (click)="selectCategory(subcategory)"
+                                 [class.active]="isSelectedCategory(subcategory)">
+                              <mat-icon>{{ subcategory.icon }}</mat-icon>
+                              <span>{{ subcategory.subCategory }}</span>
+                            </div>
+                          }
+                        </div>
+                      </div>
+                    }
                   </div>
-                </div>
+                }
               </div>
               <div class="selected-category-name">{{ selectedCategoryName }}</div>
             </div>
@@ -196,13 +200,13 @@ import {
 
             @if (totalSplitAmount > 0) {
               <div class="total-info">
-        <span [class.error]="!isSplitValid">
-          W sumie: {{ totalSplitAmount | number: '1.2-2' }}
-          @if (expenseForm.get('amount')?.value) {
-            z {{ expenseForm.get('amount')?.value | number: '1.2-2' }}
-            ({{ getSplitPercentage() | number: '1.0-0' }}%)
-          }
-        </span>
+                  <span [class.error]="!isSplitValid">
+                    W sumie: {{ totalSplitAmount | number: '1.2-2' }}
+                    @if (expenseForm.get('amount')?.value) {
+                      z {{ expenseForm.get('amount')?.value | number: '1.2-2' }}
+                      ({{ getSplitPercentage() | number: '1.0-0' }}%)
+                    }
+                  </span>
               </div>
             }
 
@@ -658,7 +662,7 @@ export class AddExpenseDialogComponent {
 
     const memberCount = this.data.group.members.length;
     const equalShare = +(totalAmount / memberCount).toFixed(2);
-    let remainder = +(totalAmount - (equalShare * memberCount)).toFixed(2);
+    const remainder = +(totalAmount - (equalShare * memberCount)).toFixed(2);
 
     const splitsGroup = this.expenseForm.get('splits') as FormGroup;
     this.data.group.members.forEach((member, index) => {

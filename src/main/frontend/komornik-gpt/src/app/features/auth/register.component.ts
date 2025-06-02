@@ -1,9 +1,9 @@
 import {Component} from '@angular/core';
-import {CommonModule} from '@angular/common';
+
 import {FormsModule} from '@angular/forms';
 import {Router, RouterModule} from '@angular/router';
 import {HttpClient} from '@angular/common/http';
-import {MatAnchor} from '@angular/material/button';
+import {MatButtonModule} from '@angular/material/button';
 
 interface RegisterRequest {
   username: string;
@@ -16,7 +16,7 @@ interface RegisterRequest {
 @Component({
   selector: 'app-register',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterModule, MatAnchor],
+  imports: [FormsModule, RouterModule, MatButtonModule],
   template: `
     <div class="row justify-content-center">
       <div class="col-md-6 col-lg-4">

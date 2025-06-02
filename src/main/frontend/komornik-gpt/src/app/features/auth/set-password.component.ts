@@ -1,5 +1,5 @@
-import {Component, inject, OnInit} from '@angular/core';
-import {CommonModule} from '@angular/common';
+import {Component, inject} from '@angular/core';
+
 import {FormBuilder, ReactiveFormsModule, Validators} from '@angular/forms';
 import {Router} from '@angular/router';
 import {HttpClient} from '@angular/common/http';
@@ -7,9 +7,9 @@ import {MatInputModule} from '@angular/material/input';
 import {MatButton} from '@angular/material/button';
 
 @Component({
-  selector: 'set-password',
+  selector: 'app-set-password',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, MatInputModule, MatButton],
+  imports: [ReactiveFormsModule, MatInputModule, MatButton],
   template: `
     <form [formGroup]="form" (ngSubmit)="onSubmit()" class="password-form">
       <h2>Ustaw nowe hasło</h2>
@@ -51,7 +51,7 @@ import {MatButton} from '@angular/material/button';
     }
   `]
 })
-export class SetPasswordComponent implements OnInit {
+export class SetPasswordComponent {
   error: string | undefined;
   private fb = inject(FormBuilder);
   form = this.fb.group({
@@ -60,9 +60,6 @@ export class SetPasswordComponent implements OnInit {
   });
   private http = inject(HttpClient);
   private router = inject(Router);
-
-  ngOnInit(): void {
-  }
 
   onSubmit(): void {
     if (this.form.invalid) return;

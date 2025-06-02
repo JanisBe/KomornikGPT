@@ -2,6 +2,10 @@ package com.janis.komornikgpt.auth.service;
 
 import com.janis.komornikgpt.user.User;
 import com.janis.komornikgpt.user.UserRepository;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Optional;
+import java.util.UUID;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
@@ -13,17 +17,11 @@ import org.springframework.security.oauth2.core.user.DefaultOAuth2User;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.stereotype.Component;
 
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Optional;
-import java.util.UUID;
-
 @Component
 @Slf4j
 @Getter
 @Setter
 public class CustomOAuth2UserService implements OAuth2UserService<OAuth2UserRequest, OAuth2User> {
-    // "login" is default for GitHub, change to "email" if that's what you want
     private static final String NAME_ATTRIBUTE = "name";
     private final UserRepository userRepository;
     private static final String EMAIL_KEY = "email";
@@ -44,22 +42,17 @@ public class CustomOAuth2UserService implements OAuth2UserService<OAuth2UserRequ
                 oauth2User,
                 userRequest.getAccessToken().getTokenValue());
 
-        // return oauth2User if primaryEmailAddress is null
-        // alternative: Throw exception
         if (primaryEmailAddress == null) {
             log.error("Email not found from OAuth2 provider");
             throw new RuntimeException("Email not found from OAuth2 provider");
         }
 
-        // Clone the original attributes into a mutable map
         Map<String, Object> updatedAttributes = new HashMap<>(oauth2User.getAttributes());
 
-        // Add the fetched email to the attributes map
         updatedAttributes.put(EMAIL_KEY, primaryEmailAddress);
 
-        // Return a new DefaultOAuth2User with the updated attributes
         OAuth2User oAuth2User = new DefaultOAuth2User(
-                oauth2User.getAuthorities(), // or Collections.emptyList()
+            oauth2User.getAuthorities(),
                 updatedAttributes,
                 NAME_ATTRIBUTE);
         String name = (String) updatedAttributes.get("name");
@@ -84,7 +77,6 @@ public class CustomOAuth2UserService implements OAuth2UserService<OAuth2UserRequ
     }
 
     private void processOAuth2User(String email, String name) {
-        log.info("Processing OAuth2 user. Email: {}", email);
 
         Optional<User> userOptional = userRepository.findByEmail(email);
         if (userOptional.isPresent()) {
@@ -92,7 +84,6 @@ public class CustomOAuth2UserService implements OAuth2UserService<OAuth2UserRequ
             return;
         }
 
-        // Create new user
         log.info("Creating new user for email: {}", email);
         User user = new User();
         user.setEmail(email);

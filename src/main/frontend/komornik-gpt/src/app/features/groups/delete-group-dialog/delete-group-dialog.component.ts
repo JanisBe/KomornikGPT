@@ -1,5 +1,5 @@
 import {Component, Inject} from '@angular/core';
-import {CommonModule} from '@angular/common';
+
 import {MAT_DIALOG_DATA, MatDialogModule} from '@angular/material/dialog';
 import {MatButtonModule} from '@angular/material/button';
 import {Group} from '../../../core/models/group.model';
@@ -7,7 +7,7 @@ import {Group} from '../../../core/models/group.model';
 @Component({
   selector: 'app-delete-group-dialog',
   standalone: true,
-  imports: [CommonModule, MatDialogModule, MatButtonModule],
+  imports: [MatDialogModule, MatButtonModule],
   template: `
     <div class="dialog-container">
       <h2 mat-dialog-title>Skasuj grupę</h2>

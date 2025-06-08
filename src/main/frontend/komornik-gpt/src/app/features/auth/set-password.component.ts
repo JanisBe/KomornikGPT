@@ -1,7 +1,7 @@
 import {Component, inject} from '@angular/core';
 
 import {FormBuilder, ReactiveFormsModule, Validators} from '@angular/forms';
-import {Router} from '@angular/router';
+import {Router, RouterLink} from '@angular/router';
 import {HttpClient} from '@angular/common/http';
 import {MatInputModule} from '@angular/material/input';
 import {MatButton} from '@angular/material/button';
@@ -9,7 +9,7 @@ import {MatButton} from '@angular/material/button';
 @Component({
   selector: 'app-set-password',
   standalone: true,
-  imports: [ReactiveFormsModule, MatInputModule, MatButton],
+  imports: [ReactiveFormsModule, MatInputModule, MatButton, RouterLink],
   template: `
     <form [formGroup]="form" (ngSubmit)="onSubmit()" class="password-form">
       <h2>Ustaw nowe hasło</h2>
@@ -35,6 +35,7 @@ import {MatButton} from '@angular/material/button';
         }
       </mat-form-field>
       <button mat-raised-button color="primary" type="submit" [disabled]="form.invalid">Zapisz hasło</button>
+      <button mat-raised-button color="primary" type="button" [routerLink]="['/groups']">Pomiń tym razem</button>
     </form>
   `,
   styles: [`

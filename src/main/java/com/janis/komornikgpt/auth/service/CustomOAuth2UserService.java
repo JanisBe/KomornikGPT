@@ -2,10 +2,6 @@ package com.janis.komornikgpt.auth.service;
 
 import com.janis.komornikgpt.user.User;
 import com.janis.komornikgpt.user.UserRepository;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Optional;
-import java.util.UUID;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
@@ -16,6 +12,11 @@ import org.springframework.security.oauth2.core.OAuth2AuthenticationException;
 import org.springframework.security.oauth2.core.user.DefaultOAuth2User;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.stereotype.Component;
+
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Optional;
+import java.util.UUID;
 
 @Component
 @Slf4j
@@ -56,11 +57,7 @@ public class CustomOAuth2UserService implements OAuth2UserService<OAuth2UserRequ
                 updatedAttributes,
                 NAME_ATTRIBUTE);
         String name = (String) updatedAttributes.get("name");
-
-
-        log.info("Processing OAuth2 user with email: {}", primaryEmailAddress);
         processOAuth2User(primaryEmailAddress, name);
-
         return oAuth2User;
     }
 
@@ -80,11 +77,9 @@ public class CustomOAuth2UserService implements OAuth2UserService<OAuth2UserRequ
 
         Optional<User> userOptional = userRepository.findByEmail(email);
         if (userOptional.isPresent()) {
-            log.info("Existing user found with email: {}", email);
             return;
         }
 
-        log.info("Creating new user for email: {}", email);
         User user = new User();
         user.setEmail(email);
         user.setName(name != null ? name : email.substring(0, email.indexOf('@')));

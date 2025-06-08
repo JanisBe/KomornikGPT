@@ -33,11 +33,11 @@ public class OAuth2AuthenticationSuccessHandler extends SimpleUrlAuthenticationS
 
     @Value("${jwt.cookie.expiration:86400}")
     private int cookieExpiration;
-
+    @Value("${url}")
+    private String redirectUrl;
     @Override
     public void onAuthenticationSuccess(HttpServletRequest request, HttpServletResponse response,
                                         Authentication authentication) throws IOException {
-        log.info("OAuth2 authentication success handler invoked");
         OAuth2AuthenticationToken oauthToken = (OAuth2AuthenticationToken) authentication;
         OAuth2User oAuth2User = oauthToken.getPrincipal();
         Map<String, Object> attributes = oAuth2User.getAttributes();
@@ -63,16 +63,15 @@ public class OAuth2AuthenticationSuccessHandler extends SimpleUrlAuthenticationS
         cookie.setMaxAge(cookieExpiration);
         response.addCookie(cookie);
 
-        log.info("OAuth2 authentication success handler invoked before redirect");
+        String url = this.redirectUrl + "/auth/callback";
         if (user.isRequiresPasswordSetup()) {
-            String targetUrl = UriComponentsBuilder.fromUriString("http://localhost:4200/auth/callback")
+            String targetUrl = UriComponentsBuilder.fromUriString(url)
                     .queryParam("requiresPassword", user.isRequiresPasswordSetup())
                     .build().toUriString();
             getRedirectStrategy().sendRedirect(request, response, targetUrl);
             return;
         }
-        String targetUrl = "http://localhost:4200/auth/callback";
-        getRedirectStrategy().sendRedirect(request, response, targetUrl);
+        getRedirectStrategy().sendRedirect(request, response, url);
         log.info("OAuth2 authentication success handler completed redirect");
     }
 }

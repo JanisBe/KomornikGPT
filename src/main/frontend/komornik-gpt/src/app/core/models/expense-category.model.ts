@@ -86,7 +86,7 @@ export function findCategory(mainCategory: string, subCategory: string): Expense
 // Convert a frontend ExpenseCategory to a backend enum string value
 export function categoryToEnumValue(category: ExpenseCategory): string {
   // Direct mapping from frontend category to exact backend enum name
-  const categoryMap: { [key: string]: string } = {
+  const categoryMap: Record<string, string> = {
     // No Category
     'Bez Kategorii-Ogólne': 'NO_CATEGORY_GENERAL',
 
@@ -139,7 +139,7 @@ export function categoryToEnumValue(category: ExpenseCategory): string {
 // Convert backend enum value to frontend category object
 export function enumValueToCategory(enumValue: string): ExpenseCategory {
   // Reverse mapping from backend enum to frontend category
-  const reverseMap: { [key: string]: ExpenseCategory } = {};
+  const reverseMap: Record<string, ExpenseCategory> = {};
 
   // Build the reverse mapping
   EXPENSE_CATEGORIES.forEach(category => {

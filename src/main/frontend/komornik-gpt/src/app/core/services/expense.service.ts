@@ -38,7 +38,7 @@ export class ExpenseService {
     return this.http.post<Expense & { message: string }>(`${this.apiUrl}`, expense).pipe(
       tap((response) => {
         if (response.message) {
-          this.snackBar.open(response.message, 'Close', {
+          this.snackBar.open(response.message, 'Zamknij', {
             duration: 3000,
             horizontalPosition: 'center',
             verticalPosition: 'bottom',
@@ -51,7 +51,7 @@ export class ExpenseService {
   updateExpense(id: number, expense: CreateExpenseDto): Observable<Expense> {
     return this.http.put<Expense>(`${this.apiUrl}/${id}`, expense).pipe(
       tap(() => {
-        this.snackBar.open('Expense updated successfully', 'Close', {
+        this.snackBar.open('Expense updated successfully', 'Zamknij', {
           duration: 3000,
           horizontalPosition: 'center',
           verticalPosition: 'bottom',

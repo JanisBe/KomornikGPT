@@ -163,7 +163,7 @@
                             <goal>npm</goal>
                         </goals>
                         <configuration>
-                            <arguments>run build</arguments>
+                            <arguments>run build --configuration=production</arguments>
                             <skip>${skipFrontend}</skip>
                         </configuration>
                     </execution>

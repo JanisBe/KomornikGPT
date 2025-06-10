@@ -47,7 +47,7 @@ export class AuthService {
   }
 
   logout(): void {
-    this.http.post(`/logout`, {}, {
+    this.http.post(`http://localhost:8080/logout`, {}, {
       withCredentials: true,
       responseType: 'text'  // Expect text response instead of JSON
     })

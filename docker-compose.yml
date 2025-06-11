@@ -3,18 +3,23 @@ services:
     image: janisbe/komornik-gpt:latest
     container_name: komornik-gpt
     ports:
-      - "80:8080"
+      - "443:8443"
     environment:
       - SPRING_DATASOURCE_URL=jdbc:postgresql://10.0.0.194:54322/komornik
       - SPRING_DATASOURCE_USERNAME=root
       - SPRING_DATASOURCE_PASSWORD=hasloKOMORNIK
       - SPRING_CONFIG_IMPORT=optional:file:/app/daneDoKont.properties
       - SPRING_SQL_INIT_MODE=never
-      - CORS_ALLOWED_ORIGINS=http://localhost,http://localhost:80,http://127.0.0.1,http://localhost:4200
+      - SPRING_PROFILES_ACTIVE=prod
+      - SERVER_SSL_KEY_STORE=/certs/komornik.site.p12
+      - SERVER_SSL_KEY_STORE_PASSWORD=toCoZwykle
+      - SERVER_SSL_KEY_STORE_TYPE=PKCS12
+      - SERVER_SSL_KEY_ALIAS=komornik.site
     networks:
       - komornik-network
     volumes:
       - /home/opc/daneDoKont.properties:/app/daneDoKont.properties
+      - ./certs:/certs:ro
 
 networks:
   komornik-network:

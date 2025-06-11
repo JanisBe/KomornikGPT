@@ -4,6 +4,7 @@ services:
     container_name: komornik-gpt
     ports:
       - "443:8443"
+      - "80:8080"
     environment:
       - SPRING_DATASOURCE_URL=jdbc:postgresql://10.0.0.194:54322/komornik
       - SPRING_DATASOURCE_USERNAME=root

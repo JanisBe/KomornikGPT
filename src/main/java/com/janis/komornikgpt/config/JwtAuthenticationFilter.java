@@ -7,6 +7,7 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -16,15 +17,19 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.stereotype.Component;
+import org.springframework.util.AntPathMatcher;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
+import java.util.Arrays;
+
+import static com.janis.komornikgpt.config.SecurityConfig.ALLOWED_URLS;
 
 @Component
 @RequiredArgsConstructor
 @Slf4j
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
-
+    private static final AntPathMatcher pathMatcher = new AntPathMatcher();
     private final JwtTokenProvider jwtTokenProvider;
     private final UserDetailsService userDetailsService;
 
@@ -32,7 +37,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     private String cookieName;
 
     @Override
-    protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
+    protected void doFilterInternal(@NonNull HttpServletRequest request, @NonNull HttpServletResponse response, @NonNull FilterChain filterChain)
             throws ServletException, IOException {
         try {
             String jwt = null;
@@ -81,17 +86,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     }
 
     @Override
-    protected boolean shouldNotFilter(HttpServletRequest request) {
-        String path = request.getRequestURI();
-
-        return path.startsWith("/assets/")
-                || path.startsWith("/oauth2")
-                || path.startsWith("/logout")
-                || path.startsWith("/favicon")
-                || path.startsWith("/css/")
-                || path.startsWith("/js/")
-                || path.startsWith("/images/")
-                || path.startsWith("/login")
-                || path.startsWith("/register");
+    protected boolean shouldNotFilter(@NonNull HttpServletRequest request) {
+        return Arrays.stream(ALLOWED_URLS).anyMatch(pattern -> pathMatcher.match(pattern, request.getRequestURI()));
     }
 }

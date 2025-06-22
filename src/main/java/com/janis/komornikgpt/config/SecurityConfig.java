@@ -1,6 +1,7 @@
 package com.janis.komornikgpt.config;
 
 import com.janis.komornikgpt.auth.OAuth2AuthenticationSuccessHandler;
+import com.webauthn4j.WebAuthnManager;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
@@ -8,6 +9,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
+import org.springframework.security.config.annotation.web.configurers.WebAuthnConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
@@ -24,6 +26,29 @@ import java.util.List;
 @EnableWebSecurity
 @RequiredArgsConstructor
 public class SecurityConfig {
+    public static final String[] ALLOWED_URLS = {"/",
+            "/index.html",
+            "/favicon.ico",
+            "/*.png",
+            "/*.gif",
+            "/*.svg",
+            "/*.jpg",
+            "/*.html",
+            "/*.css",
+            "/*.js",
+            "/api/auth/login",
+            "/users/**",
+            "/api/auth/user",
+            "/api/users/register",
+            "/api/groups",
+            "/api/groups/**",
+            "/.well-known/**",
+            "/oauth2/**",
+            "/login",
+            "/login/**",
+            "/manifest.webmanifest",
+            "/api/webauthn/**",
+            "/assets/**"};
     private final OAuth2AuthenticationSuccessHandler oAuth2AuthenticationSuccessHandler;
     private final OAuth2AuthenticationFailureHandler oAuth2AuthenticationFailureHandler;
     private final JwtAuthenticationFilter jwtAuthFilter;
@@ -38,31 +63,7 @@ public class SecurityConfig {
                 .sessionManagement(session -> session
                         .sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers(
-                                "/",
-                                "/index.html",
-                                "/favicon.ico",
-                                "/*.png",
-                                "/*.gif",
-                                "/*.svg",
-                                "/*.jpg",
-                                "/*.html",
-                                "/*.css",
-                                "/*.js",
-                                "/api/auth/login",
-                                "/api/auth/user",
-                                "/api/auth/register",
-                                "/api/forgot-password",
-                                "/api/reset-password",
-                                "/api/groups",
-                                "/api/groups/**",
-                                "/.well-known/**",
-                                "/oauth2/**",
-                                "/login",
-                                "/login/**",
-                                "/manifest.webmanifest",
-                                "/assets/**"
-                        ).permitAll()
+                        .requestMatchers(ALLOWED_URLS).permitAll()
                         .anyRequest().authenticated()
                 )
                 .oauth2Login(oauth2 -> oauth2
@@ -84,7 +85,11 @@ public class SecurityConfig {
                 .addFilterAfter(new SpaWebFilter(), BasicAuthenticationFilter.class)
                 .exceptionHandling(exceptionHandling ->
                         exceptionHandling.authenticationEntryPoint(new JwtAuthenticationEntryPoint())
-                );
+                )
+                .with(new WebAuthnConfigurer<>(),
+                        (passkeys) -> passkeys.rpName("Spring Security Relying Party")
+                                .rpId("localhost")
+                                .allowedOrigins("http://localhost:8080", "https://localhost:4200"));
         return http.build();
     }
 
@@ -109,5 +114,10 @@ public class SecurityConfig {
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", configuration);
         return source;
+    }
+
+    @Bean
+    public WebAuthnManager webAuthnManager() {
+        return WebAuthnManager.createNonStrictWebAuthnManager();
     }
 }

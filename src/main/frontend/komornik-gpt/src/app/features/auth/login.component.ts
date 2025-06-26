@@ -111,11 +111,46 @@ import {MatDividerModule} from '@angular/material/divider';
               </button>
             </div>
           </form>
+
+          <div class="divider">
+            <mat-divider></mat-divider>
+            <span class="divider-text">lub</span>
+            <mat-divider></mat-divider>
+          </div>
+
+          <div class="social-login-container">
+            <div class="social-login">
+              <button mat-raised-button
+                      class="google-btn"
+                      (click)="loginWithGoogle()"
+                      [disabled]="isLoading">
+                <img src="assets/google-logo.svg" alt="Google logo" class="social-icon">
+                Zaloguj przez Google
+              </button>
+              <button mat-raised-button
+                      class="facebook-btn"
+                      (click)="loginWithFacebook()"
+                      [disabled]="isLoading">
+                <img src="assets/facebook-logo.svg" alt="Facebook logo" class="social-icon">
+                Zaloguj przez Facebook
+              </button>
+              <button mat-raised-button
+                      class="github-btn"
+                      (click)="loginWithGithub()"
+                      [disabled]="isLoading">
+                <img src="assets/github-logo.svg" alt="GitHub logo" class="social-icon" style="background: white">
+                Zaloguj przez GitHub
+              </button>
+            </div>
+          </div>
         </mat-card-content>
 
         <mat-card-actions>
           <div class="register-link">
-            Nie masz konta? <a mat-button color="primary" routerLink="/register">Zarejestruj się</a>
+            Nie masz konta?
+            <a mat-button color="primary" routerLink="/register" style="padding-bottom: 2px;">
+              Zarejestruj się
+            </a>
           </div>
         </mat-card-actions>
       </mat-card>
@@ -180,12 +215,17 @@ import {MatDividerModule} from '@angular/material/divider';
       margin-bottom: 20px;
     }
 
+    .social-login-container {
+      display: flex;
+      justify-content: center;
+    }
+
     .social-login {
       display: flex;
       flex-direction: column;
       gap: 16px;
       margin-bottom: 24px;
-      width: 400px;
+      width: 4000px;
     }
 
     .social-login button {

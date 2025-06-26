@@ -39,36 +39,6 @@ import {MatDividerModule} from '@angular/material/divider';
         }
 
         <mat-card-content>
-          <div class="social-login">
-            <button mat-raised-button
-                    class="google-btn"
-                    (click)="loginWithGoogle()"
-                    [disabled]="isLoading">
-              <img src="assets/google-logo.svg" alt="Google logo" class="social-icon">
-              Continue with Google
-            </button>
-            <button mat-raised-button
-                    class="facebook-btn"
-                    (click)="loginWithFacebook()"
-                    [disabled]="isLoading">
-              <img src="assets/facebook-logo.svg" alt="Facebook logo" class="social-icon">
-              Continue with Facebook
-            </button>
-            <button mat-raised-button
-                    class="github-btn"
-                    (click)="loginWithGithub()"
-                    [disabled]="isLoading">
-              <img src="assets/github-logo.svg" alt="GitHub logo" class="social-icon">
-              Continue with GitHub
-            </button>
-          </div>
-
-          <div class="divider">
-            <mat-divider></mat-divider>
-            <span class="divider-text">or</span>
-            <mat-divider></mat-divider>
-          </div>
-
           <form [formGroup]="loginForm" (ngSubmit)="onSubmit()">
             <mat-form-field appearance="outline">
               <mat-label>Email</mat-label>
@@ -168,7 +138,7 @@ import {MatDividerModule} from '@angular/material/divider';
 
     .login-card {
       width: 100%;
-      max-width: 430px;
+      max-width: 480px;
     }
 
     mat-card-header {
@@ -225,7 +195,7 @@ import {MatDividerModule} from '@angular/material/divider';
       flex-direction: column;
       gap: 16px;
       margin-bottom: 24px;
-      width: 4000px;
+      width: 400px;
     }
 
     .social-login button {

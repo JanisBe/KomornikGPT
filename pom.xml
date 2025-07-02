@@ -24,7 +24,7 @@
         <skipFrontend>false</skipFrontend>
         <spring.security.test.version>6.5.1</spring.security.test.version>
         <webauthn4j-spring-security.version>0.11.2.RELEASE</webauthn4j-spring-security.version>
-        <webauthn4j-core.version>0.29.3.RELEASE</webauthn4j-core.version>
+        <webauthn4j-core.version>0.29.4.RELEASE</webauthn4j-core.version>
     </properties>
     <version>0.0.1-SNAPSHOT</version>
     <dependencies>
@@ -199,7 +199,7 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-enforcer-plugin</artifactId>
-                <version>3.5.0</version>
+                <version>3.6.0</version>
                 <executions>
                     <execution>
                         <id>enforce-maven</id>

@@ -1,5 +1,6 @@
 export const environment = {
   production: true,
   apiUrl: '/api',
-  oAuth: 'http://158.180.58.252/oauth2/authorization'
+  oAuth: 'https://komornik.site/oauth2/authorization',
+  serverUrl: 'http://localhost:8080'
 };

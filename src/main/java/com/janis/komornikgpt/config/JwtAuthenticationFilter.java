@@ -75,7 +75,10 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     protected boolean shouldNotFilter(HttpServletRequest request) {
         String path = request.getRequestURI();
 
-        return path.startsWith("/assets/")
+        return path.equals("/")
+                || path.equals("/index.html")
+                || path.equals("/manifest.webmanifest")
+                || path.startsWith("/assets/")
                 || path.startsWith("/oauth2")
                 || path.startsWith("/logout")
                 || path.startsWith("/favicon")
@@ -83,6 +86,12 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 || path.startsWith("/js/")
                 || path.startsWith("/images/")
                 || path.startsWith("/login")
-                || path.startsWith("/register");
+                || path.startsWith("/register")
+                || path.startsWith("/api/auth/login")
+                || path.startsWith("/users/")
+                || path.startsWith("/.well-known/")
+                || path.startsWith("/auth/callback")
+                || path.startsWith("/api/webauthn/")
+                || path.matches(".*\\.(png|gif|svg|jpg|html|css|js)$");
     }
 }

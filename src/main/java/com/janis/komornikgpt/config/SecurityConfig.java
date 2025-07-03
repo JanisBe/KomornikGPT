@@ -45,6 +45,7 @@ public class SecurityConfig {
             "/.well-known/**",
             "/oauth2/**",
             "/auth/callback",
+            "/api/set-password",
             "/login",
             "/login/**",
             "/manifest.webmanifest",

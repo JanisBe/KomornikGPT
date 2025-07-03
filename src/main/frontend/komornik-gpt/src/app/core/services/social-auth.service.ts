@@ -42,10 +42,7 @@ export class SocialAuthService {
       map(response => {
         if (response.authenticated) {
           // Update current user in the auth service
-          this.authService.getCurrentUser().subscribe(() => {
-            // Navigate to groups page on success
-            this.router.navigate(['/groups']);
-          });
+          this.authService.getCurrentUser().subscribe();
         } else {
           // Handle authentication failure
           this.router.navigate(['/login']);

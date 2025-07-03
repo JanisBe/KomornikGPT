@@ -29,12 +29,11 @@ export const routes: Routes = [
       },
       {
         path: 'set-password',
-        loadComponent: () => import('./features/auth/set-password.component').then(m => m.SetPasswordComponent),
-        canActivate: [AuthGuard]
+        loadComponent: () => import('./features/auth/set-password.component').then(m => m.SetPasswordComponent)
       },
       {
         path: 'auth/callback',
-        loadComponent: () => import('./features/auth/login.component').then(m => m.LoginComponent)
+        loadComponent: () => import('./features/auth/auth-callback.component').then(m => m.AuthCallbackComponent)
       },
       {
         path: 'register',

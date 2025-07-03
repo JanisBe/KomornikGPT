@@ -1,4 +1,3 @@
-// JwtAuthenticationFilter.java - Request filter for JWT
 package com.janis.komornikgpt.config;
 
 import com.janis.komornikgpt.auth.JwtTokenProvider;

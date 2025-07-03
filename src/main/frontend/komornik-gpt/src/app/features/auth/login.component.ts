@@ -12,6 +12,8 @@ import {MatCardModule} from '@angular/material/card';
 import {MatProgressBarModule} from '@angular/material/progress-bar';
 import {MatIconModule} from '@angular/material/icon';
 import {MatDividerModule} from '@angular/material/divider';
+import {WebAuthnService} from '../../core/services/webauthn.service';
+import {User} from '../../core/models/user.model';
 
 @Component({
   selector: 'app-login',
@@ -39,6 +41,46 @@ import {MatDividerModule} from '@angular/material/divider';
         }
 
         <mat-card-content>
+          <div class="social-login-container">
+            <div class="social-login">
+              <button mat-raised-button
+                      class="google-btn"
+                      (click)="loginWithGoogle()"
+                      [disabled]="isLoading">
+                <img src="assets/google-logo.svg" alt="Google logo" class="social-icon">
+                Zaloguj przez Google
+              </button>
+              <button mat-raised-button
+                      class="facebook-btn"
+                      (click)="loginWithFacebook()"
+                      [disabled]="isLoading">
+                <img src="assets/facebook-logo.svg" alt="Facebook logo" class="social-icon">
+                Zaloguj przez Facebook
+              </button>
+              <button mat-raised-button
+                      class="github-btn"
+                      (click)="loginWithGithub()"
+                      [disabled]="isLoading">
+                <img src="assets/github-logo.svg" alt="GitHub logo" class="social-icon" style="background: white">
+                Zaloguj przez GitHub
+              </button>
+              <!--              @if (isWebAuthnSupported) {-->
+              <!--                <button mat-raised-button-->
+              <!--                        class="fingerprint-btn"-->
+              <!--                        (click)="loginWithFingerprint()"-->
+              <!--                        [disabled]="isLoading">-->
+              <!--                  <mat-icon>fingerprint</mat-icon>-->
+              <!--                  Zaloguj odciskiem palca-->
+              <!--                </button>-->
+              <!--              }-->
+            </div>
+          </div>
+
+          <div class="divider">
+            <mat-divider></mat-divider>
+            <span class="divider-text">lub</span>
+            <mat-divider></mat-divider>
+          </div>
           <form [formGroup]="loginForm" (ngSubmit)="onSubmit()">
             <mat-form-field appearance="outline">
               <mat-label>Email</mat-label>
@@ -127,6 +169,32 @@ import {MatDividerModule} from '@angular/material/divider';
     </div>
   `,
   styles: [`
+
+    .auth-container {
+      text-align: center;
+      padding: 50px;
+    }
+
+    .success {
+      color: green;
+    }
+
+    .error {
+      color: red;
+    }
+
+    button {
+      margin: 10px;
+      padding: 10px 20px;
+      font-size: 16px;
+    }
+
+    p {
+      margin: 10px;
+      font-size: 16px;
+    }
+
+
     .login-container {
       display: flex;
       justify-content: center;
@@ -238,6 +306,14 @@ import {MatDividerModule} from '@angular/material/divider';
       font-weight: 500;
     }
 
+    .fingerprint-btn {
+      background-color: #ffffff;
+      color: #000000;
+      border: 1px solid #cccccc;
+      height: 40px;
+      font-weight: 500;
+    }
+
     .divider {
       display: flex;
       align-items: center;
@@ -259,6 +335,10 @@ export class LoginComponent implements OnInit {
   loginForm!: FormGroup;
   isLoading = false;
   errorMessage = '';
+  message: string | null = null; // Message to display feedback to the user
+  isSuccess: boolean = false; // Indicates if the last action was successful
+  isWebAuthnSupported: boolean = false;
+  protected readonly matchMedia = matchMedia;
 
   constructor(
     private fb: FormBuilder,
@@ -266,11 +346,29 @@ export class LoginComponent implements OnInit {
     private socialAuthService: SocialAuthService,
     private router: Router,
     private route: ActivatedRoute,
-    private snackBar: MatSnackBar
+    private snackBar: MatSnackBar,
+    private webAuthnService: WebAuthnService
   ) {
   }
 
+  // Trigger registration process and update the UI based on the outcome
+  async register() {
+    const user: User = {
+      username: this.loginForm.get('email')?.value
+    } as User;
+    try {
+      await this.webAuthnService.register(user);
+      this.message = "Registration successful!";
+      this.isSuccess = true;
+    } catch (err) {
+      console.log(err);
+      this.message = "Registration failed. Please try again.";
+      this.isSuccess = false;
+    }
+  }
   ngOnInit(): void {
+    this.isWebAuthnSupported = this.webAuthnService.isWebAuthnSupported();
+    console.log(this.isWebAuthnSupported);
     this.route.queryParams.subscribe(params => {
       const requiresPassword = params['requiresPassword'] === 'true';
       if (requiresPassword) {
@@ -310,6 +408,23 @@ export class LoginComponent implements OnInit {
       this.isLoading = true;
       this.errorMessage = '';
       this.socialAuthService.loginWithGithub();
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  async loginWithFingerprint(): Promise<void> {
+    if (!this.loginForm.get('email')?.value) {
+      this.errorMessage = 'Please enter your email address first';
+      return;
+    }
+
+    try {
+      this.isLoading = true;
+      this.errorMessage = '';
+      const user: User = {username: this.loginForm.get('email')?.value} as User;
+      await this.webAuthnService.authenticate(user);
+      this.showSuccessAndRedirect();
     } catch (error) {
       this.handleError(error);
     }
@@ -360,5 +475,21 @@ export class LoginComponent implements OnInit {
       verticalPosition: 'top',
       panelClass: ['error-snackbar']
     });
+  }
+
+  // Trigger authentication process and update the UI based on the outcome
+  async login() {
+    const user: User = {
+      username: this.loginForm.get('email')?.value
+    } as User;
+    try {
+      await this.webAuthnService.authenticate(user);
+      this.message = "Authentication successful!";
+      this.isSuccess = true;
+    } catch (err) {
+      console.log(err);
+      this.message = "Authentication failed. Please try again.";
+      this.isSuccess = false;
+    }
   }
 }

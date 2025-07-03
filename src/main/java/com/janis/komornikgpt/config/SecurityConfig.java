@@ -44,6 +44,7 @@ public class SecurityConfig {
             "/api/groups/**",
             "/.well-known/**",
             "/oauth2/**",
+            "/auth/callback",
             "/login",
             "/login/**",
             "/manifest.webmanifest",

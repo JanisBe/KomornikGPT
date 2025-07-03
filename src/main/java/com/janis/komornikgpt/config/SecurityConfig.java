@@ -1,6 +1,6 @@
 package com.janis.komornikgpt.config;
 
-import com.janis.komornikgpt.auth.OAuth2AuthenticationSuccessHandler;
+import com.janis.komornikgpt.auth.*;
 import com.webauthn4j.WebAuthnManager;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;

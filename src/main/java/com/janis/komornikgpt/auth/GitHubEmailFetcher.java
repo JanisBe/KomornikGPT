@@ -1,10 +1,11 @@
-package com.janis.komornikgpt.auth.service;
+package com.janis.komornikgpt.auth;
 
-import java.util.List;
+import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpHeaders;
 import org.springframework.stereotype.Service;
-import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.web.client.RestClient;
+
+import java.util.List;
 
 
 @Service
@@ -26,7 +27,8 @@ public class GitHubEmailFetcher {
 			.header(HttpHeaders.AUTHORIZATION, BEARER_PREFIX + token)
 			.header(HttpHeaders.ACCEPT, "application/vnd.github+json")
 			.retrieve()
-			.body(new ParameterizedTypeReference<List<GitHubEmailVm>>() {});
+						.body(new ParameterizedTypeReference<>() {
+						});
 
 		if (emailVmList == null || emailVmList.isEmpty()) {
 			return null;

@@ -1,4 +1,4 @@
-package com.janis.komornikgpt.config;
+package com.janis.komornikgpt.auth;
 
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;

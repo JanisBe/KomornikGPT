@@ -1,6 +1,5 @@
-package com.janis.komornikgpt.config;
+package com.janis.komornikgpt.auth;
 
-import com.janis.komornikgpt.auth.JwtTokenProvider;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.Cookie;

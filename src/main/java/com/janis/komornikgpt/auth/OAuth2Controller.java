@@ -1,4 +1,4 @@
-package com.janis.komornikgpt.auth.controller;
+package com.janis.komornikgpt.auth;
 
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.stereotype.Controller;

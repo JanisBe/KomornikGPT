@@ -1,4 +1,4 @@
-package com.janis.komornikgpt.auth.service;
+package com.janis.komornikgpt.auth;
 
 import com.janis.komornikgpt.user.Role;
 import com.janis.komornikgpt.user.User;

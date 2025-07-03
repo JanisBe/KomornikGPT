@@ -15,14 +15,10 @@ import {AuthService} from '../../core/services/auth.service';
 import {MatSnackBar, MatSnackBarModule} from '@angular/material/snack-bar';
 import {User} from '../../core/models/user.model';
 import {forkJoin} from 'rxjs';
-import {
-  AddExpenseDialogComponent
-} from '../expenses/add-expense-dialog/add-expense-dialog.component';
+import {AddExpenseDialogComponent} from '../expenses/add-expense-dialog/add-expense-dialog.component';
 import {ExpenseService} from '../../core/services/expense.service';
 import {HttpErrorResponse} from '@angular/common/http';
-import {
-  ViewExpensesDialogComponent
-} from '../expenses/view-expenses-dialog/view-expenses-dialog.component';
+import {ViewExpensesDialogComponent} from '../expenses/view-expenses-dialog/view-expenses-dialog.component';
 import {MatDatepickerModule} from '@angular/material/datepicker';
 import {MatNativeDateModule} from '@angular/material/core';
 import {DATE_PROVIDERS} from '../../core/config/date.config';
@@ -244,7 +240,7 @@ export class GroupsComponent implements OnInit {
       },
       error: (error: HttpErrorResponse) => {
         console.error(error);
-        this.snackBar.open('Error loading data', 'Zamknij', {
+        this.snackBar.open('Błąd podczas ładowania danych', 'Zamknij', {
           duration: 3000
         });
       }

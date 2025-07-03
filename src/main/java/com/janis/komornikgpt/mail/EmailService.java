@@ -46,4 +46,19 @@ public class EmailService {
             log.error(ex.getMessage());
         }
     }
+
+    @Async
+    public void sendGroupInvitationEmail(String toEmail, String groupName, String inviterName) {
+        try {
+            MimeMessage message = mailSender.createMimeMessage();
+            String msg = String.format("Witaj!\n\nZostałeś zaproszony do grupy \"%s\" przez %s.\n\nDołącz do nas: https://%s/login", groupName, inviterName, env.getProperty("url"));
+            message.setSubject("Zaproszenie do grupy " + groupName);
+            MimeMessageHelper helper = new MimeMessageHelper(message, true);
+            helper.setTo(toEmail);
+            helper.setText(msg, true);
+            mailSender.send(message);
+        } catch (MessagingException ex) {
+            log.error("Failed to send group invitation email: {}", ex.getMessage());
+        }
+    }
 }

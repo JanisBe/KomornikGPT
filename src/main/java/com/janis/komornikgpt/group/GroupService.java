@@ -1,5 +1,6 @@
 package com.janis.komornikgpt.group;
 
+import com.janis.komornikgpt.mail.EmailService;
 import com.janis.komornikgpt.user.CreateUserWithoutPasswordRequest;
 import com.janis.komornikgpt.user.User;
 import com.janis.komornikgpt.user.UserRepository;
@@ -18,6 +19,7 @@ public class GroupService {
     private final GroupRepository groupRepository;
     private final UserRepository userRepository;
     private final UserService userService;
+    private final EmailService emailService;
 
     public List<Group> findAll() {
         return groupRepository.findAll();
@@ -57,6 +59,9 @@ public class GroupService {
                         memberRequest.userName(), // Using userName as username
                         memberRequest.email());
                 user = userService.createUserWithoutPassword(createUserRequest);
+                if (request.sendInvitationEmail()) {
+                    emailService.sendGroupInvitationEmail(user.getEmail(), request.name(), creator.getUsername());
+                }
             }
             users.add(user);
         }

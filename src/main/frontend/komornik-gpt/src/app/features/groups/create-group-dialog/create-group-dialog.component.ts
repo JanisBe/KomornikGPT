@@ -75,10 +75,13 @@ interface CreatedUserResponse {
             </mat-form-field>
           </div>
           <div class="form-row">
-            <mat-checkbox formControlName="isPublic" class="mb-2">Public group (visible to everyone)</mat-checkbox>
+            <div class="checkbox-column">
+              <mat-checkbox formControlName="isPublic" class="mb-2">Grupa publiczna</mat-checkbox>
+              <mat-checkbox formControlName="sendInvitationEmail" class="mb-2">Wyślij zaproszenia</mat-checkbox>
+            </div>
             <div class="form-field currency-field">
               <mat-form-field appearance="outline">
-                <mat-label>Currency</mat-label>
+                <mat-label>Waluta</mat-label>
                 <mat-select formControlName="currency" required>
                   @for (currency of currencies; track currency) {
                     <mat-option [value]="currency">{{ currency }}</mat-option>
@@ -268,11 +271,16 @@ interface CreatedUserResponse {
     }
     .form-row {
       display: flex;
-      align-items: baseline;
+      align-items: flex-start;
       gap: 16px;
       margin-bottom: 16px;
     }
 
+    .checkbox-column {
+      display: flex;
+      flex-direction: column;
+      flex: 1;
+    }
     .member-inputs {
       display: flex;
       gap: 16px;
@@ -469,7 +477,8 @@ export class CreateGroupDialogComponent implements OnInit {
           description: formValue.description,
           members: memberData,
           isPublic: formValue.isPublic,
-          currency: formValue.currency
+          defaultCurrency: formValue.currency,
+          sendInvitationEmail: formValue.sendInvitationEmail
         });
       } catch (error: unknown) {
         if (error instanceof HttpErrorResponse) {

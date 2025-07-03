@@ -23,7 +23,7 @@
         <postgresql.version>42.7.7</postgresql.version>
         <skipFrontend>false</skipFrontend>
         <spring.security.test.version>6.5.1</spring.security.test.version>
-        <webauthn4j-spring-security.version>0.11.2.RELEASE</webauthn4j-spring-security.version>
+        <webauthn-spring-security.version>0.11.2.RELEASE</webauthn-spring-security.version>
         <webauthn4j-core.version>0.29.3.RELEASE</webauthn4j-core.version>
         <frontend.build.script>run build</frontend.build.script>
     </properties>

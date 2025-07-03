@@ -41,41 +41,6 @@ import {User} from '../../core/models/user.model';
         }
 
         <mat-card-content>
-          <div class="social-login-container">
-            <div class="social-login">
-              <button mat-raised-button
-                      class="google-btn"
-                      (click)="loginWithGoogle()"
-                      [disabled]="isLoading">
-                <img src="assets/google-logo.svg" alt="Google logo" class="social-icon">
-                Zaloguj przez Google
-              </button>
-              <button mat-raised-button
-                      class="facebook-btn"
-                      (click)="loginWithFacebook()"
-                      [disabled]="isLoading">
-                <img src="assets/facebook-logo.svg" alt="Facebook logo" class="social-icon">
-                Zaloguj przez Facebook
-              </button>
-              <button mat-raised-button
-                      class="github-btn"
-                      (click)="loginWithGithub()"
-                      [disabled]="isLoading">
-                <img src="assets/github-logo.svg" alt="GitHub logo" class="social-icon" style="background: white">
-                Zaloguj przez GitHub
-              </button>
-              <!--              @if (isWebAuthnSupported) {-->
-              <!--                <button mat-raised-button-->
-              <!--                        class="fingerprint-btn"-->
-              <!--                        (click)="loginWithFingerprint()"-->
-              <!--                        [disabled]="isLoading">-->
-              <!--                  <mat-icon>fingerprint</mat-icon>-->
-              <!--                  Zaloguj odciskiem palca-->
-              <!--                </button>-->
-              <!--              }-->
-            </div>
-          </div>
-
           <div class="divider">
             <mat-divider></mat-divider>
             <span class="divider-text">lub</span>

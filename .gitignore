@@ -34,3 +34,5 @@ build/
 daneDoKont.properties
 "src/main/resources/daneDoKont.properties"
 /src/main/frontend/komornik-gpt/node_modules
+/certs/
+docker-compose.yml

@@ -33,8 +33,11 @@ public class OAuth2AuthenticationSuccessHandler extends SimpleUrlAuthenticationS
 
     @Value("${jwt.cookie.expiration:86400}")
     private int cookieExpiration;
-    @Value("${url}")
-    private String redirectUrl;
+
+    @Value("${jwt.cookie.secure:true}")
+    private boolean cookieSecure;
+    @Value("${frontend.url}")
+    private String frontendUrl;
     @Override
     public void onAuthenticationSuccess(HttpServletRequest request, HttpServletResponse response,
                                         Authentication authentication) throws IOException {
@@ -53,17 +56,17 @@ public class OAuth2AuthenticationSuccessHandler extends SimpleUrlAuthenticationS
         UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
                 user, null, user.getAuthorities());
         SecurityContextHolder.getContext().setAuthentication(authToken);
-
+        log.info("OAuth2 authentication success handler completed authentication");
         String token = jwtTokenProvider.generateToken(user);
 
         Cookie cookie = new Cookie(cookieName, token);
         cookie.setHttpOnly(true);
-        cookie.setSecure(true);
+        cookie.setSecure(cookieSecure);
         cookie.setPath("/");
         cookie.setMaxAge(cookieExpiration);
         response.addCookie(cookie);
 
-        String url = this.redirectUrl + "/auth/callback";
+        String url = this.frontendUrl + "/auth/callback";
         if (user.isRequiresPasswordSetup()) {
             String targetUrl = UriComponentsBuilder.fromUriString(url)
                     .queryParam("requiresPassword", user.isRequiresPasswordSetup())

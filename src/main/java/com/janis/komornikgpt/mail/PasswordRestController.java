@@ -14,7 +14,7 @@ import org.springframework.web.server.ResponseStatusException;
 import java.time.LocalDateTime;
 
 @RestController
-@RequestMapping("/api/")
+@RequestMapping("/users/")
 @RequiredArgsConstructor
 public class PasswordRestController {
     private final VerificationTokenRepository tokenRepo;
@@ -22,7 +22,7 @@ public class PasswordRestController {
     private final JwtTokenProvider jwtService;
     private final PasswordEncoder passwordEncoder;
 
-    @GetMapping("/confirm")
+    @GetMapping("/confirm-email")
     public ResponseEntity<String> confirm(@RequestParam String token) {
         VerificationToken vt = tokenRepo.findByToken(token)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));

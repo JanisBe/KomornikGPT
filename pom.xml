@@ -4,6 +4,30 @@
     xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <artifactId>KomornikGPT</artifactId>
+    <description>KomornikGPT</description>
+    <groupId>com.janis</groupId>
+    <name>KomornikGPT</name>
+    <parent>
+        <artifactId>spring-boot-starter-parent</artifactId>
+        <groupId>org.springframework.boot</groupId>
+        <relativePath/>
+        <version>3.5.3</version>
+    </parent>
+    <properties>
+        <java.version>24</java.version>
+        <jjwt.version>0.12.6</jjwt.version>
+        <lombok.version>1.18.38</lombok.version>
+        <maven.compiler.source>${java.version}</maven.compiler.source>
+        <maven.compiler.target>${java.version}</maven.compiler.target>
+        <maven.version>3.9.9</maven.version>
+        <postgresql.version>42.7.7</postgresql.version>
+        <skipFrontend>false</skipFrontend>
+        <spring.security.test.version>6.5.1</spring.security.test.version>
+        <webauthn4j-spring-security.version>0.11.2.RELEASE</webauthn4j-spring-security.version>
+        <webauthn4j-core.version>0.29.3.RELEASE</webauthn4j-core.version>
+        <frontend.build.script>run build</frontend.build.script>
+    </properties>
+    <version>0.0.1-SNAPSHOT</version>
     <dependencies>
         <!-- Spring Boot Dependencies -->
         <dependency>
@@ -72,6 +96,16 @@
             <version>${postgresql.version}</version>
         </dependency>
         <dependency>
+            <groupId>com.webauthn4j</groupId>
+            <artifactId>webauthn4j-spring-security-core</artifactId>
+            <version>${webauthn4j-spring-security.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.webauthn4j</groupId>
+            <artifactId>webauthn4j-core</artifactId>
+            <version>${webauthn4j-core.version}</version> <!-- lub najnowsza dostępna -->
+        </dependency>
+        <dependency>
             <artifactId>lombok</artifactId>
             <groupId>org.projectlombok</groupId>
             <version>${lombok.version}</version>
@@ -83,27 +117,6 @@
             <version>${spring.security.test.version}</version>
         </dependency>
     </dependencies>
-    <description>KomornikGPT</description>
-    <groupId>com.janis</groupId>
-    <name>KomornikGPT</name>
-    <parent>
-        <artifactId>spring-boot-starter-parent</artifactId>
-        <groupId>org.springframework.boot</groupId>
-        <relativePath/>
-        <version>3.5.0</version>
-    </parent>
-    <properties>
-        <java.version>24</java.version>
-        <jjwt.version>0.12.6</jjwt.version>
-        <lombok.version>1.18.38</lombok.version>
-        <maven.compiler.source>${java.version}</maven.compiler.source>
-        <maven.compiler.target>${java.version}</maven.compiler.target>
-        <maven.version>3.9.9</maven.version>
-        <postgresql.version>42.7.6</postgresql.version>
-        <skipFrontend>false</skipFrontend>
-        <spring.security.test.version>6.5.0</spring.security.test.version>
-    </properties>
-    <version>0.0.1-SNAPSHOT</version>
     <build>
         <plugins>
             <plugin>
@@ -163,7 +176,7 @@
                             <goal>npm</goal>
                         </goals>
                         <configuration>
-                            <arguments>run buildProd</arguments>
+                            <arguments>${frontend.build.script}</arguments>
                             <skip>${skipFrontend}</skip>
                         </configuration>
                     </execution>
@@ -232,5 +245,14 @@
             </plugin>
         </plugins>
     </build>
+
+    <profiles>
+        <profile>
+            <id>docker-build</id>
+            <properties>
+                <frontend.build.script>run buildProd</frontend.build.script>
+            </properties>
+        </profile>
+    </profiles>
 </project>
 

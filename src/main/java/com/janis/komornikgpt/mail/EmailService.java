@@ -21,7 +21,7 @@ public class EmailService {
     public void sendVerificationEmail(String email, String token) {
         try {
             MimeMessage message = mailSender.createMimeMessage();
-            String msg = "Kliknij link, aby aktywować konto: http://" + env.getProperty("app.address") + "/verifyEmail?token=" + token;
+            String msg = "Kliknij link, aby aktywować konto: https://" + env.getProperty("url") + "/users/confirm-email?token=" + token;
             message.setSubject("Witaj w Komorniku!");
             MimeMessageHelper helper = new MimeMessageHelper(message, true);
             helper.setTo(email);
@@ -36,7 +36,7 @@ public class EmailService {
     public void sendPasswordResetEmail(String email, String token) {
         try {
             MimeMessage message = mailSender.createMimeMessage();
-            String msg = "Kliknij link, aby zresetować hasło: http://" + env.getProperty("app.address") + "/reset-password?token=" + token;
+            String msg = "Kliknij link, aby zresetować hasło: https://" + env.getProperty("url") + "/users/reset-password?token=" + token;
             message.setSubject("Reset hasła");
             MimeMessageHelper helper = new MimeMessageHelper(message, true);
             helper.setTo(email);

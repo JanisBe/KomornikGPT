@@ -30,17 +30,6 @@ public class AuthController {
     @Value("${jwt.cookie.name:JWT_TOKEN}")
     private String cookieName;
 
-    private static ResponseEntity<Map<String, Object>> getMapResponseEntity(User user) {
-        Map<String, Object> userDetails = new HashMap<>();
-        userDetails.put("authenticated", true);
-        userDetails.put("name", user.getName());
-        userDetails.put("email", user.getEmail());
-        userDetails.put("username", user.getUsername());
-        userDetails.put("role", user.getRole());
-        userDetails.put("id", user.getId());
-        return ResponseEntity.ok(userDetails);
-    }
-
     @PostMapping("/logout")
     public ResponseEntity<Void> logout(HttpServletResponse response) {
         // Clear the JWT cookie
@@ -101,5 +90,16 @@ public class AuthController {
             // If not found by email, try username
             return userService.getUserByUsername(identifier);
         }
+    }
+
+    private static ResponseEntity<Map<String, Object>> getMapResponseEntity(User user) {
+        Map<String, Object> userDetails = new HashMap<>();
+        userDetails.put("authenticated", true);
+        userDetails.put("name", user.getName());
+        userDetails.put("email", user.getEmail());
+        userDetails.put("username", user.getUsername());
+        userDetails.put("role", user.getRole());
+        userDetails.put("id", user.getId());
+        return ResponseEntity.ok(userDetails);
     }
 }

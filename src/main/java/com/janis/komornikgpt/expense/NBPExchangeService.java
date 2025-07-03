@@ -1,16 +1,17 @@
 package com.janis.komornikgpt.expense;
 
+import lombok.extern.log4j.Log4j2;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.stereotype.Service;
+import org.springframework.web.client.RestClient;
+import org.springframework.web.client.RestClientResponseException;
+
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.Optional;
-import lombok.extern.log4j.Log4j2;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
-import org.springframework.stereotype.Service;
-import org.springframework.web.reactive.function.client.WebClient;
-import org.springframework.web.reactive.function.client.WebClientResponseException;
 
 @Log4j2
 @Service
@@ -19,13 +20,13 @@ public class NBPExchangeService {
     private static final int MAX_RETRIES = 5;
 
     private final ExchangeRateRepository exchangeRateRepository;
-    private final WebClient webClient;
+    private final RestClient restClient;
 
     @Autowired
     public NBPExchangeService(ExchangeRateRepository exchangeRateRepository,
-        WebClient.Builder webClientBuilder) {
+                              RestClient.Builder restClientBuilder) {
         this.exchangeRateRepository = exchangeRateRepository;
-        this.webClient = webClientBuilder.baseUrl("https://api.nbp.pl").build();
+        this.restClient = restClientBuilder.baseUrl("https://api.nbp.pl").build();
     }
 
     public BigDecimal convertToPln(BigDecimal amount, Currency currency) {
@@ -48,21 +49,20 @@ public class NBPExchangeService {
                     .findByCurrencyFromAndCurrencyToAndDate(currency, Currency.PLN, currentDate);
             if (cachedRate.isPresent()) {
                 return amount.multiply(cachedRate.get().getRate())
-                    .setScale(2, RoundingMode.HALF_DOWN);
+                        .setScale(2, RoundingMode.HALF_DOWN);
             }
 
             // 2. If not in DB, fetch from NBP
             String formattedDate = currentDate.format(DateTimeFormatter.ISO_LOCAL_DATE);
             String url = String.format(
-                "/api/exchangerates/rates/a/%s/%s/?format=json",
+                    "/api/exchangerates/rates/a/%s/%s/?format=json",
                     currency.toString().toLowerCase(), formattedDate);
 
             try {
-                ExchangeRateResponse response = webClient.get()
-                    .uri(url)
-                    .retrieve()
-                    .bodyToMono(ExchangeRateResponse.class)
-                    .block();
+                ExchangeRateResponse response = restClient.get()
+                        .uri(url)
+                        .retrieve()
+                        .body(ExchangeRateResponse.class);
 
                 if (response != null && response.rates() != null && response.rates().length > 0) {
                     BigDecimal exchangeRate = response.rates()[0].mid();
@@ -76,11 +76,11 @@ public class NBPExchangeService {
                     exchangeRateRepository.save(newRate);
 
                     return amount.multiply(exchangeRate)
-                        .setScale(2, RoundingMode.HALF_DOWN);
+                            .setScale(2, RoundingMode.HALF_DOWN);
                 } else {
                     log.warn("Otrzymano pustą odpowiedź z API NBP dla daty {}", formattedDate);
                 }
-            } catch (WebClientResponseException e) {
+            } catch (RestClientResponseException e) {
                 if (e.getStatusCode() == HttpStatus.NOT_FOUND) {
                     log.debug("Brak kursu dla daty {}, próbuję dla poprzedniego dnia",
                             formattedDate);

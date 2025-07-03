@@ -3,8 +3,9 @@ package com.janis.komornikgpt.auth.service;
 import java.util.List;
 import org.springframework.http.HttpHeaders;
 import org.springframework.stereotype.Service;
-import org.springframework.web.reactive.function.client.WebClient;
-import reactor.core.publisher.Mono;
+import org.springframework.core.ParameterizedTypeReference;
+import org.springframework.web.client.RestClient;
+
 
 @Service
 public class GitHubEmailFetcher {
@@ -12,23 +13,20 @@ public class GitHubEmailFetcher {
 	private static final String EMAILS_URL = "https://api.github.com/user/emails";
 	private static final String BEARER_PREFIX = "Bearer ";
 
-	private final WebClient webClient;
+	private final RestClient restClient;
 
-	public GitHubEmailFetcher(WebClient.Builder webClientBuilder) {
-		this.webClient = webClientBuilder.build();
+	public GitHubEmailFetcher(RestClient.Builder restClientBuilder) {
+		this.restClient = restClientBuilder.build();
 	}
 
 	public String fetchPrimaryEmailAddress(String token) {
-		Mono<List<GitHubEmailVm>> responseMono = webClient
+				List<GitHubEmailVm> emailVmList = restClient
 			.get()
 			.uri(EMAILS_URL)
 			.header(HttpHeaders.AUTHORIZATION, BEARER_PREFIX + token)
 			.header(HttpHeaders.ACCEPT, "application/vnd.github+json")
 			.retrieve()
-			.bodyToFlux(GitHubEmailVm.class)
-			.collectList();
-
-		List<GitHubEmailVm> emailVmList = responseMono.block();
+			.body(new ParameterizedTypeReference<List<GitHubEmailVm>>() {});
 
 		if (emailVmList == null || emailVmList.isEmpty()) {
 			return null;

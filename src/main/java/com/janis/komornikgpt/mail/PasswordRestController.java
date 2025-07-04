@@ -74,8 +74,7 @@ public class PasswordRestController {
             @RequestParam String token,
             @RequestBody SetPasswordRequest request
     ) {
-        VerificationToken vt = tokenRepo.findByToken(token)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Token not found"));
+        VerificationToken vt = getVerificationToken(token);
 
         if (vt.getExpiryDate().isBefore(LocalDateTime.now())) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Token expired");
@@ -87,6 +86,31 @@ public class PasswordRestController {
         tokenRepo.delete(vt);
 
         return ResponseEntity.ok("Password has been reset successfully");
+    }
+
+    @PostMapping("/set-password-with-token")
+    public ResponseEntity<String> setPasswordWithToken(
+            @RequestParam String token,
+            @RequestBody SetPasswordRequest request
+    ) {
+        VerificationToken vt = getVerificationToken(token);
+
+        if (vt.getExpiryDate().isBefore(LocalDateTime.now())) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Token expired");
+        }
+
+        User user = vt.getUser();
+        user.setPassword(passwordEncoder.encode(request.password()));
+        user.setEnabled(true);
+        userService.saveUser(user);
+        tokenRepo.delete(vt);
+
+        return ResponseEntity.ok("Password has been set successfully");
+    }
+
+    private VerificationToken getVerificationToken(String token) {
+        return tokenRepo.findByToken(token)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Token not found"));
     }
 
 }

@@ -48,11 +48,25 @@ public class EmailService {
     }
 
     @Async
-    public void sendGroupInvitationEmail(String toEmail, String groupName, String inviterName) {
+    public void sendSetPasswordEmail(String email, String token) {
         try {
             MimeMessage message = mailSender.createMimeMessage();
-            String msg = String.format("Witaj!\n\nZostałeś zaproszony do grupy \"%s\" przez %s.\n\nDołącz do nas: https://%s/login", groupName, inviterName, env.getProperty("url"));
-            message.setSubject("Zaproszenie do grupy " + groupName);
+            String msg = "Kliknij link, aby ustawić hasło: https://" + env.getProperty("url") + "/users/set-password-with-token?token=" + token;
+            message.setSubject("Ustaw swoje hasło");
+            MimeMessageHelper helper = new MimeMessageHelper(message, true);
+            helper.setTo(email);
+            helper.setText(msg, true);
+            mailSender.send(message);
+        } catch (MessagingException ex) {
+            log.error(ex.getMessage());
+        }
+    }
+
+    @Async
+    public void sendGroupInvitationEmail(String toEmail, String groupName, String token) {
+        try {
+            MimeMessage message = mailSender.createMimeMessage();
+            String msg = String.format("Witaj!\n\nZostałeś zaproszony do grupy \"%s\".\n\nUstaw swoje hasło, aby dołączyć: https://%s/users/set-password?token=%s", groupName, env.getProperty("url"), token);
             MimeMessageHelper helper = new MimeMessageHelper(message, true);
             helper.setTo(toEmail);
             helper.setText(msg, true);

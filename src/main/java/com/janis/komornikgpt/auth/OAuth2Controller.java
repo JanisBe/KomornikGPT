@@ -13,6 +13,6 @@ public class OAuth2Controller {
     @GetMapping("/login/oauth2/code/{provider}")
     public void handleOAuth2Redirect(@PathVariable String provider, HttpServletResponse response) throws IOException {
         // Redirect to the frontend with the provider information
-        response.sendRedirect("http://localhost:4200/auth/callback/" + provider);
+        response.sendRedirect("http://localhost:8080/auth/callback/" + provider);
     }
 }

@@ -123,10 +123,6 @@ public class UserService implements UserDetailsService {
         userRepository.deleteById(id);
     }
 
-    public List<User> findAllByGroupId(Long groupId) {
-        return userRepository.findAllByGroupId(groupId);
-    }
-
     @Transactional
     public User createUserWithoutPassword(CreateUserWithoutPasswordRequest request) {
         if (userRepository.existsByUsername(request.username())) {
@@ -147,12 +143,13 @@ public class UserService implements UserDetailsService {
         String randomPassword = UUID.randomUUID().toString();
         user.setPassword(passwordEncoder.encode(randomPassword));
 
-        return userRepository.save(user);
-    }
+        String token = UUID.randomUUID().toString();
+        VerificationToken vt = new VerificationToken(token, user, LocalDateTime.now().plusHours(48));
+        verificationTokenRepository.save(vt);
 
-    public User findByUsername(String username) {
-        return userRepository.findByUsername(username)
-                .orElseThrow(() -> new RuntimeException("User not found"));
+        emailService.sendSetPasswordEmail(user.getEmail(), token);
+
+        return userRepository.save(user);
     }
 
     public User findByEmail(String email) {

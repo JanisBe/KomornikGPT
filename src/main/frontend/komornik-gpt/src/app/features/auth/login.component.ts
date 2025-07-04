@@ -12,8 +12,8 @@ import {MatCardModule} from '@angular/material/card';
 import {MatProgressBarModule} from '@angular/material/progress-bar';
 import {MatIconModule} from '@angular/material/icon';
 import {MatDividerModule} from '@angular/material/divider';
-import {WebAuthnService} from '../../core/services/webauthn.service';
 import {User} from '../../core/models/user.model';
+import {WebAuthnService} from '../../core/services/webauthn.service';
 
 @Component({
   selector: 'app-login',
@@ -102,21 +102,21 @@ import {User} from '../../core/models/user.model';
                       (click)="loginWithGoogle()"
                       [disabled]="isLoading">
                 <img src="assets/google-logo.svg" alt="Google logo" class="social-icon">
-                Zaloguj przez Google
+                Zaloguj Googlem
               </button>
               <button mat-raised-button
                       class="facebook-btn"
                       (click)="loginWithFacebook()"
                       [disabled]="isLoading">
                 <img src="assets/facebook-logo.svg" alt="Facebook logo" class="social-icon">
-                Zaloguj przez Facebook
+                Zaloguj Facebookiem
               </button>
               <button mat-raised-button
                       class="github-btn"
                       (click)="loginWithGithub()"
                       [disabled]="isLoading">
                 <img src="assets/github-logo.svg" alt="GitHub logo" class="social-icon" style="background: white">
-                Zaloguj przez GitHub
+                Zaloguj GitHubem
               </button>
             </div>
           </div>
@@ -149,7 +149,7 @@ import {User} from '../../core/models/user.model';
     }
 
     button {
-      margin: 10px;
+      margin: 5px;
       padding: 10px 20px;
       font-size: 16px;
     }
@@ -226,7 +226,7 @@ import {User} from '../../core/models/user.model';
     .social-login {
       display: flex;
       flex-direction: column;
-      gap: 16px;
+      gap: 8px;
       margin-bottom: 24px;
       width: 400px;
     }
@@ -237,7 +237,7 @@ import {User} from '../../core/models/user.model';
       align-items: center;
       justify-content: center;
       gap: 8px;
-      padding: 0 16px;
+      padding: 0 8px;
     }
 
     .social-icon {
@@ -293,6 +293,17 @@ import {User} from '../../core/models/user.model';
     .divider-text {
       color: rgba(0, 0, 0, 0.54);
       font-size: 14px;
+    }
+
+    @media (max-width: 480px) {
+      .form-actions {
+        flex-direction: column;
+        gap: 8px;
+      }
+
+      .social-login {
+        width: 100%;
+      }
     }
   `]
 })

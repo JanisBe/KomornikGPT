@@ -86,4 +86,14 @@ public class UserRestController {
         User updatedUser = userService.updateUser(authentication.getName(), request);
         return ResponseEntity.ok(UserDto.fromUser(updatedUser));
     }
+
+    @GetMapping("/check-username")
+    public ResponseEntity<Boolean> checkUsernameExists(@RequestParam String username) {
+        return ResponseEntity.ok(userService.checkUsernameExists(username));
+    }
+
+    @GetMapping("/check-email")
+    public ResponseEntity<Boolean> checkEmailExists(@RequestParam String email) {
+        return ResponseEntity.ok(userService.checkEmailExists(email));
+    }
 }

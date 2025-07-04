@@ -1,7 +1,15 @@
 import {Component, EventEmitter, Input, OnInit, Output} from '@angular/core';
 import {MatDialogModule} from '@angular/material/dialog';
 import {CommonModule} from '@angular/common';
-import {FormArray, FormBuilder, FormGroup, ReactiveFormsModule, Validators} from '@angular/forms';
+import {
+  AbstractControl,
+  AsyncValidatorFn,
+  FormArray,
+  FormBuilder,
+  FormGroup,
+  ReactiveFormsModule,
+  Validators
+} from '@angular/forms';
 import {MatButtonModule} from '@angular/material/button';
 import {MatFormFieldModule} from '@angular/material/form-field';
 import {MatInputModule} from '@angular/material/input';
@@ -12,8 +20,9 @@ import {MatAutocompleteModule, MatAutocompleteSelectedEvent} from '@angular/mate
 import {MatCheckboxModule} from '@angular/material/checkbox';
 import {User} from '../../../core/models/user.model';
 import {CreateUserRequest, UserService} from '../../../core/services/user.service';
-import {firstValueFrom, map, Observable, startWith} from 'rxjs';
-import {HttpErrorResponse} from '@angular/common/http';
+import {firstValueFrom, Observable, of} from 'rxjs';
+import {map, startWith} from 'rxjs/operators';
+import {HttpClient, HttpErrorResponse} from '@angular/common/http';
 import {MatSelectModule} from '@angular/material/select';
 import {Currency} from '../../../core/models/currency.model';
 import {Group} from '../../../core/models/group.model';
@@ -184,9 +193,13 @@ interface CreatedUserResponse {
           <div class="form-field">
             <mat-form-field appearance="outline" class="full-width">
               <mat-label>Nazwa użytkownika</mat-label>
-              <input matInput formControlName="username" placeholder="Podaj nazwę użytkownika" required>
+              <input matInput formControlName="username" placeholder="Podaj nazwę użytkownika" required
+                     (blur)="newUserForm.get('username')?.updateValueAndValidity()">
               @if (newUserForm.get('username')?.errors?.['required']) {
                 <mat-error>Nazwa użytkownika jest wymagana</mat-error>
+              }
+              @if (newUserForm.get('username')?.errors?.['usernameExists']) {
+                <mat-error>Nazwa użytkownika jest już zajęta</mat-error>
               }
             </mat-form-field>
           </div>
@@ -194,12 +207,16 @@ interface CreatedUserResponse {
           <div class="form-field">
             <mat-form-field appearance="outline" class="full-width">
               <mat-label>Email</mat-label>
-              <input matInput formControlName="email" placeholder="Enter email" type="email" required>
+              <input matInput formControlName="email" placeholder="Podaj adres e-mail" type="email" required
+                     (blur)="newUserForm.get('email')?.updateValueAndValidity()">
               @if (newUserForm.get('email')?.errors?.['required']) {
                 <mat-error>Email jest wymagany</mat-error>
               }
               @if (newUserForm.get('email')?.errors?.['email']) {
                 <mat-error>Wprowadź poprawny adres e-mail</mat-error>
+              }
+              @if (newUserForm.get('email')?.errors?.['emailExists']) {
+                <mat-error>Email jest już zajęty</mat-error>
               }
             </mat-form-field>
           </div>
@@ -214,8 +231,6 @@ interface CreatedUserResponse {
           </div>
         </form>
       </mat-expansion-panel>
-
-
     </form>
   `,
   styles: [`
@@ -318,6 +333,7 @@ export class GroupFormComponent implements OnInit {
   constructor(
     private fb: FormBuilder,
     private userService: UserService,
+    private http: HttpClient,
   ) {
     this.groupForm = this.fb.group({
       name: ['', [Validators.required, Validators.minLength(2)]],
@@ -331,9 +347,31 @@ export class GroupFormComponent implements OnInit {
     this.newUserForm = this.fb.group({
       name: ['', Validators.required],
       surname: ['', Validators.required],
-      username: ['', Validators.required],
-      email: ['', [Validators.required, Validators.email]]
+      username: ['', [Validators.required], this.usernameExistsAsyncValidator()],
+      email: ['', [Validators.required, Validators.email], this.emailExistsAsyncValidator()]
     });
+  }
+
+  usernameExistsAsyncValidator(): AsyncValidatorFn {
+    return (control: AbstractControl): Observable<{ [key: string]: any } | null> => {
+      if (!control.value) {
+        return of(null);
+      }
+      return this.userService.checkUsernameExists(control.value).pipe(
+        map(exists => (exists ? {usernameExists: true} : null))
+      );
+    };
+  }
+
+  emailExistsAsyncValidator(): AsyncValidatorFn {
+    return (control: AbstractControl): Observable<{ [key: string]: any } | null> => {
+      if (!control.value) {
+        return of(null);
+      }
+      return this.userService.checkEmailExists(control.value).pipe(
+        map(exists => (exists ? {emailExists: true} : null))
+      );
+    };
   }
 
   get members(): FormArray {
@@ -348,12 +386,10 @@ export class GroupFormComponent implements OnInit {
   }
 
   ngOnInit(): void {
-    // Load all available users
     this.userService.getUsers().subscribe({
       next: (users: User[]) => {
         this.availableUsers = users;
         if (this.group) {
-          // Initialize members form array with existing members for editing
           this.group.members.forEach(member => {
             this.addMember(member);
           });
@@ -364,7 +400,6 @@ export class GroupFormComponent implements OnInit {
             currency: this.group.defaultCurrency || Currency.PLN
           });
         } else {
-          // Add initial member row for new group creation
           this.addMember();
         }
       },
@@ -386,7 +421,6 @@ export class GroupFormComponent implements OnInit {
     const memberGroup = this.createMemberFormGroup(member);
     this.members.push(memberGroup);
 
-    // Add new autocomplete filter for this member
     const index = this.members.length - 1;
     this.setupAutoComplete(index);
   }
@@ -430,16 +464,13 @@ export class GroupFormComponent implements OnInit {
       const formValue = this.newUserForm.value;
       const tempId = `temp_${this.tempIdCounter++}`;
 
-      // Create a temporary user object
       const newUser: PendingUser = {
         ...formValue,
         tempId
       };
 
-      // Add to pending users
       this.pendingUsers = [...this.pendingUsers, newUser];
 
-      // Add as a new member row
       const memberGroup = this.createMemberFormGroup();
       memberGroup.patchValue({
         userName: formValue.name,
@@ -449,7 +480,6 @@ export class GroupFormComponent implements OnInit {
       this.members.push(memberGroup);
       this.setupAutoComplete(this.members.length - 1);
 
-      // Reset the form
       this.newUserForm.reset();
     }
   }
@@ -459,7 +489,6 @@ export class GroupFormComponent implements OnInit {
       const formValue = this.groupForm.value;
 
       try {
-        // First, create all pending users
         const createdUsers = await Promise.all(
           this.pendingUsers.map(async (pendingUser): Promise<CreatedUserResponse> => {
             const {tempId, ...userData} = pendingUser;
@@ -470,10 +499,8 @@ export class GroupFormComponent implements OnInit {
           })
         );
 
-        // Process members to get final member data
         const memberData = formValue.members.map((member: MemberInput) => {
           if (member.userId) {
-            // If it's a temp ID, replace with real ID
             const createdUser = createdUsers.find(u => u.tempId === member.userId);
             if (createdUser) {
               return {
@@ -482,14 +509,12 @@ export class GroupFormComponent implements OnInit {
                 email: member.email
               };
             }
-            // If not a temp ID, it's an existing user ID
             return {
               userId: parseInt(member.userId.toString()),
               userName: member.userName,
               email: member.email
             };
           }
-          // If no userId, this is a new user to be created
           return {
             userName: member.userName,
             email: member.email

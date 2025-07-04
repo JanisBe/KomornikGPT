@@ -61,4 +61,12 @@ export class UserService {
       map(currentUser => currentUser && (this.isAdmin(currentUser) || currentUser.id === targetUser.id))
     );
   }
+
+  checkUsernameExists(username: string): Observable<boolean> {
+    return this.http.get<boolean>(`${this.apiUrl}/check-username?username=${username}`);
+  }
+
+  checkEmailExists(email: string): Observable<boolean> {
+    return this.http.get<boolean>(`${this.apiUrl}/check-email?email=${email}`);
+  }
 }

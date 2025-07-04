@@ -180,4 +180,12 @@ public class UserService implements UserDetailsService {
             return false;
         }
     }
+
+    public boolean checkUsernameExists(String username) {
+        return userRepository.existsByUsername(username);
+    }
+
+    public boolean checkEmailExists(String email) {
+        return userRepository.existsByEmail(email);
+    }
 }

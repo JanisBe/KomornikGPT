@@ -36,7 +36,7 @@ public class OAuth2AuthenticationSuccessHandler extends SimpleUrlAuthenticationS
 
     @Value("${jwt.cookie.secure:true}")
     private boolean cookieSecure;
-    @Value("${frontend.url}")
+    @Value("${frontend.url:http://localhost:8080}")
     private String frontendUrl;
     @Override
     public void onAuthenticationSuccess(HttpServletRequest request, HttpServletResponse response,

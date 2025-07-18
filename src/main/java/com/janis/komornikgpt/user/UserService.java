@@ -83,7 +83,6 @@ public class UserService implements UserDetailsService {
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new UserNotFoundException("User not found with id: " + id));
 
-        // Verify current password if trying to change password
         updateUserDetails(request, user);
 
         return userRepository.save(user);
@@ -98,7 +97,6 @@ public class UserService implements UserDetailsService {
             user.setPassword(passwordEncoder.encode(request.newPassword()));
         }
 
-        // Update other fields
         user.setName(request.name());
         user.setSurname(request.surname());
         user.setEmail(request.email());
@@ -109,7 +107,6 @@ public class UserService implements UserDetailsService {
         User user = userRepository.findByUsername(username)
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
-        // Verify current password if trying to change password
         updateUserDetails(request, user);
 
         return userRepository.save(user);

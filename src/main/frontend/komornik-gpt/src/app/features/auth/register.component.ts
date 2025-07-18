@@ -1,9 +1,10 @@
-import {Component} from '@angular/core';
-
+import {Component, inject} from '@angular/core';
 import {FormsModule} from '@angular/forms';
 import {Router, RouterModule} from '@angular/router';
 import {HttpClient} from '@angular/common/http';
-import {MatButtonModule} from '@angular/material/button';
+import {CommonModule} from "@angular/common";
+import {environment} from '../../../environments/environment';
+import {MatSnackBar, MatSnackBarModule} from '@angular/material/snack-bar';
 
 interface RegisterRequest {
   username: string;
@@ -16,7 +17,7 @@ interface RegisterRequest {
 @Component({
   selector: 'app-register',
   standalone: true,
-  imports: [FormsModule, RouterModule, MatButtonModule],
+  imports: [FormsModule, RouterModule, CommonModule, MatSnackBarModule],
   template: `
     <div class="row justify-content-center">
       <div class="col-md-6 col-lg-4">
@@ -27,11 +28,18 @@ interface RegisterRequest {
               <div class="mb-3">
                 <label for="username" class="form-label">Nazwa użytkownika</label>
                 <input type="text" class="form-control" id="username" [(ngModel)]="user.username" name="username"
-                       required>
+                       (blur)="checkUsername()" (input)="usernameExists = null" required>
+                @if (usernameExists) {
+                  <div class="text-danger">Nazwa użytkownika jest już zajęta.</div>
+                }
               </div>
               <div class="mb-3">
                 <label for="email" class="form-label">Email</label>
-                <input type="email" class="form-control" id="email" [(ngModel)]="user.email" name="email" required>
+                <input type="email" class="form-control" id="email" [(ngModel)]="user.email" name="email"
+                       (blur)="checkEmail()" (input)="emailExists = null" required>
+                @if (emailExists) {
+                  <div class="text-danger">Email jest już zajęty.</div>
+                }
               </div>
               <div class="mb-3">
                 <label for="name" class="form-label">Imię</label>
@@ -65,11 +73,31 @@ export class RegisterComponent {
     name: '',
     surname: ''
   };
+  usernameExists: boolean | null = null;
+  emailExists: boolean | null = null;
+  private readonly apiUrl = environment.apiUrl;
+  private http = inject(HttpClient);
+  private router = inject(Router);
+  private snackBar = inject(MatSnackBar);
 
-  constructor(
-    private http: HttpClient,
-    private router: Router
-  ) {
+  checkUsername(): void {
+    if (this.user.username) {
+      this.http.get<boolean>(`${this.apiUrl}/users/check/username?username=${this.user.username}`).subscribe({
+        next: (exists) => {
+          this.usernameExists = exists;
+        }
+      });
+    }
+  }
+
+  checkEmail(): void {
+    if (this.user.email) {
+      this.http.get<boolean>(`${this.apiUrl}/users/check/email?email=${this.user.email}`).subscribe({
+        next: (exists) => {
+          this.emailExists = exists;
+        }
+      });
+    }
   }
 
   onSubmit(): void {
@@ -77,7 +105,9 @@ export class RegisterComponent {
       alert('Wypełnij wszystkie pola.');
       return;
     }
-
+    this.snackBar.open('Sprawdź podanego maila i kliknij w link aktywacyjny', 'Close', {
+      duration: 3000
+    });
     this.http.post('/api/users/register', this.user).subscribe({
       next: () => {
         this.router.navigate(['/login']);

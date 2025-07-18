@@ -87,12 +87,12 @@ public class UserRestController {
         return ResponseEntity.ok(UserDto.fromUser(updatedUser));
     }
 
-    @GetMapping("/check-username")
+    @GetMapping("/check/username")
     public ResponseEntity<Boolean> checkUsernameExists(@RequestParam String username) {
         return ResponseEntity.ok(userService.checkUsernameExists(username));
     }
 
-    @GetMapping("/check-email")
+    @GetMapping("/check/email")
     public ResponseEntity<Boolean> checkEmailExists(@RequestParam String email) {
         return ResponseEntity.ok(userService.checkEmailExists(email));
     }

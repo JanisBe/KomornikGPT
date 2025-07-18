@@ -21,7 +21,7 @@ public class EmailService {
     public void sendVerificationEmail(String email, String token) {
         try {
             MimeMessage message = mailSender.createMimeMessage();
-            String msg = "Kliknij link, aby aktywować konto: https://" + env.getProperty("url") + "/users/confirm-email?token=" + token;
+            String msg = "Kliknij link, aby aktywować konto: " + env.getProperty("url") + "/users/confirm-email?token=" + token;
             message.setSubject("Witaj w Komorniku!");
             MimeMessageHelper helper = new MimeMessageHelper(message, true);
             helper.setTo(email);

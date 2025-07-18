@@ -46,6 +46,7 @@ public class SecurityConfig {
             "/auth/callback",
             "/login",
             "/login/**",
+            "/api/users/check/**",
             "/manifest.webmanifest",
             "/api/webauthn/**",
             "/assets/**"};

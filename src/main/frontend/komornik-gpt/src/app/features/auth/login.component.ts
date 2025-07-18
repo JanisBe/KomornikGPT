@@ -51,9 +51,9 @@ import {WebAuthnService} from '../../core/services/webauthn.service';
               <mat-label>Email</mat-label>
               <input matInput type="email" formControlName="email" required>
               @if (loginForm.get('email')?.errors?.['required'] && (loginForm.get('email')?.dirty || loginForm.get('email')?.touched)) {
-                <mat-error>Email is required</mat-error>
+                <mat-error>Email jest wymagany</mat-error>
               } @else if (loginForm.get('email')?.errors?.['email'] && (loginForm.get('email')?.dirty || loginForm.get('email')?.touched)) {
-                <mat-error>Email is invalid</mat-error>
+                <mat-error>Email niepoprawny</mat-error>
               }
             </mat-form-field>
 
@@ -61,7 +61,7 @@ import {WebAuthnService} from '../../core/services/webauthn.service';
               <mat-label>Password</mat-label>
               <input matInput type="password" formControlName="password" required>
               @if (loginForm.get('password')?.invalid && (loginForm.get('password')?.dirty || loginForm.get('password')?.touched)) {
-                <mat-error>Password is required</mat-error>
+                <mat-error>Hasło jest wymagane</mat-error>
               }
             </mat-form-field>
 

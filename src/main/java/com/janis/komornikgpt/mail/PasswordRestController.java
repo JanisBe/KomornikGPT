@@ -5,12 +5,14 @@ import com.janis.komornikgpt.user.User;
 import com.janis.komornikgpt.user.UserService;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
+import org.springframework.core.env.Environment;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.net.URI;
 import java.time.LocalDateTime;
 
 @RestController
@@ -21,14 +23,15 @@ public class PasswordRestController {
     private final UserService userService;
     private final JwtTokenProvider jwtService;
     private final PasswordEncoder passwordEncoder;
+    private final Environment env;
 
     @GetMapping("/confirm-email")
-    public ResponseEntity<String> confirm(@RequestParam String token) {
+    public ResponseEntity<Void> confirm(@RequestParam String token) {
         VerificationToken vt = tokenRepo.findByToken(token)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Token not found"));
 
         if (vt.getExpiryDate().isBefore(LocalDateTime.now())) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Token wygasł");
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
         }
 
         User user = vt.getUser();
@@ -36,7 +39,7 @@ public class PasswordRestController {
         userService.saveUser(user);
         tokenRepo.delete(vt);
 
-        return ResponseEntity.ok("Konto aktywowane");
+        return ResponseEntity.status(HttpStatus.FOUND).location(URI.create(env.getProperty("frontend.url") + "/login")).build();
     }
 
     @PostMapping("/set-password")

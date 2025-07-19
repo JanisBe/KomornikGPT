@@ -54,7 +54,7 @@ interface RegisterRequest {
                 <input type="password" class="form-control" id="password" [(ngModel)]="user.password" name="password"
                        required>
               </div>
-              <button type="submit" class="btn btn-primary w-100">Zarejestruj się</button>
+              <button type="submit" class="btn btn-primary w-100" [disabled]="usernameExists || emailExists">Zarejestruj się</button>
             </form>
             <div class="text-center mt-3">
               <p>Masz już konto? <a mat-button color="primary" routerLink="/login">Login</a></p>

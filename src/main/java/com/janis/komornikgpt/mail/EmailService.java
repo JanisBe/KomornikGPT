@@ -9,6 +9,8 @@ import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
+import org.thymeleaf.TemplateEngine;
+import org.thymeleaf.context.Context;
 
 @Service
 @RequiredArgsConstructor
@@ -16,16 +18,25 @@ import org.springframework.stereotype.Service;
 public class EmailService {
     private final JavaMailSender mailSender;
     private final Environment env;
+    private final TemplateEngine templateEngine;
 
     @Async
     public void sendVerificationEmail(String email, String token) {
         try {
             MimeMessage message = mailSender.createMimeMessage();
-            String msg = "Kliknij link, aby aktywować konto: " + env.getProperty("url") + "/users/confirm-email?token=" + token;
-            message.setSubject("Witaj w Komorniku!");
             MimeMessageHelper helper = new MimeMessageHelper(message, true);
+
+            String verificationUrl = env.getProperty("url") + "/users/confirm-email?token=" + token;
+
+            Context context = new Context();
+            context.setVariable("verificationUrl", verificationUrl);
+
+            String htmlContent = templateEngine.process("verification-email", context);
+
             helper.setTo(email);
-            helper.setText(msg, true);
+            helper.setSubject("Witaj w Komorniku!");
+            helper.setText(htmlContent, true);
+
             mailSender.send(message);
         } catch (MessagingException ex) {
             log.error(ex.getMessage());
@@ -36,11 +47,19 @@ public class EmailService {
     public void sendPasswordResetEmail(String email, String token) {
         try {
             MimeMessage message = mailSender.createMimeMessage();
-            String msg = "Kliknij link, aby zresetować hasło: https://" + env.getProperty("url") + "/users/reset-password?token=" + token;
-            message.setSubject("Reset hasła");
             MimeMessageHelper helper = new MimeMessageHelper(message, true);
+
+            String resetUrl = "https://" + env.getProperty("url") + "/users/reset-password?token=" + token;
+
+            Context context = new Context();
+            context.setVariable("resetUrl", resetUrl);
+
+            String htmlContent = templateEngine.process("password-reset-email", context);
+
             helper.setTo(email);
-            helper.setText(msg, true);
+            helper.setSubject("Reset hasła");
+            helper.setText(htmlContent, true);
+
             mailSender.send(message);
         } catch (MessagingException ex) {
             log.error(ex.getMessage());
@@ -51,11 +70,19 @@ public class EmailService {
     public void sendSetPasswordEmail(String email, String token) {
         try {
             MimeMessage message = mailSender.createMimeMessage();
-            String msg = "Kliknij link, aby ustawić hasło: https://" + env.getProperty("url") + "/users/set-password-with-token?token=" + token;
-            message.setSubject("Ustaw swoje hasło");
             MimeMessageHelper helper = new MimeMessageHelper(message, true);
+
+            String setUrl = "https://" + env.getProperty("url") + "/users/set-password-with-token?token=" + token;
+
+            Context context = new Context();
+            context.setVariable("setUrl", setUrl);
+
+            String htmlContent = templateEngine.process("set-password-email", context);
+
             helper.setTo(email);
-            helper.setText(msg, true);
+            helper.setSubject("Ustaw swoje hasło");
+            helper.setText(htmlContent, true);
+
             mailSender.send(message);
         } catch (MessagingException ex) {
             log.error(ex.getMessage());
@@ -66,10 +93,20 @@ public class EmailService {
     public void sendGroupInvitationEmail(String toEmail, String groupName, String token) {
         try {
             MimeMessage message = mailSender.createMimeMessage();
-            String msg = String.format("Witaj!\n\nZostałeś zaproszony do grupy \"%s\".\n\nUstaw swoje hasło, aby dołączyć: https://%s/users/set-password?token=%s", groupName, env.getProperty("url"), token);
             MimeMessageHelper helper = new MimeMessageHelper(message, true);
+
+            String joinUrl = String.format("https://%s/users/set-password?token=%s", env.getProperty("url"), token);
+
+            Context context = new Context();
+            context.setVariable("groupName", groupName);
+            context.setVariable("joinUrl", joinUrl);
+
+            String htmlContent = templateEngine.process("group-invitation-email", context);
+
             helper.setTo(toEmail);
-            helper.setText(msg, true);
+            helper.setSubject("Zaproszenie do grupy");
+            helper.setText(htmlContent, true);
+
             mailSender.send(message);
         } catch (MessagingException ex) {
             log.error("Failed to send group invitation email: {}", ex.getMessage());

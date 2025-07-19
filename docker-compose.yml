@@ -1,6 +1,6 @@
 services:
   app:
-    image: janisbe/komornik-gpt:latest
+    build: .
     container_name: komornik-gpt
     ports:
       - "443:8443"
@@ -22,7 +22,7 @@ services:
     depends_on:
       - postgres
     volumes:
-      - /home/opc/daneDoKont.properties:/app/daneDoKont.properties
+      - ./daneDoKont.properties:/app/daneDoKont.properties
       - ./certs:/certs:ro
   postgres:
     image: postgres:latest

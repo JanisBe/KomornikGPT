@@ -39,7 +39,9 @@ public class PasswordRestController {
         userService.saveUser(user);
         tokenRepo.delete(vt);
 
-        return ResponseEntity.status(HttpStatus.FOUND).location(URI.create(env.getProperty("frontend.url") + "/login")).build();
+        String email = user.getEmail();
+        String url = env.getProperty("frontend.url") + "/login?email=" + email;
+        return ResponseEntity.status(HttpStatus.FOUND).location(URI.create(url)).build();
     }
 
     @PostMapping("/set-password")

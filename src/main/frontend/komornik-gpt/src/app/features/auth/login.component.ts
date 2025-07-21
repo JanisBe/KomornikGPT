@@ -313,7 +313,6 @@ export class LoginComponent implements OnInit {
   errorMessage = '';
   message: string | null = null; // Message to display feedback to the user
   isSuccess: boolean = false; // Indicates if the last action was successful
-  isWebAuthnSupported: boolean = false;
   protected readonly matchMedia = matchMedia;
 
   constructor(
@@ -343,8 +342,10 @@ export class LoginComponent implements OnInit {
     }
   }
   ngOnInit(): void {
-    this.isWebAuthnSupported = this.webAuthnService.isWebAuthnSupported();
-    console.log(this.isWebAuthnSupported);
+    this.loginForm = this.fb.group({
+      email: ['', [Validators.required, Validators.email]],
+      password: ['', Validators.required]
+    });
     this.route.queryParams.subscribe(params => {
       const requiresPassword = params['requiresPassword'] === 'true';
       if (requiresPassword) {
@@ -352,10 +353,10 @@ export class LoginComponent implements OnInit {
       } else {
         this.router.navigate(['/groups']);
       }
-    });
-    this.loginForm = this.fb.group({
-      email: ['', [Validators.required, Validators.email]],
-      password: ['', Validators.required]
+      const email = params['email'];
+      if (email) {
+        this.loginForm.get('email')?.setValue(email);
+      }
     });
   }
 

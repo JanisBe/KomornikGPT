@@ -237,7 +237,7 @@ export class ProfileComponent implements OnInit {
     });
 
     // Load user's groups
-    this.groupService.getGroups().subscribe({
+    this.groupService.getMyGroups().subscribe({
       next: (groups: Group[]) => {
         this.userGroups = groups;
       },

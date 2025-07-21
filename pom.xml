@@ -3,8 +3,8 @@
     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
     xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
-    <artifactId>KomornikGPT</artifactId>
-    <description>KomornikGPT</description>
+    <artifactId>Komornik</artifactId>
+    <description>Komornik</description>
     <groupId>com.janis</groupId>
     <name>KomornikGPT</name>
     <parent>
@@ -103,7 +103,7 @@
         <dependency>
             <groupId>com.webauthn4j</groupId>
             <artifactId>webauthn4j-core</artifactId>
-            <version>${webauthn4j-core.version}</version> <!-- lub najnowsza dostępna -->
+            <version>${webauthn4j-core.version}</version>
         </dependency>
         <dependency>
             <artifactId>lombok</artifactId>

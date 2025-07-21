@@ -9,7 +9,7 @@ import {MatButtonModule} from '@angular/material/button';
 import {MatCardModule} from '@angular/material/card';
 import {MatProgressBarModule} from '@angular/material/progress-bar';
 import {MatIconModule} from '@angular/material/icon';
-import {HttpClient} from '@angular/common/http';
+import {PasswordService} from '../../core/services/password.service';
 
 @Component({
   selector: 'app-reset-password',
@@ -170,7 +170,7 @@ export class ResetPasswordComponent implements OnInit {
 
   constructor(
     private fb: FormBuilder,
-    private http: HttpClient,
+    private passwordService: PasswordService,
     private route: ActivatedRoute,
     private router: Router,
     private snackBar: MatSnackBar
@@ -203,7 +203,7 @@ export class ResetPasswordComponent implements OnInit {
 
       const password = this.resetPasswordForm.get('password')?.value;
 
-      this.http.post(`/api/reset-password?token=${this.token}`, {password})
+      this.passwordService.resetPassword(this.token, password)
         .subscribe({
           next: () => {
             this.isLoading = false;

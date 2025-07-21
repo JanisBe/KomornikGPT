@@ -1,12 +1,12 @@
 package com.janis.komornikgpt.user;
 
 import com.janis.komornikgpt.exception.ResourceAlreadyExistsException;
+import com.janis.komornikgpt.exception.UserAlreadyExistsException;
+import com.janis.komornikgpt.exception.UserNotFoundException;
+import com.janis.komornikgpt.exception.UsernameAlreadyExistsException;
 import com.janis.komornikgpt.mail.EmailService;
 import com.janis.komornikgpt.mail.VerificationToken;
 import com.janis.komornikgpt.mail.VerificationTokenRepository;
-import com.janis.komornikgpt.user.exception.UserAlreadyExistsException;
-import com.janis.komornikgpt.user.exception.UserNotFoundException;
-import com.janis.komornikgpt.user.exception.UsernameAlreadyExistsException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;

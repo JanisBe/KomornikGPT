@@ -1,13 +1,15 @@
-package com.janis.komornikgpt.mail;
+package com.janis.komornikgpt.user;
 
 import com.janis.komornikgpt.auth.JwtTokenProvider;
-import com.janis.komornikgpt.user.User;
-import com.janis.komornikgpt.user.UserService;
-import jakarta.servlet.http.HttpServletRequest;
+import com.janis.komornikgpt.mail.ForgotPasswordRequest;
+import com.janis.komornikgpt.mail.SetPasswordRequest;
+import com.janis.komornikgpt.mail.VerificationToken;
+import com.janis.komornikgpt.mail.VerificationTokenRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.core.env.Environment;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
@@ -16,7 +18,7 @@ import java.net.URI;
 import java.time.LocalDateTime;
 
 @RestController
-@RequestMapping("/users/")
+@RequestMapping("/api/pwd/")
 @RequiredArgsConstructor
 public class PasswordRestController {
     private final VerificationTokenRepository tokenRepo;
@@ -45,22 +47,16 @@ public class PasswordRestController {
     }
 
     @PostMapping("/set-password")
-    public ResponseEntity<Void> setPassword(
-            @RequestBody SetPasswordRequest request,
-            HttpServletRequest httpRequest
-    ) {
-        String token = jwtService.extractTokenFromCookies(httpRequest);
-        if (token == null || !jwtService.validateToken(token)) {
+    public ResponseEntity<Void> setPassword(@RequestBody SetPasswordRequest request, Authentication authentication) {
+        if (authentication == null) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
-
-        String email = jwtService.extractUsername(token);
-        User user = userService.findByEmail(email);
+        User user = userService.getUserByUsername(authentication.getName());
         user.setRequiresPasswordSetup(false);
         user.setPassword(passwordEncoder.encode(request.password()));
         userService.saveUser(user);
 
-        return ResponseEntity.ok().build();
+        return ResponseEntity.status(HttpStatus.FOUND).location(URI.create(env.getProperty("frontend.url"))).build();
     }
 
     @PostMapping("/forgot-password")

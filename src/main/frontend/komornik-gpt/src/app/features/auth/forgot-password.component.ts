@@ -10,6 +10,8 @@ import {MatCardModule} from '@angular/material/card';
 import {MatProgressBarModule} from '@angular/material/progress-bar';
 import {MatIconModule} from '@angular/material/icon';
 import {HttpClient} from '@angular/common/http';
+import {environment} from '../../../environments/environment';
+import {PasswordService} from '../../core/services/password.service';
 
 @Component({
   selector: 'app-forgot-password',
@@ -140,12 +142,13 @@ export class ForgotPasswordComponent {
   isLoading = false;
   errorMessage = '';
   emailSent = false;
-
+  private readonly apiUrl = `${environment.apiUrl}/`;
   constructor(
     private fb: FormBuilder,
     private http: HttpClient,
     private router: Router,
-    private snackBar: MatSnackBar
+    private snackBar: MatSnackBar,
+    private passwordService: PasswordService
   ) {
     this.forgotPasswordForm = this.fb.group({
       email: ['', [Validators.required, Validators.email]]
@@ -158,7 +161,7 @@ export class ForgotPasswordComponent {
       this.isLoading = true;
       this.errorMessage = '';
 
-      this.http.post('/api/forgot-password', {email})
+      this.passwordService.forgotPassword(email)
         .subscribe({
           next: () => {
             this.isLoading = false;

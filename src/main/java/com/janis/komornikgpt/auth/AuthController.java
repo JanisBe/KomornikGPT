@@ -1,8 +1,8 @@
 package com.janis.komornikgpt.auth;
 
+import com.janis.komornikgpt.exception.UserNotFoundException;
 import com.janis.komornikgpt.user.User;
 import com.janis.komornikgpt.user.UserService;
-import com.janis.komornikgpt.user.exception.UserNotFoundException;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;

@@ -1,5 +1,6 @@
 package com.janis.komornikgpt.group;
 
+import com.janis.komornikgpt.exception.GroupNotFoundException;
 import com.janis.komornikgpt.user.User;
 import com.janis.komornikgpt.user.UserService;
 import jakarta.validation.Valid;

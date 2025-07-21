@@ -1,4 +1,4 @@
-package com.janis.komornikgpt.user.exception;
+package com.janis.komornikgpt.exception;
 
 public class UsernameAlreadyExistsException extends RuntimeException {
     public UsernameAlreadyExistsException(String message) {

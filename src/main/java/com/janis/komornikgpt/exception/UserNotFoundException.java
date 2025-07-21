@@ -1,4 +1,4 @@
-package com.janis.komornikgpt.user.exception;
+package com.janis.komornikgpt.exception;
 
 public class UserNotFoundException extends RuntimeException {
     public UserNotFoundException(String message) {

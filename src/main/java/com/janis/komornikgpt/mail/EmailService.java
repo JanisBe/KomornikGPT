@@ -2,8 +2,8 @@ package com.janis.komornikgpt.mail;
 
 import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.env.Environment;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
@@ -13,20 +13,25 @@ import org.thymeleaf.TemplateEngine;
 import org.thymeleaf.context.Context;
 
 @Service
-@RequiredArgsConstructor
 @Log4j2
 public class EmailService {
     private final JavaMailSender mailSender;
-    private final Environment env;
     private final TemplateEngine templateEngine;
+
+    private final String url;
+
+    public EmailService(JavaMailSender mailSender, @Autowired Environment env, TemplateEngine templateEngine) {
+        this.mailSender = mailSender;
+        this.templateEngine = templateEngine;
+        this.url = env.getProperty("url") + "/api/pwd";
+    }
 
     @Async
     public void sendVerificationEmail(String email, String token) {
         try {
             MimeMessage message = mailSender.createMimeMessage();
             MimeMessageHelper helper = new MimeMessageHelper(message, true);
-
-            String verificationUrl = env.getProperty("url") + "/users/confirm-email?token=" + token;
+            String verificationUrl = String.format("%s/confirm-email?token=%s", url, token);
 
             Context context = new Context();
             context.setVariable("verificationUrl", verificationUrl);
@@ -49,8 +54,7 @@ public class EmailService {
             MimeMessage message = mailSender.createMimeMessage();
             MimeMessageHelper helper = new MimeMessageHelper(message, true);
 
-            String resetUrl = "https://" + env.getProperty("url") + "/users/reset-password?token=" + token;
-
+            String resetUrl = String.format("%s/reset-password?token=%s", url, token);
             Context context = new Context();
             context.setVariable("resetUrl", resetUrl);
 
@@ -72,8 +76,7 @@ public class EmailService {
             MimeMessage message = mailSender.createMimeMessage();
             MimeMessageHelper helper = new MimeMessageHelper(message, true);
 
-            String setUrl = "https://" + env.getProperty("url") + "/users/set-password-with-token?token=" + token;
-
+            String setUrl = String.format("%s/set-password-with-token?token=%s", url, token);
             Context context = new Context();
             context.setVariable("setUrl", setUrl);
 
@@ -95,7 +98,7 @@ public class EmailService {
             MimeMessage message = mailSender.createMimeMessage();
             MimeMessageHelper helper = new MimeMessageHelper(message, true);
 
-            String joinUrl = String.format("https://%s/users/set-password?token=%s", env.getProperty("url"), token);
+            String joinUrl = String.format("%s/set-password?token=%s", url, token);
 
             Context context = new Context();
             context.setVariable("groupName", groupName);

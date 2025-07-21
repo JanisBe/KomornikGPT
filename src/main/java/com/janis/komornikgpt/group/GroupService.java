@@ -1,5 +1,6 @@
 package com.janis.komornikgpt.group;
 
+import com.janis.komornikgpt.exception.GroupNotFoundException;
 import com.janis.komornikgpt.mail.EmailService;
 import com.janis.komornikgpt.user.CreateUserWithoutPasswordRequest;
 import com.janis.komornikgpt.user.User;

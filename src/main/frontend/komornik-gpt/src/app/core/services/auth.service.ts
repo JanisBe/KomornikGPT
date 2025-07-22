@@ -28,6 +28,7 @@ export interface UpdateUserRequest {
 export class AuthService {
   private readonly apiUrl = environment.apiUrl;
   private currentUserSubject = new BehaviorSubject<User | null>(null);
+  public user$ = this.currentUserSubject.asObservable();
   private authCheckInProgress: Observable<User> | null = null;
 
   constructor(

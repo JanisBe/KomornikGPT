@@ -54,7 +54,7 @@ public class EmailService {
             MimeMessage message = mailSender.createMimeMessage();
             MimeMessageHelper helper = new MimeMessageHelper(message, true);
 
-            String resetUrl = String.format("%s/reset-password?token=%s", url, token);
+            String resetUrl = String.format("https://%s/reset-password?token=%s", url, token);
             Context context = new Context();
             context.setVariable("resetUrl", resetUrl);
 

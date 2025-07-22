@@ -1,34 +1,36 @@
-import {Component, OnInit} from '@angular/core';
-
+import {Component, inject, OnInit} from '@angular/core';
 import {FormBuilder, FormGroup, ReactiveFormsModule, Validators} from '@angular/forms';
 import {ActivatedRoute, Router, RouterModule} from '@angular/router';
-import {MatSnackBar} from '@angular/material/snack-bar';
-import {MatInputModule} from '@angular/material/input';
-import {MatFormFieldModule} from '@angular/material/form-field';
-import {MatButtonModule} from '@angular/material/button';
+import {MatSnackBar, MatSnackBarModule} from '@angular/material/snack-bar';
+import {CommonModule} from '@angular/common';
 import {MatCardModule} from '@angular/material/card';
-import {MatProgressBarModule} from '@angular/material/progress-bar';
+import {MatFormFieldModule} from '@angular/material/form-field';
+import {MatInputModule} from '@angular/material/input';
 import {MatIconModule} from '@angular/material/icon';
+import {MatButtonModule} from '@angular/material/button';
+import {MatProgressBarModule} from '@angular/material/progress-bar';
 import {PasswordService} from '../../core/services/password.service';
 
 @Component({
   selector: 'app-reset-password',
   standalone: true,
   imports: [
+    CommonModule,
     ReactiveFormsModule,
     RouterModule,
-    MatInputModule,
-    MatFormFieldModule,
-    MatButtonModule,
     MatCardModule,
+    MatFormFieldModule,
+    MatInputModule,
+    MatButtonModule,
     MatProgressBarModule,
+    MatSnackBarModule,
     MatIconModule
   ],
   template: `
     <div class="reset-password-container">
       <mat-card class="reset-password-card">
         <mat-card-header>
-          <mat-card-title>Resetowanie hasła</mat-card-title>
+          <mat-card-title>Ustaw nowe hasło</mat-card-title>
         </mat-card-header>
 
         @if (isLoading) {
@@ -36,65 +38,29 @@ import {PasswordService} from '../../core/services/password.service';
         }
 
         <mat-card-content>
-          @if (!resetSuccess && !tokenError) {
-            <p class="instruction">Wprowadź nowe hasło dla swojego konta.</p>
-            <form [formGroup]="resetPasswordForm" (ngSubmit)="onSubmit()">
-              <mat-form-field appearance="outline">
-                <mat-label>Nowe hasło</mat-label>
-                <input matInput type="password" formControlName="password" required>
-                @if (resetPasswordForm.get('password')?.errors?.['required'] && (resetPasswordForm.get('password')?.dirty || resetPasswordForm.get('password')?.touched)) {
-                  <mat-error>Hasło jest wymagane</mat-error>
-                } @else if (resetPasswordForm.get('password')?.errors?.['minlength'] && (resetPasswordForm.get('password')?.dirty || resetPasswordForm.get('password')?.touched)) {
-                  <mat-error>Hasło musi mieć co najmniej 6 znaków</mat-error>
-                }
-              </mat-form-field>
-
-              <mat-form-field appearance="outline">
-                <mat-label>Powtórz hasło</mat-label>
-                <input matInput type="password" formControlName="confirmPassword" required>
-                @if (resetPasswordForm.get('confirmPassword')?.errors?.['required'] && (resetPasswordForm.get('confirmPassword')?.dirty || resetPasswordForm.get('confirmPassword')?.touched)) {
-                  <mat-error>Powtórzenie hasła jest wymagane</mat-error>
-                } @else if (resetPasswordForm.errors?.['passwordMismatch'] && (resetPasswordForm.get('confirmPassword')?.dirty || resetPasswordForm.get('confirmPassword')?.touched)) {
-                  <mat-error>Hasła nie są identyczne</mat-error>
-                }
-              </mat-form-field>
-
-              @if (errorMessage) {
-                <div class="error-message">{{ errorMessage }}</div>
+          <form [formGroup]="resetPasswordForm" (ngSubmit)="onSubmit()">
+            <mat-form-field appearance="outline">
+              <mat-label>Nowe hasło</mat-label>
+              <input matInput [type]="hide ? 'password' : 'text'" formControlName="password" required>
+              <button mat-icon-button matSuffix (click)="hide = !hide" type="button">
+                <mat-icon>{{ hide ? 'visibility_off' : 'visibility' }}</mat-icon>
+              </button>
+              @if (resetPasswordForm.get('password')?.invalid && resetPasswordForm.get('password')?.touched) {
+                <mat-error>Hasło jest wymagane</mat-error>
               }
+            </mat-form-field>
 
-              <div class="form-actions">
-                <button mat-raised-button
-                        color="primary"
-                        type="submit"
-                        [disabled]="resetPasswordForm.invalid || isLoading">
-                  Resetuj hasło
-                </button>
-              </div>
-            </form>
-          } @else if (resetSuccess) {
-            <div class="success-message">
-              <mat-icon color="primary">check_circle</mat-icon>
-              <p>Twoje hasło zostało pomyślnie zresetowane.</p>
-              <button mat-raised-button
-                      color="primary"
-                      type="button"
-                      [routerLink]="['/login']">
-                Przejdź do logowania
+            @if (errorMessage) {
+              <div class="error-message">{{ errorMessage }}</div>
+            }
+
+            <div class="form-actions">
+              <button mat-raised-button color="primary" type="submit"
+                      [disabled]="resetPasswordForm.invalid || isLoading">
+                Ustaw hasło
               </button>
             </div>
-          } @else {
-            <div class="error-message-container">
-              <mat-icon color="warn">error</mat-icon>
-              <p>{{ tokenError }}</p>
-              <button mat-raised-button
-                      color="primary"
-                      type="button"
-                      [routerLink]="['/forgot-password']">
-                Spróbuj ponownie
-              </button>
-            </div>
-          }
+          </form>
         </mat-card-content>
       </mat-card>
     </div>
@@ -104,131 +70,83 @@ import {PasswordService} from '../../core/services/password.service';
       display: flex;
       justify-content: center;
       align-items: center;
-      height: 100vh;
+      min-height: 100vh;
+      padding: 20px;
       background-color: #f5f5f5;
     }
 
     .reset-password-card {
       width: 100%;
       max-width: 400px;
-      padding: 20px;
+    }
+
+    mat-card-header {
+      justify-content: center;
+      margin-bottom: 20px;
     }
 
     mat-form-field {
       width: 100%;
+      display: block;
       margin-bottom: 16px;
     }
 
     .form-actions {
       display: flex;
-      flex-direction: column;
-      gap: 8px;
-      margin-top: 16px;
+      justify-content: center;
+      margin-top: 24px;
     }
 
     .error-message {
       color: #f44336;
-      margin-bottom: 16px;
-    }
-
-    .instruction {
-      margin-bottom: 24px;
-      color: rgba(0, 0, 0, 0.6);
-    }
-
-    .success-message, .error-message-container {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
       text-align: center;
-      padding: 24px 0;
-    }
-
-    .success-message mat-icon, .error-message-container mat-icon {
-      font-size: 48px;
-      height: 48px;
-      width: 48px;
-      margin-bottom: 16px;
-    }
-
-    .error-message-container {
-      color: #f44336;
-    }
-
-    button {
-      margin-top: 16px;
+      margin-bottom: 1rem;
     }
   `]
 })
 export class ResetPasswordComponent implements OnInit {
-  resetPasswordForm: FormGroup;
+  resetPasswordForm!: FormGroup;
   isLoading = false;
   errorMessage = '';
-  resetSuccess = false;
-  tokenError = '';
-  token = '';
-
-  constructor(
-    private fb: FormBuilder,
-    private passwordService: PasswordService,
-    private route: ActivatedRoute,
-    private router: Router,
-    private snackBar: MatSnackBar
-  ) {
-    this.resetPasswordForm = this.fb.group({
-      password: ['', [Validators.required, Validators.minLength(6)]],
-      confirmPassword: ['', [Validators.required]]
-    }, {validators: this.passwordMatchValidator});
-  }
+  hide = true;
+  private token = '';
+  private fb = inject(FormBuilder);
+  private passwordService = inject(PasswordService);
+  private router = inject(Router);
+  private route = inject(ActivatedRoute);
+  private snackBar = inject(MatSnackBar);
 
   ngOnInit(): void {
+    this.resetPasswordForm = this.fb.group({
+      password: ['', Validators.required]
+    });
+
     this.route.queryParams.subscribe(params => {
       this.token = params['token'];
       if (!this.token) {
-        this.tokenError = 'Nieprawidłowy token resetowania hasła';
+        this.errorMessage = 'Brak tokenu resetującego hasło.';
       }
     });
-  }
-
-  passwordMatchValidator(form: FormGroup) {
-    const password = form.get('password')?.value;
-    const confirmPassword = form.get('confirmPassword')?.value;
-    return password === confirmPassword ? null : {passwordMismatch: true};
   }
 
   onSubmit(): void {
     if (this.resetPasswordForm.valid && this.token) {
       this.isLoading = true;
       this.errorMessage = '';
-
       const password = this.resetPasswordForm.get('password')?.value;
 
-      this.passwordService.resetPassword(this.token, password)
-        .subscribe({
-          next: () => {
-            this.isLoading = false;
-            this.resetSuccess = true;
-          },
-          error: (error) => {
-            this.isLoading = false;
-            console.error(error);
-
-            if (error.status === 404) {
-              this.tokenError = 'Token resetowania hasła nie został znaleziony';
-            } else if (error.status === 400) {
-              this.tokenError = 'Token resetowania hasła wygasł';
-            } else {
-              this.errorMessage = 'Wystąpił błąd podczas resetowania hasła. Spróbuj ponownie.';
-            }
-
-            this.snackBar.open(this.errorMessage || this.tokenError, 'Zamknij', {
-              duration: 5000,
-              horizontalPosition: 'end',
-              verticalPosition: 'top',
-              panelClass: ['error-snackbar']
-            });
-          }
-        });
+      this.passwordService.resetPassword(this.token, password).subscribe({
+        next: () => {
+          this.isLoading = false;
+          this.snackBar.open('Hasło zostało zresetowane pomyślnie.', 'Zamknij', {duration: 3000});
+          this.router.navigate(['/login']);
+        },
+        error: (err) => {
+          this.isLoading = false;
+          this.errorMessage = 'Wystąpił błąd podczas resetowania hasła. Spróbuj ponownie.';
+          console.error(err);
+        }
+      });
     }
   }
 }

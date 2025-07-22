@@ -59,7 +59,10 @@ import {WebAuthnService} from '../../core/services/webauthn.service';
 
             <mat-form-field appearance="outline">
               <mat-label>Password</mat-label>
-              <input matInput type="password" formControlName="password" required>
+              <input matInput [type]="hide ? 'password' : 'text'" formControlName="password" required>
+              <button mat-icon-button matSuffix (click)="hide = !hide" type="button">
+                <mat-icon>{{hide ? 'visibility_off' : 'visibility'}}</mat-icon>
+              </button>
               @if (loginForm.get('password')?.invalid && (loginForm.get('password')?.dirty || loginForm.get('password')?.touched)) {
                 <mat-error>Hasło jest wymagane</mat-error>
               }
@@ -313,6 +316,7 @@ export class LoginComponent implements OnInit {
   errorMessage = '';
   message: string | null = null; // Message to display feedback to the user
   isSuccess: boolean = false; // Indicates if the last action was successful
+  hide = true;
   protected readonly matchMedia = matchMedia;
 
   constructor(

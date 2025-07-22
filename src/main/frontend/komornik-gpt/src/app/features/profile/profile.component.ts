@@ -15,6 +15,7 @@ import {User} from '../../core/models/user.model';
 import {AuthService} from '../../core/services/auth.service';
 import {GroupService} from '../../core/services/group.service';
 import {HttpErrorResponse} from '@angular/common/http';
+import {MatIconModule} from '@angular/material/icon';
 
 interface UpdateUserRequest {
   name: string;
@@ -36,7 +37,8 @@ interface UpdateUserRequest {
     MatExpansionModule,
     MatDividerModule,
     MatListModule,
-    RouterModule
+    RouterModule,
+    MatIconModule
   ],
   template: `
     <div class="profile-container">
@@ -90,7 +92,10 @@ interface UpdateUserRequest {
               <div class="form-field">
                 <mat-form-field appearance="outline">
                   <mat-label>Obecne hasło</mat-label>
-                  <input matInput type="password" formControlName="currentPassword">
+                  <input matInput [type]="hideCurrent ? 'password' : 'text'" formControlName="currentPassword">
+                  <button mat-icon-button matSuffix (click)="hideCurrent = !hideCurrent" type="button">
+                    <mat-icon>{{hideCurrent ? 'visibility_off' : 'visibility'}}</mat-icon>
+                  </button>
                   @if (profileForm.get('currentPassword')?.errors?.['required'] && profileForm.get('currentPassword')?.touched) {
                     <mat-error>Obecne hasło jest wymagane</mat-error>
                   }
@@ -100,7 +105,10 @@ interface UpdateUserRequest {
               <div class="form-field">
                 <mat-form-field appearance="outline">
                   <mat-label>Nowe hasło</mat-label>
-                  <input matInput type="password" formControlName="newPassword">
+                  <input matInput [type]="hideNew ? 'password' : 'text'" formControlName="newPassword">
+                  <button mat-icon-button matSuffix (click)="hideNew = !hideNew" type="button">
+                    <mat-icon>{{hideNew ? 'visibility_off' : 'visibility'}}</mat-icon>
+                  </button>
                   @if (profileForm.get('newPassword')?.errors?.['minlength'] && profileForm.get('newPassword')?.touched) {
                     <mat-error>Nowe hasło musi mieć conajmniej 8 znaków</mat-error>
                   }
@@ -202,6 +210,8 @@ export class ProfileComponent implements OnInit {
   profileForm: FormGroup;
   isLoading = false;
   userGroups: Group[] = [];
+  hideCurrent = true;
+  hideNew = true;
 
   constructor(
     private fb: FormBuilder,

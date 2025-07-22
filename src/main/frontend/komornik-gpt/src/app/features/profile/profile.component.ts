@@ -1,6 +1,13 @@
 import {Component, OnInit} from '@angular/core';
 
-import {FormBuilder, FormGroup, ReactiveFormsModule, Validators} from '@angular/forms';
+import {
+  AbstractControl,
+  FormBuilder,
+  FormGroup,
+  ReactiveFormsModule,
+  ValidationErrors,
+  Validators
+} from '@angular/forms';
 import {MatCardModule} from '@angular/material/card';
 import {MatFormFieldModule} from '@angular/material/form-field';
 import {MatInputModule} from '@angular/material/input';
@@ -110,7 +117,23 @@ interface UpdateUserRequest {
                     <mat-icon>{{hideNew ? 'visibility_off' : 'visibility'}}</mat-icon>
                   </button>
                   @if (profileForm.get('newPassword')?.errors?.['minlength'] && profileForm.get('newPassword')?.touched) {
-                    <mat-error>Nowe hasło musi mieć conajmniej 8 znaków</mat-error>
+                    <mat-error>Nowe hasło musi mieć conajmniej 4 znaki</mat-error>
+                  }
+                </mat-form-field>
+              </div>
+
+              <div class="form-field">
+                <mat-form-field appearance="outline">
+                  <mat-label>Potwierdź nowe hasło</mat-label>
+                  <input matInput [type]="hideConfirm ? 'password' : 'text'" formControlName="confirmNewPassword">
+                  <button mat-icon-button matSuffix (click)="hideConfirm = !hideConfirm" type="button">
+                    <mat-icon>{{ hideConfirm ? 'visibility_off' : 'visibility' }}</mat-icon>
+                  </button>
+                  @if (profileForm.get('confirmNewPassword')?.errors?.['required'] && profileForm.get('confirmNewPassword')?.touched) {
+                    <mat-error>Potwierdzenie hasła jest wymagane</mat-error>
+                  }
+                  @if (profileForm.errors?.['passwordsMismatch'] && profileForm.get('confirmNewPassword')?.touched) {
+                    <mat-error>Hasła nie są identyczne</mat-error>
                   }
                 </mat-form-field>
               </div>
@@ -212,6 +235,7 @@ export class ProfileComponent implements OnInit {
   userGroups: Group[] = [];
   hideCurrent = true;
   hideNew = true;
+  hideConfirm = true;
 
   constructor(
     private fb: FormBuilder,
@@ -224,8 +248,15 @@ export class ProfileComponent implements OnInit {
       surname: ['', Validators.required],
       email: ['', [Validators.required, Validators.email]],
       currentPassword: [''],
-      newPassword: ['', Validators.minLength(6)]
-    });
+      newPassword: ['', Validators.minLength(4)],
+      confirmNewPassword: ['']
+    }, {validators: this.passwordsMatchValidator});
+  }
+
+  passwordsMatchValidator(form: AbstractControl): ValidationErrors | null {
+    const newPassword = form.get('newPassword')?.value;
+    const confirmNewPassword = form.get('confirmNewPassword')?.value;
+    return newPassword === confirmNewPassword ? null : {passwordsMismatch: true};
   }
 
   ngOnInit(): void {
@@ -280,7 +311,6 @@ export class ProfileComponent implements OnInit {
         email: this.profileForm.get('email')?.value
       };
 
-      // Only include password fields if new password is provided
       if (newPassword) {
         updateRequest.currentPassword = this.profileForm.get('currentPassword')?.value;
         updateRequest.newPassword = newPassword;
@@ -292,10 +322,10 @@ export class ProfileComponent implements OnInit {
           this.snackBar.open('Profile updated successfully', 'Close', {
             duration: 3000
           });
-          // Reset password fields
           this.profileForm.patchValue({
             currentPassword: '',
-            newPassword: ''
+            newPassword: '',
+            confirmNewPassword: ''
           });
         },
         error: (error: HttpErrorResponse) => {

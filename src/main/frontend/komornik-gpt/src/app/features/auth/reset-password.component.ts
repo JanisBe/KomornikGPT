@@ -1,5 +1,12 @@
 import {Component, inject, OnInit} from '@angular/core';
-import {FormBuilder, FormGroup, ReactiveFormsModule, Validators} from '@angular/forms';
+import {
+  AbstractControl,
+  FormBuilder,
+  FormGroup,
+  ReactiveFormsModule,
+  ValidationErrors,
+  Validators
+} from '@angular/forms';
 import {ActivatedRoute, Router, RouterModule} from '@angular/router';
 import {MatSnackBar, MatSnackBarModule} from '@angular/material/snack-bar';
 import {CommonModule} from '@angular/common';
@@ -45,8 +52,25 @@ import {PasswordService} from '../../core/services/password.service';
               <button mat-icon-button matSuffix (click)="hide = !hide" type="button">
                 <mat-icon>{{ hide ? 'visibility_off' : 'visibility' }}</mat-icon>
               </button>
-              @if (resetPasswordForm.get('password')?.invalid && resetPasswordForm.get('password')?.touched) {
+              @if (resetPasswordForm.get('password')?.errors?.['required'] && resetPasswordForm.get('password')?.touched) {
                 <mat-error>Hasło jest wymagane</mat-error>
+              }
+              @if (resetPasswordForm.get('password')?.errors?.['minlength'] && resetPasswordForm.get('password')?.touched) {
+                <mat-error>Hasło musi mieć przynajmniej 4 znaki</mat-error>
+              }
+            </mat-form-field>
+
+            <mat-form-field appearance="outline">
+              <mat-label>Potwierdź hasło</mat-label>
+              <input matInput [type]="hideConfirm ? 'password' : 'text'" formControlName="confirmPassword" required>
+              <button mat-icon-button matSuffix (click)="hideConfirm = !hideConfirm" type="button">
+                <mat-icon>{{ hideConfirm ? 'visibility_off' : 'visibility' }}</mat-icon>
+              </button>
+              @if (resetPasswordForm.get('confirmPassword')?.errors?.['required'] && resetPasswordForm.get('confirmPassword')?.touched) {
+                <mat-error>Potwierdzenie hasła jest wymagane</mat-error>
+              }
+              @if (resetPasswordForm.errors?.['passwordsMismatch'] && resetPasswordForm.get('confirmPassword')?.touched) {
+                <mat-error>Hasła nie są identyczne</mat-error>
               }
             </mat-form-field>
 
@@ -56,7 +80,7 @@ import {PasswordService} from '../../core/services/password.service';
 
             <div class="form-actions">
               <button mat-raised-button color="primary" type="submit"
-                      [disabled]="resetPasswordForm.invalid || isLoading">
+                      [disabled]="resetPasswordForm.invalid || isLoading || !this.token">
                 Ustaw hasło
               </button>
             </div>
@@ -109,7 +133,8 @@ export class ResetPasswordComponent implements OnInit {
   isLoading = false;
   errorMessage = '';
   hide = true;
-  private token = '';
+  hideConfirm = true;
+  token = '';
   private fb = inject(FormBuilder);
   private passwordService = inject(PasswordService);
   private router = inject(Router);
@@ -118,8 +143,9 @@ export class ResetPasswordComponent implements OnInit {
 
   ngOnInit(): void {
     this.resetPasswordForm = this.fb.group({
-      password: ['', Validators.required]
-    });
+      password: ['', [Validators.required, Validators.minLength(4)]],
+      confirmPassword: ['', Validators.required]
+    }, {validators: this.passwordsMatchValidator});
 
     this.route.queryParams.subscribe(params => {
       this.token = params['token'];
@@ -127,6 +153,12 @@ export class ResetPasswordComponent implements OnInit {
         this.errorMessage = 'Brak tokenu resetującego hasło.';
       }
     });
+  }
+
+  passwordsMatchValidator(form: AbstractControl): ValidationErrors | null {
+    const password = form.get('password')?.value;
+    const confirmPassword = form.get('confirmPassword')?.value;
+    return password === confirmPassword ? null : {passwordsMismatch: true};
   }
 
   onSubmit(): void {

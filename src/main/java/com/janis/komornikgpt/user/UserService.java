@@ -1,9 +1,6 @@
 package com.janis.komornikgpt.user;
 
-import com.janis.komornikgpt.exception.ResourceAlreadyExistsException;
-import com.janis.komornikgpt.exception.UserAlreadyExistsException;
-import com.janis.komornikgpt.exception.UserNotFoundException;
-import com.janis.komornikgpt.exception.UsernameAlreadyExistsException;
+import com.janis.komornikgpt.exception.*;
 import com.janis.komornikgpt.mail.EmailService;
 import com.janis.komornikgpt.mail.VerificationToken;
 import com.janis.komornikgpt.mail.VerificationTokenRepository;
@@ -162,8 +159,10 @@ public class UserService implements UserDetailsService {
     public boolean handleForgotPasswordRequest(String email) {
         try {
             User user = getUserByEmail(email);
+            if (verificationTokenRepository.existsByUser(user)) {
+                throw new TokenAlreadyExistsException("Token already exists");
+            }
             String token = UUID.randomUUID().toString();
-
             VerificationToken verificationToken = new VerificationToken(token, user, LocalDateTime.now().plusHours(24));
             verificationTokenRepository.save(verificationToken);
 

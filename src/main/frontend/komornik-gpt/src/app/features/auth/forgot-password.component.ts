@@ -1,7 +1,7 @@
 import {Component} from '@angular/core';
 
 import {FormBuilder, FormGroup, ReactiveFormsModule, Validators} from '@angular/forms';
-import {Router, RouterModule} from '@angular/router';
+import {RouterModule} from '@angular/router';
 import {MatSnackBar} from '@angular/material/snack-bar';
 import {MatInputModule} from '@angular/material/input';
 import {MatFormFieldModule} from '@angular/material/form-field';
@@ -9,8 +9,6 @@ import {MatButtonModule} from '@angular/material/button';
 import {MatCardModule} from '@angular/material/card';
 import {MatProgressBarModule} from '@angular/material/progress-bar';
 import {MatIconModule} from '@angular/material/icon';
-import {HttpClient} from '@angular/common/http';
-import {environment} from '../../../environments/environment';
 import {PasswordService} from '../../core/services/password.service';
 
 @Component({
@@ -142,11 +140,9 @@ export class ForgotPasswordComponent {
   isLoading = false;
   errorMessage = '';
   emailSent = false;
-  private readonly apiUrl = `${environment.apiUrl}/`;
+
   constructor(
     private fb: FormBuilder,
-    private http: HttpClient,
-    private router: Router,
     private snackBar: MatSnackBar,
     private passwordService: PasswordService
   ) {
@@ -173,6 +169,8 @@ export class ForgotPasswordComponent {
 
             if (error.status === 404) {
               this.errorMessage = 'Nie znaleziono użytkownika z podanym adresem email';
+            } else if (error.status === 409) {
+              this.errorMessage = 'Już wysłano link do resetowania hasła';
             } else {
               this.errorMessage = 'Wystąpił błąd podczas wysyłania linku resetującego. Spróbuj ponownie.';
             }

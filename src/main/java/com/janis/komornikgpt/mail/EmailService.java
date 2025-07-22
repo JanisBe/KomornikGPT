@@ -19,11 +19,13 @@ public class EmailService {
     private final TemplateEngine templateEngine;
 
     private final String url;
+    private final String frontendUrl;
 
     public EmailService(JavaMailSender mailSender, @Autowired Environment env, TemplateEngine templateEngine) {
         this.mailSender = mailSender;
         this.templateEngine = templateEngine;
         this.url = env.getProperty("url") + "/api/pwd";
+        this.frontendUrl = env.getProperty("frontend.url");
     }
 
     @Async
@@ -54,7 +56,7 @@ public class EmailService {
             MimeMessage message = mailSender.createMimeMessage();
             MimeMessageHelper helper = new MimeMessageHelper(message, true);
 
-            String resetUrl = String.format("https://%s/reset-password?token=%s", url, token);
+            String resetUrl = String.format("%s/reset-password?token=%s", frontendUrl, token);
             Context context = new Context();
             context.setVariable("resetUrl", resetUrl);
 

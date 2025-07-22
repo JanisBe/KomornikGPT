@@ -5,19 +5,6 @@ import {environment} from '../../../environments/environment';
 import {User} from '../models/user.model';
 import {RegisterRequest} from '../../features/auth/register.component';
 
-export interface CreateUserRequest {
-  name: string;
-  surname: string;
-  username: string;
-  email: string;
-}
-
-export interface UpdateUserRequest {
-  name?: string;
-  surname?: string;
-  email?: string;
-}
-
 @Injectable({
   providedIn: 'root'
 })

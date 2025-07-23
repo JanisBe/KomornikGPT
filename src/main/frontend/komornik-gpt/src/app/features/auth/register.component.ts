@@ -1,32 +1,26 @@
-import {Component, inject} from '@angular/core';
-import {FormsModule} from '@angular/forms';
+import {Component, inject, OnInit} from '@angular/core';
+import {FormBuilder, FormGroup, ReactiveFormsModule, Validators} from '@angular/forms';
 import {Router, RouterModule} from '@angular/router';
 import {CommonModule} from "@angular/common";
 import {MatSnackBar, MatSnackBarModule} from '@angular/material/snack-bar';
 import {UserService} from '../../core/services/user.service';
-
-export interface RegisterRequest {
-  username: string;
-  password: string;
-  email: string;
-  name: string;
-  surname: string;
-}
+import {MatIconModule} from "@angular/material/icon";
+import {MatButtonModule} from "@angular/material/button";
 
 @Component({
   selector: 'app-register',
   standalone: true,
-  imports: [FormsModule, RouterModule, CommonModule, MatSnackBarModule],
+  imports: [ReactiveFormsModule, RouterModule, CommonModule, MatSnackBarModule, MatIconModule, MatButtonModule],
   template: `
     <div class="row justify-content-center">
       <div class="col-md-6 col-lg-4">
         <div class="card">
           <div class="card-body">
             <h2 class="card-title text-center mb-4">Zarejestruj się</h2>
-            <form (ngSubmit)="onSubmit()">
+            <form [formGroup]="registerForm" (ngSubmit)="onSubmit()">
               <div class="mb-3">
                 <label for="username" class="form-label">Nazwa użytkownika</label>
-                <input type="text" class="form-control" id="username" [(ngModel)]="user.username" name="username"
+                <input type="text" class="form-control" id="username" formControlName="username"
                        (blur)="checkUsername()" (input)="usernameExists = null" required>
                 @if (usernameExists) {
                   <div class="text-danger">Nazwa użytkownika jest już zajęta.</div>
@@ -34,7 +28,7 @@ export interface RegisterRequest {
               </div>
               <div class="mb-3">
                 <label for="email" class="form-label">Email</label>
-                <input type="email" class="form-control" id="email" [(ngModel)]="user.email" name="email"
+                <input type="email" class="form-control" id="email" formControlName="email"
                        (blur)="checkEmail()" (input)="emailExists = null" required>
                 @if (emailExists) {
                   <div class="text-danger">Email jest już zajęty.</div>
@@ -42,18 +36,32 @@ export interface RegisterRequest {
               </div>
               <div class="mb-3">
                 <label for="name" class="form-label">Imię</label>
-                <input type="text" class="form-control" id="name" [(ngModel)]="user.name" name="name" required>
+                <input type="text" class="form-control" id="name" formControlName="name" required>
               </div>
               <div class="mb-3">
                 <label for="surname" class="form-label">Nazwisko</label>
-                <input type="text" class="form-control" id="surname" [(ngModel)]="user.surname" name="surname" required>
+                <input type="text" class="form-control" id="surname" formControlName="surname" required>
               </div>
               <div class="mb-3">
                 <label for="password" class="form-label">Hasło</label>
-                <input type="password" class="form-control" id="password" [(ngModel)]="user.password" name="password"
-                       required>
+                <div class="input-group">
+                  <input [type]="hide ? 'password' : 'text'" class="form-control" id="password"
+                         formControlName="password"
+                         required minlength="4">
+                  <button mat-icon-button (click)="hide = !hide" type="button" class="btn btn-outline-secondary">
+                    <mat-icon>{{ hide ? 'visibility_off' : 'visibility' }}</mat-icon>
+                  </button>
+                </div>
+                @if (registerForm.get('password')?.errors?.['required'] && registerForm.get('password')?.touched) {
+                  <div class="text-danger">Hasło jest wymagane.</div>
+                }
+                @if (registerForm.get('password')?.errors?.['minlength'] && registerForm.get('password')?.touched) {
+                  <div class="text-danger">Hasło musi mieć przynajmniej 4 znaki.</div>
+                }
               </div>
-              <button type="submit" class="btn btn-primary w-100" [disabled]="usernameExists || emailExists">Zarejestruj się</button>
+              <button type="submit" class="btn btn-primary w-100"
+                      [disabled]="registerForm.invalid || usernameExists || emailExists">Zarejestruj się
+              </button>
             </form>
             <div class="text-center mt-3">
               <p>Masz już konto? <a mat-button color="primary" routerLink="/login">Login</a></p>
@@ -64,23 +72,30 @@ export interface RegisterRequest {
     </div>
   `
 })
-export class RegisterComponent {
-  user: RegisterRequest = {
-    username: '',
-    password: '',
-    email: '',
-    name: '',
-    surname: ''
-  };
+export class RegisterComponent implements OnInit {
+  registerForm!: FormGroup;
   usernameExists: boolean | null = null;
   emailExists: boolean | null = null;
+  hide = true;
+  private fb = inject(FormBuilder);
   private router = inject(Router);
   private snackBar = inject(MatSnackBar);
   private userService = inject(UserService);
 
+  ngOnInit(): void {
+    this.registerForm = this.fb.group({
+      username: ['', Validators.required],
+      email: ['', [Validators.required, Validators.email]],
+      name: ['', Validators.required],
+      surname: ['', Validators.required],
+      password: ['', [Validators.required, Validators.minLength(4)]]
+    });
+  }
+
   checkUsername(): void {
-    if (this.user.username) {
-      this.userService.checkUsernameExists(this.user.username).subscribe({
+    const username = this.registerForm.get('username')?.value;
+    if (username) {
+      this.userService.checkUsernameExists(username).subscribe({
         next: (exists) => {
           this.usernameExists = exists;
         }
@@ -89,8 +104,9 @@ export class RegisterComponent {
   }
 
   checkEmail(): void {
-    if (this.user.email) {
-      this.userService.checkEmailExists(this.user.email).subscribe({
+    const email = this.registerForm.get('email')?.value;
+    if (email) {
+      this.userService.checkEmailExists(email).subscribe({
         next: (exists) => {
           this.emailExists = exists;
         }
@@ -99,14 +115,13 @@ export class RegisterComponent {
   }
 
   onSubmit(): void {
-    if (!this.user.name || !this.user.surname) {
-      alert('Wypełnij wszystkie pola.');
+    if (this.registerForm.invalid) {
       return;
     }
     this.snackBar.open('Sprawdź podanego maila i kliknij w link aktywacyjny', 'Close', {
       duration: 3000
     });
-    this.userService.registerUser(this.user).subscribe({
+    this.userService.registerUser(this.registerForm.value).subscribe({
       next: () => {
         this.router.navigate(['/login']);
       },

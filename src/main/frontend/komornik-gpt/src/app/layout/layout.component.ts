@@ -1,13 +1,15 @@
-import {Component, OnInit} from '@angular/core';
+import {Component, HostListener, OnInit} from '@angular/core';
 
 import {RouterModule} from '@angular/router';
 import {AuthService} from '../core/services/auth.service';
 import {User} from '../core/models/user.model';
+import {MatButtonModule} from "@angular/material/button";
+import {MatIconModule} from "@angular/material/icon";
 
 @Component({
   selector: 'app-layout',
   standalone: true,
-  imports: [RouterModule],
+  imports: [RouterModule, MatButtonModule, MatIconModule],
   template: `
     <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
       <div class="container">
@@ -52,15 +54,34 @@ import {User} from '../core/models/user.model';
     <div class="container mt-4">
       <router-outlet></router-outlet>
     </div>
+
+    @if (showInstallButton) {
+      <div class="install-pwa-container">
+        <button mat-raised-button color="primary" (click)="installPWA()">
+          <mat-icon>cloud_download</mat-icon>
+          Zainstaluj aplikację
+        </button>
+      </div>
+    }
   `,
   styles: [`
     .navbar {
       margin-bottom: 2rem;
     }
+
+    .install-pwa-container {
+      position: fixed;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 1000;
+    }
   `]
 })
 export class LayoutComponent implements OnInit {
   userName = '';
+  deferredPrompt: any;
+  showInstallButton = false;
 
   constructor(public authService: AuthService) {
   }
@@ -73,7 +94,35 @@ export class LayoutComponent implements OnInit {
     });
   }
 
+  @HostListener('window:beforeinstallprompt', ['$event'])
+  onbeforeinstallprompt(e: Event) {
+    e.preventDefault();
+    this.deferredPrompt = e;
+    // Only show the button if it's a mobile device
+    if (this.isMobileDevice()) {
+      this.showInstallButton = true;
+    }
+  }
+
+  installPWA() {
+    this.deferredPrompt.prompt();
+    this.deferredPrompt.userChoice.then((choiceResult: any) => {
+      if (choiceResult.outcome === 'accepted') {
+        console.log('User accepted the A2HS prompt');
+      } else {
+        console.log('User dismissed the A2HS prompt');
+      }
+      this.deferredPrompt = null;
+      this.showInstallButton = false;
+    });
+  }
+
   logout(): void {
     this.authService.logout();
+  }
+
+  private isMobileDevice(): boolean {
+    const userAgent = navigator.userAgent || navigator.vendor || (window as any).opera;
+    return /android|ipad|iphone|ipod/i.test(userAgent);
   }
 }

@@ -47,6 +47,11 @@ import {MatIconModule} from "@angular/material/icon";
                 <a class="nav-link" routerLink="/register" routerLinkActive="active">Zarejestruj</a>
               </li>
             }
+            @if (showInstallButton) {
+            <li class="nav-item">
+              <a class="nav-link pointer" (click)="installPWA()">Zainstaluj</a>
+            </li>
+            }
           </ul>
         </div>
       </div>
@@ -54,27 +59,13 @@ import {MatIconModule} from "@angular/material/icon";
     <div class="container mt-4">
       <router-outlet></router-outlet>
     </div>
-
-    @if (showInstallButton) {
-      <div class="install-pwa-container">
-        <button mat-raised-button color="primary" (click)="installPWA()">
-          <mat-icon>cloud_download</mat-icon>
-          Zainstaluj aplikację
-        </button>
-      </div>
-    }
   `,
   styles: [`
     .navbar {
       margin-bottom: 2rem;
     }
-
-    .install-pwa-container {
-      position: fixed;
-      bottom: 20px;
-      left: 50%;
-      transform: translateX(-50%);
-      z-index: 1000;
+    .pointer {
+      cursor: pointer;
     }
   `]
 })
@@ -98,20 +89,14 @@ export class LayoutComponent implements OnInit {
   onbeforeinstallprompt(e: Event) {
     e.preventDefault();
     this.deferredPrompt = e;
-    // Only show the button if it's a mobile device
-    if (this.isMobileDevice()) {
+    if (this.isMobileDevice() || true) {
       this.showInstallButton = true;
     }
   }
 
   installPWA() {
     this.deferredPrompt.prompt();
-    this.deferredPrompt.userChoice.then((choiceResult: any) => {
-      if (choiceResult.outcome === 'accepted') {
-        console.log('User accepted the A2HS prompt');
-      } else {
-        console.log('User dismissed the A2HS prompt');
-      }
+    this.deferredPrompt.userChoice.then(() => {
       this.deferredPrompt = null;
       this.showInstallButton = false;
     });
@@ -122,7 +107,9 @@ export class LayoutComponent implements OnInit {
   }
 
   private isMobileDevice(): boolean {
-    const userAgent = navigator.userAgent || navigator.vendor || (window as any).opera;
-    return /android|ipad|iphone|ipod/i.test(userAgent);
+    const userAgent = navigator.userAgent || (window as any).opera;
+    const isMobileUA = /android|ipad|iphone|ipod/i.test(userAgent);
+    const isTouch = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0);
+    return isMobileUA || isTouch;
   }
 }

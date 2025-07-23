@@ -237,6 +237,9 @@
                                 <resource>
                                     <directory>src/main/frontend/komornik-gpt/dist/browser</directory>
                                 </resource>
+                                <resource>
+                                    <directory>src/main/frontend/komornik-gpt/public</directory>
+                                </resource>
                             </resources>
                             <outputDirectory>${project.basedir}/src/main/resources/static</outputDirectory>
                         </configuration>

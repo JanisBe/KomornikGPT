@@ -1,6 +1,6 @@
 import {Component, OnInit} from '@angular/core';
 
-import {ActivatedRoute, RouterModule} from '@angular/router';
+import {ActivatedRoute, Router, RouterModule} from '@angular/router';
 import {GroupService} from '../../core/services/group.service';
 import {Group} from '../../core/models/group.model';
 import {MatCardModule} from '@angular/material/card';
@@ -9,17 +9,46 @@ import {MatButtonModule} from '@angular/material/button';
 import {MatListModule} from '@angular/material/list';
 import {AuthService} from '../../core/services/auth.service';
 import {MatProgressSpinner} from '@angular/material/progress-spinner';
+import {MatTooltipModule} from '@angular/material/tooltip';
+import {ViewExpensesDialogComponent} from '../expenses/view-expenses-dialog/view-expenses-dialog.component';
+import {MatDialog} from '@angular/material/dialog';
+import {SettleExpensesDialogComponent} from '../expenses/settle-expenses-dialog';
+import {AddExpenseDialogComponent} from '../expenses/add-expense-dialog/add-expense-dialog.component';
+import {HttpErrorResponse} from '@angular/common/http';
+import {ExpenseService} from '../../core/services/expense.service';
+import {User} from '../../core/models/user.model';
+import {MatSnackBar} from '@angular/material/snack-bar';
+import {EditGroupDialogComponent} from './edit-group-dialog/edit-group-dialog.component';
+import {DeleteGroupDialogComponent} from './delete-group-dialog/delete-group-dialog.component';
 
 @Component({
   selector: 'app-group-details',
   standalone: true,
-  imports: [RouterModule, MatCardModule, MatIconModule, MatButtonModule, MatListModule, MatProgressSpinner],
+  imports: [RouterModule, MatCardModule, MatIconModule, MatButtonModule, MatListModule, MatProgressSpinner, MatTooltipModule],
   template: `
     @if (group; as g) {
       <div class="container mt-4">
         <mat-card>
           <mat-card-header>
-            <mat-card-title routerLink="/group/{{ g.id }}">{{ g.name }}</mat-card-title>
+            <mat-card-title>
+              <div style="display: flex; align-items: center;">
+                <span>{{ g.name }}</span>
+                <mat-icon style="margin-left: 13px;" (click)="viewExpenses(group)" matTooltip="Zobacz wydatki">receipt
+                </mat-icon>
+                <mat-icon style="margin-left: 13px;" (click)="settleExpenses(group)" matTooltip="Rozlicz wydatki">
+                  payments
+                </mat-icon>
+                <mat-icon style="margin-left: 13px;" (click)="addExpense(group)" matTooltip="Dodaj wydatek">
+                  add_shopping_cart
+                </mat-icon>
+                <mat-icon style="margin-left: 13px;" (click)="editGroup(group)" matTooltip="Edytuj grupę"
+                          [hidden]="!canEditGroup(group)">edit
+                </mat-icon>
+                <mat-icon style="margin-left: 13px; color: red" (click)="deleteGroup(group)" matTooltip="Usuń grupę"
+                          [hidden]="!canDeleteGroup(group)">delete
+                </mat-icon>
+              </div>
+            </mat-card-title>
           </mat-card-header>
           <mat-card-content>
             @if (g.description) {
@@ -83,11 +112,15 @@ export class GroupDetailsComponent implements OnInit {
   loading = true;
   error: string | null = null;
   isAuthenticated = false;
-
+  currentUser: User | null = null;
   constructor(
     private route: ActivatedRoute,
     private groupService: GroupService,
-    private authService: AuthService
+    private authService: AuthService,
+    private dialog: MatDialog,
+    private expenseService: ExpenseService,
+    private snackBar: MatSnackBar,
+    private router: Router
   ) {
   }
 
@@ -99,6 +132,11 @@ export class GroupDetailsComponent implements OnInit {
       return;
     }
     this.isAuthenticated = this.authService.isAuthenticated();
+    this.authService.getCurrentUser().subscribe(
+      (user) => {
+        this.currentUser = user;
+      }
+    );
     this.groupService.getGroup(+id).subscribe({
       next: (group) => {
         this.group = group;
@@ -110,6 +148,132 @@ export class GroupDetailsComponent implements OnInit {
       error: () => {
         this.error = 'Group not found or you do not have access.';
         this.loading = false;
+      }
+    });
+  }
+
+  canEditGroup(group: Group): boolean {
+    return this.canDeleteGroup(group);
+  }
+
+  canDeleteGroup(group: Group): boolean {
+    if (!this.currentUser || !group || !group.members) return false;
+
+    // Check if the current user is part of the group
+    const isGroupMember = group.members.some(member => member.id === this.currentUser?.id);
+    if (!isGroupMember) return false;
+
+    // Check if the current user is the creator of the group
+    return group.createdBy?.id === this.currentUser.id;
+  }
+
+  viewExpenses(group: Group): void {
+    this.dialog.open(ViewExpensesDialogComponent, {
+      width: '80%',
+      height: '80%',
+      data: {group}
+    });
+  }
+
+  settleExpenses(group: Group): void {
+    const dialogRef = this.dialog.open(SettleExpensesDialogComponent, {
+      width: '600px',
+      data: {group}
+    });
+    dialogRef.afterClosed().subscribe(result => {
+      if (result) {
+        this.snackBar.open('Wydatki zostały rozliczone!', 'Zamknij', {duration: 3000});
+      }
+    });
+  }
+
+  addExpense(group: Group): void {
+    const dialogRef = this.dialog.open(AddExpenseDialogComponent, {
+      width: '70%',
+      data: {group, currentUser: this.currentUser}
+    });
+
+    dialogRef.afterClosed().subscribe(result => {
+      if (result) {
+        this.expenseService.createExpense(result).subscribe({
+          next: () => {
+            this.snackBar.open('Wydatek został dodany', 'Zamknij', {
+              duration: 3000
+            });
+          },
+          error: (error: HttpErrorResponse) => {
+            console.error(error);
+            this.snackBar.open('Bład podczas dodawania wydatku', 'Zamknij', {
+              duration: 3000
+            });
+          }
+        });
+      }
+    });
+  }
+
+  editGroup(group: Group): void {
+    if (!this.canEditGroup(group)) {
+      this.snackBar.open('Możesz tylko edytować swoje grupy', 'Zamknij', {
+        duration: 3000
+      });
+      return;
+    }
+
+    const dialogRef = this.dialog.open(EditGroupDialogComponent, {
+      width: '70%',
+      data: {group, currentUser: this.currentUser}
+    });
+
+    dialogRef.afterClosed().subscribe(result => {
+      if (result) {
+        this.groupService.updateGroup(group.id, result).subscribe({
+          next: (updatedGroup) => {
+            this.group = updatedGroup;
+            this.snackBar.open('Grupa została zaktualizowana', 'Zamknij', {
+              duration: 3000
+            });
+          },
+          error: (error) => {
+            console.error(error);
+            this.snackBar.open('Bład podczas aktualizacji grupy', 'Zamknij', {
+              duration: 3000
+            });
+          }
+        });
+      }
+    });
+  }
+
+  deleteGroup(group: Group): void {
+    if (!this.canDeleteGroup(group)) {
+      this.snackBar.open('Możesz tylko usuwać swoje grupy', 'Zamknij', {
+        duration: 3000
+      });
+      return;
+    }
+
+    const dialogRef = this.dialog.open(DeleteGroupDialogComponent, {
+      width: '400px',
+      data: group
+    });
+
+    dialogRef.afterClosed().subscribe(result => {
+      if (result) {
+        this.groupService.deleteGroup(group.id).subscribe({
+          next: () => {
+            this.router.navigate(['/groups']);
+            this.snackBar.open('Grupa została usunieta', 'Zamknij', {
+              duration: 3000
+            });
+          },
+          error: (error: HttpErrorResponse) => {
+            console.error(error);
+            this.snackBar.open('Bład podczas usuwania grupy', 'Zamknij', {
+              duration: 3000
+            });
+          }
+        });
       }
     });
   }

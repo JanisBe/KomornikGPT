@@ -15,7 +15,7 @@ public record UpdateUserRequest(
 
         String currentPassword,
 
-        @Size(min = 6, message = "New password must be at least 6 characters")
+        @Size(min = 4, message = "New password must be at least 4 characters")
         String newPassword
 ) {
 }

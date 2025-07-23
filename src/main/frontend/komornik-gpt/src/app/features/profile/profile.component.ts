@@ -142,7 +142,7 @@ interface UpdateUserRequest {
             <div class="form-actions">
               <button mat-raised-button color="primary" type="submit"
                       [disabled]="!profileForm.valid || isLoading">
-                {{ isLoading ? 'Saving...' : 'Save Changes' }}
+                {{ isLoading ? 'Zapisywanie...' : 'Zapisz zmiany' }}
               </button>
             </div>
           </form>
@@ -271,7 +271,7 @@ export class ProfileComponent implements OnInit {
       },
       error: (error) => {
         console.error(error);
-        this.snackBar.open('Error loading user data', 'Close', {
+        this.snackBar.open('Nie załadowano danych', 'Close', {
           duration: 3000
         });
       }
@@ -284,7 +284,7 @@ export class ProfileComponent implements OnInit {
       },
       error: (error) => {
         console.error(error);
-        this.snackBar.open('Error loading groups', 'Close', {
+        this.snackBar.open('Nie załadowano grup', 'Close', {
           duration: 3000
         });
       }
@@ -298,7 +298,7 @@ export class ProfileComponent implements OnInit {
       // Validate password fields
       const newPassword = this.profileForm.get('newPassword')?.value;
       if (newPassword && !this.profileForm.get('currentPassword')?.value) {
-        this.snackBar.open('Current password is required to change password', 'Close', {
+        this.snackBar.open('Wpisz aktualne hasło', 'Close', {
           duration: 3000
         });
         this.isLoading = false;
@@ -319,7 +319,7 @@ export class ProfileComponent implements OnInit {
       this.authService.updateProfile(updateRequest).subscribe({
         next: () => {
           this.isLoading = false;
-          this.snackBar.open('Profile updated successfully', 'Close', {
+          this.snackBar.open('Profil zaktualizowany poprawnie', 'Close', {
             duration: 3000
           });
           this.profileForm.patchValue({
@@ -329,8 +329,12 @@ export class ProfileComponent implements OnInit {
           });
         },
         error: (error: HttpErrorResponse) => {
+          let message = 'Nie udało się zaktualizować profilu.';
+          if (error.status === 401) {
+            message = 'Nie jesteś zalogowany. Zaloguj się ponownie.';
+          }
           this.isLoading = false;
-          this.snackBar.open('Failed to update profile. Please try again.', 'Close', {
+          this.snackBar.open(message, 'Close', {
             duration: 3000,
             panelClass: ['error-snackbar']
           });

@@ -109,7 +109,7 @@ import {CopyUrlButtonComponent} from '../expenses/copy-url-button';
             <mat-card>
               <mat-card-content>
                 <p class="text-center">Nie masz zarejestrowanych grup, <span
-                  (click)="openCreateGroupDialog()" class="cursor link-primary">stwórz je</span></p>
+                  (click)="openCreateGroupDialog()" class="link-primary cursor">stwórz je</span></p>
               </mat-card-content>
             </mat-card>
           </div>
@@ -300,7 +300,7 @@ export class GroupsComponent implements OnInit {
 
   editGroup(group: Group): void {
     if (!this.canEditGroup(group)) {
-      this.snackBar.open('You can only edit groups you created', 'Zamknij', {
+      this.snackBar.open('Możesz tylko edytować swoje grupy', 'Zamknij', {
         duration: 3000
       });
       return;
@@ -321,13 +321,13 @@ export class GroupsComponent implements OnInit {
               this.groups = [...this.groups];
               console.log(this.groups)// Trigger change detection
             }
-            this.snackBar.open('Group updated successfully', 'Zamknij', {
+            this.snackBar.open('Grupa została zaktualizowana', 'Zamknij', {
               duration: 3000
             });
           },
           error: (error) => {
             console.error(error);
-            this.snackBar.open('Error updating group', 'Zamknij', {
+            this.snackBar.open('Bład podczas aktualizacji grupy', 'Zamknij', {
               duration: 3000
             });
           }
@@ -338,7 +338,7 @@ export class GroupsComponent implements OnInit {
 
   deleteGroup(group: Group): void {
     if (!this.canDeleteGroup(group)) {
-      this.snackBar.open('You can only delete groups you created', 'Zamknij', {
+      this.snackBar.open('Możesz tylko usuwać swoje grupy', 'Zamknij', {
         duration: 3000
       });
       return;
@@ -354,13 +354,13 @@ export class GroupsComponent implements OnInit {
         this.groupService.deleteGroup(group.id).subscribe({
           next: () => {
             this.groups = this.groups.filter(g => g.id !== group.id);
-            this.snackBar.open('Group deleted successfully', 'Zamknij', {
+            this.snackBar.open('Grupa została usunieta', 'Zamknij', {
               duration: 3000
             });
           },
           error: (error: HttpErrorResponse) => {
             console.error(error);
-            this.snackBar.open('Error deleting group', 'Zamknij', {
+            this.snackBar.open('Bład podczas usuwania grupy', 'Zamknij', {
               duration: 3000
             });
           }
@@ -399,13 +399,13 @@ export class GroupsComponent implements OnInit {
       if (result) {
         this.expenseService.createExpense(result).subscribe({
           next: () => {
-            this.snackBar.open('Expense added successfully', 'Zamknij', {
+            this.snackBar.open('Wydatek został dodany', 'Zamknij', {
               duration: 3000
             });
           },
           error: (error: HttpErrorResponse) => {
             console.error(error);
-            this.snackBar.open('Error adding expense', 'Zamknij', {
+            this.snackBar.open('Bład podczas dodawania wydatku', 'Zamknij', {
               duration: 3000
             });
           }

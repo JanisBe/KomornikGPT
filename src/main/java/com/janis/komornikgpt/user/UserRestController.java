@@ -83,6 +83,9 @@ public class UserRestController {
     public ResponseEntity<UserDto> updateCurrentUser(
             @Valid @RequestBody UpdateUserRequest request,
             Authentication authentication) {
+        if (authentication == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
         User updatedUser = userService.updateUser(authentication.getName(), request);
         return ResponseEntity.ok(UserDto.fromUser(updatedUser));
     }

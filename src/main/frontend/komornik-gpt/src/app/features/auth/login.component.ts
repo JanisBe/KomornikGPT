@@ -33,7 +33,7 @@ import {WebAuthnService} from '../../core/services/webauthn.service';
     <div class="login-container">
       <mat-card class="login-card">
         <mat-card-header>
-          <mat-card-title>Login</mat-card-title>
+          <mat-card-title>Zaloguj się</mat-card-title>
         </mat-card-header>
 
         @if (isLoading) {
@@ -41,11 +41,6 @@ import {WebAuthnService} from '../../core/services/webauthn.service';
         }
 
         <mat-card-content>
-          <div class="divider">
-            <mat-divider></mat-divider>
-            <span class="divider-text">lub</span>
-            <mat-divider></mat-divider>
-          </div>
           <form [formGroup]="loginForm" (ngSubmit)="onSubmit()">
             <mat-form-field appearance="outline">
               <mat-label>Email</mat-label>
@@ -137,20 +132,6 @@ import {WebAuthnService} from '../../core/services/webauthn.service';
     </div>
   `,
   styles: [`
-
-    .auth-container {
-      text-align: center;
-      padding: 50px;
-    }
-
-    .success {
-      color: green;
-    }
-
-    .error {
-      color: red;
-    }
-
     button {
       margin: 5px;
       padding: 10px 20px;
@@ -161,7 +142,6 @@ import {WebAuthnService} from '../../core/services/webauthn.service';
       margin: 10px;
       font-size: 16px;
     }
-
 
     .login-container {
       display: flex;
@@ -174,7 +154,7 @@ import {WebAuthnService} from '../../core/services/webauthn.service';
 
     .login-card {
       width: 100%;
-      max-width: 480px;
+      max-width: 560px;
     }
 
     mat-card-header {
@@ -231,7 +211,7 @@ import {WebAuthnService} from '../../core/services/webauthn.service';
       flex-direction: column;
       gap: 8px;
       margin-bottom: 24px;
-      width: 400px;
+      width: 300px;
     }
 
     .social-login button {

@@ -59,7 +59,7 @@ import {DeleteGroupDialogComponent} from './delete-group-dialog/delete-group-dia
             <mat-list>
               @for (member of g.members; track member.id) {
                 <mat-list-item>
-                  <mat-icon matListIcon>person</mat-icon>
+                  <mat-icon>person</mat-icon>
                   {{ member.name }} ({{ member.email }})
                 </mat-list-item>
               }

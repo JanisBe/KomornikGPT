@@ -408,7 +408,10 @@ import {
     .form-row {
       display: flex;
       gap: 16px;
-      margin-bottom: 16px;
+    }
+
+    ::ng-deep .mat-mdc-form-field-subscript-wrapper {
+      height: 0;
     }
 
     .amount-field {

@@ -1,12 +1,9 @@
 import {Component, inject} from '@angular/core';
 import {FormsModule} from '@angular/forms';
 import {Router, RouterModule} from '@angular/router';
-import {HttpClient} from '@angular/common/http';
 import {CommonModule} from "@angular/common";
-import {environment} from '../../../environments/environment';
 import {MatSnackBar, MatSnackBarModule} from '@angular/material/snack-bar';
 import {UserService} from '../../core/services/user.service';
-import {PasswordService} from '../../core/services/password.service';
 
 export interface RegisterRequest {
   username: string;
@@ -77,11 +74,8 @@ export class RegisterComponent {
   };
   usernameExists: boolean | null = null;
   emailExists: boolean | null = null;
-  private readonly apiUrl = environment.apiUrl;
-  private http = inject(HttpClient);
   private router = inject(Router);
   private snackBar = inject(MatSnackBar);
-  private passwordService = inject(PasswordService);
   private userService = inject(UserService);
 
   checkUsername(): void {
@@ -112,7 +106,7 @@ export class RegisterComponent {
     this.snackBar.open('Sprawdź podanego maila i kliknij w link aktywacyjny', 'Close', {
       duration: 3000
     });
-    this.passwordService.registerUser(this.user).subscribe({
+    this.userService.registerUser(this.user).subscribe({
       next: () => {
         this.router.navigate(['/login']);
       },

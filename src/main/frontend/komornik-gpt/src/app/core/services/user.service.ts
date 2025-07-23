@@ -5,6 +5,7 @@ import {environment} from '../../../environments/environment';
 import {User} from '../models/user.model';
 import {AuthService} from './auth.service';
 import {map} from 'rxjs/operators';
+import {RegisterRequest} from '../../features/auth/register.component';
 
 export interface CreateUserRequest {
   name: string;
@@ -63,10 +64,14 @@ export class UserService {
   }
 
   checkUsernameExists(username: string): Observable<boolean> {
-    return this.http.get<boolean>(`${this.apiUrl}/check-username?username=${username}`);
+    return this.http.get<boolean>(`${this.apiUrl}/check/username?username=${username}`);
   }
 
   checkEmailExists(email: string): Observable<boolean> {
-    return this.http.get<boolean>(`${this.apiUrl}/check-email?email=${email}`);
+    return this.http.get<boolean>(`${this.apiUrl}/check/email?email=${email}`);
+  }
+
+  registerUser(user: RegisterRequest): Observable<User> {
+    return this.http.post<User>(`${this.apiUrl}/register`, user);
   }
 }

@@ -253,6 +253,12 @@
                 <frontend.build.script>run buildProd</frontend.build.script>
             </properties>
         </profile>
+        <profile>
+            <id>docker-build-local</id>
+            <properties>
+                <frontend.build.script>run buildLocal</frontend.build.script>
+            </properties>
+        </profile>
     </profiles>
 </project>
 

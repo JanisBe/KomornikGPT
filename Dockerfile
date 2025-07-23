@@ -11,7 +11,7 @@ COPY pom.xml .
 COPY src ./src
 
 # Build with frontend included
-RUN mvn clean package -DskipTests -DskipFrontend=false -Pdocker-build
+RUN mvn clean package -DskipTests -DskipFrontend=false -Pdocker-build-local
 
 # Verify frontend files are included
 RUN echo "Checking JAR contents:" && \

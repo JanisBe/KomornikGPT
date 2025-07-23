@@ -166,10 +166,10 @@ import {WebAuthnService} from '../../core/services/webauthn.service';
     .login-container {
       display: flex;
       justify-content: center;
-      align-items: center;
+      align-items: start;
       min-height: 100vh;
       padding: 20px;
-      background-color: #f5f5f5;
+      background-color: white;
     }
 
     .login-card {

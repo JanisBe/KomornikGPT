@@ -86,9 +86,9 @@ import {PasswordService} from '../../core/services/password.service';
     .forgot-password-container {
       display: flex;
       justify-content: center;
-      align-items: center;
+      align-items: start;
       height: 100vh;
-      background-color: #f5f5f5;
+      background-color: white;
     }
 
     .forgot-password-card {

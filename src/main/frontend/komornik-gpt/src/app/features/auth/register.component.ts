@@ -73,6 +73,13 @@ import {MatButtonModule} from "@angular/material/button";
   `
 })
 export class RegisterComponent implements OnInit {
+  user: RegisterRequest = {
+    username: '',
+    password: '',
+    email: '',
+    name: '',
+    surname: ''
+  };
   registerForm!: FormGroup;
   usernameExists: boolean | null = null;
   emailExists: boolean | null = null;
@@ -131,4 +138,13 @@ export class RegisterComponent implements OnInit {
       }
     });
   }
+}
+
+
+export interface RegisterRequest {
+  username: string;
+  password: string;
+  email: string;
+  name: string;
+  surname: string;
 }

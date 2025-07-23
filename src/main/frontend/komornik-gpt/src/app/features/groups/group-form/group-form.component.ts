@@ -349,7 +349,7 @@ export class GroupFormComponent implements OnInit {
       surname: ['', Validators.required],
       username: ['', [Validators.required], this.usernameExistsAsyncValidator()],
       email: ['', [Validators.required, Validators.email], this.emailExistsAsyncValidator()]
-    });
+    }, {updateOn: "blur"});
   }
 
   usernameExistsAsyncValidator(): AsyncValidatorFn {

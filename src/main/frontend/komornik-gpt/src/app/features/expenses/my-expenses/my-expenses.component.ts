@@ -6,9 +6,7 @@ import {AuthService} from '../../../core/services/auth.service';
 import {Expense} from '../../../core/models/expense.model';
 import {Group, GroupExpenses} from '../../../core/models/group.model';
 import {RouterLink} from '@angular/router';
-import {
-  ConfirmDeleteDialogComponent
-} from '../view-expenses-dialog/confirm-delete-dialog.component';
+import {ConfirmDeleteDialogComponent} from '../view-expenses-dialog/confirm-delete-dialog.component';
 import {AddExpenseDialogComponent} from '../add-expense-dialog/add-expense-dialog.component';
 import {MatSnackBar} from '@angular/material/snack-bar';
 import {MatDialog} from '@angular/material/dialog';
@@ -108,11 +106,36 @@ import {DEFAULT_CATEGORY, enumValueToCategory} from '../../../core/models/expens
     }
 
     .expense-table .mat-column-actions {
-      width: 140px;
+      width: 128px;
       text-align: center;
     }
 
-  `],
+    @media (max-width: 600px) {
+
+      ::ng-deep .mdc-data-table__cell {
+        padding: 0 4px;
+      }
+
+      ::ng-deep .mdc-data-table__header-cell {
+        padding: 0 4px;
+      }
+
+      .expense-table .mat-column-category {
+        display: none;
+      }
+
+      .expense-table .mat-column-actions {
+        width: 110px;
+      }
+
+      .expense-table .mat-column-date {
+        width: 84px;
+      }
+
+      .expense-table .mat-column-amount {
+        width: 84px;
+      }
+    }`],
   template: `
     @if (expensesByGroupKeys().length > 0) {
       @for (group of expensesByGroupKeys(); track group.id) {

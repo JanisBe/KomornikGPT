@@ -1,17 +1,25 @@
 import {Component, inject} from '@angular/core';
 
-import {FormBuilder, FormsModule, ReactiveFormsModule, Validators} from '@angular/forms';
+import {
+  AbstractControl,
+  FormBuilder,
+  FormsModule,
+  ReactiveFormsModule,
+  ValidationErrors,
+  Validators
+} from '@angular/forms';
 import {Router, RouterLink} from '@angular/router';
 import {HttpClient} from '@angular/common/http';
 import {MatInputModule} from '@angular/material/input';
-import {MatButton} from '@angular/material/button';
+import {MatButtonModule} from '@angular/material/button';
 import {environment} from '../../../environments/environment';
 import {MatSnackBar} from '@angular/material/snack-bar';
+import {MatIconModule} from "@angular/material/icon";
 
 @Component({
   selector: 'app-set-password',
   standalone: true,
-  imports: [ReactiveFormsModule, MatInputModule, MatButton, RouterLink, FormsModule],
+  imports: [ReactiveFormsModule, MatInputModule, MatButtonModule, RouterLink, FormsModule, MatIconModule],
   template: `
     <form [formGroup]="form" (ngSubmit)="onSubmit()" class="password-form">
       <h2>Ustaw nowe hasło</h2>
@@ -22,14 +30,24 @@ import {MatSnackBar} from '@angular/material/snack-bar';
 
       <mat-form-field appearance="outline">
         <mat-label>Nowe hasło:</mat-label>
-        <input matInput type="password" formControlName="newPassword"/>
-        @if (form.get('newPassword')?.invalid && (form.get('newPassword')?.dirty || form.get('newPassword')?.touched)) {
+        <input matInput [type]="hide ? 'password' : 'text'" formControlName="newPassword" required minlength="4"/>
+        <button mat-icon-button matSuffix (click)="hide = !hide" type="button">
+          <mat-icon>{{ hide ? 'visibility_off' : 'visibility' }}</mat-icon>
+        </button>
+        @if (form.get('newPassword')?.errors?.['required'] && (form.get('newPassword')?.dirty || form.get('newPassword')?.touched)) {
           <mat-error>Hasło jest wymagane</mat-error>
+        }
+        @if (form.get('newPassword')?.errors?.['minlength'] && (form.get('newPassword')?.dirty || form.get('newPassword')?.touched)) {
+          <mat-error>Hasło musi mieć przynajmniej 4 znaki</mat-error>
         }
       </mat-form-field>
       <mat-form-field appearance="outline">
         <mat-label>Powtórz hasło:</mat-label>
-        <input matInput type="password" formControlName="confirmPassword" (blur)="comparePasswords()"/>
+        <input matInput [type]="hideConfirm ? 'password' : 'text'" formControlName="confirmPassword"
+               required/>
+        <button mat-icon-button matSuffix (click)="hideConfirm = !hideConfirm" type="button">
+          <mat-icon>{{ hideConfirm ? 'visibility_off' : 'visibility' }}</mat-icon>
+        </button>
         @if (form.get('confirmPassword')?.errors?.['incorrect']) {
           <mat-error>Hasła nie są takie same</mat-error>
         } @else if ((form.get('confirmPassword')?.dirty || form.get('confirmPassword')?.touched)) {
@@ -56,11 +74,13 @@ import {MatSnackBar} from '@angular/material/snack-bar';
 })
 export class SetPasswordComponent {
   error: string | undefined;
+  hide = true;
+  hideConfirm = true;
   private fb = inject(FormBuilder);
   form = this.fb.group({
-    newPassword: ['', Validators.required],
+    newPassword: ['', [Validators.required, Validators.minLength(4)]],
     confirmPassword: ['', Validators.required]
-  });
+  }, {validators: this.passwordsMatchValidator, updateOn: 'blur'});
   private http = inject(HttpClient);
   private router = inject(Router);
   private snackBar = inject(MatSnackBar);
@@ -68,7 +88,6 @@ export class SetPasswordComponent {
   onSubmit(): void {
     if (this.form.invalid) return;
     const {newPassword} = this.form.value;
-    this.comparePasswords();
 
     this.http.post(`${environment.serverUrl}/users/set-password`, {password: newPassword}, {
       withCredentials: true
@@ -85,13 +104,9 @@ export class SetPasswordComponent {
     });
   }
 
-  comparePasswords() {
-    const {newPassword, confirmPassword} = this.form.value;
-    if (newPassword !== confirmPassword) {
-      this.form.controls['confirmPassword'].setErrors({'incorrect': true});
-      return;
-    } else {
-      this.form.controls['confirmPassword'].setErrors(null);
-    }
+  passwordsMatchValidator(form: AbstractControl): ValidationErrors | null {
+    const password = form.get('newPassword')?.value;
+    const confirmPassword = form.get('confirmPassword')?.value;
+    return password === confirmPassword ? null : {passwordsMismatch: true};
   }
 }

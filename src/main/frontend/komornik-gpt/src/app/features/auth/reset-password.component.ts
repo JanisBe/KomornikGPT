@@ -72,6 +72,9 @@ import {PasswordService} from '../../core/services/password.service';
               @if (resetPasswordForm.errors?.['passwordsMismatch'] && resetPasswordForm.get('confirmPassword')?.touched) {
                 <mat-error>Hasła nie są identyczne</mat-error>
               }
+              @if (resetPasswordForm.get('passwordsMismatch')?.errors?.['minlength'] && resetPasswordForm.get('passwordsMismatch')?.touched) {
+                <mat-error>Hasło musi mieć przynajmniej 4 znaki</mat-error>
+              }
             </mat-form-field>
 
             @if (errorMessage) {

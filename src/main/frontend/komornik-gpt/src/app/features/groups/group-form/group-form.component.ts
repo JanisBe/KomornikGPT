@@ -22,7 +22,7 @@ import {User} from '../../../core/models/user.model';
 import {CreateUserRequest, UserService} from '../../../core/services/user.service';
 import {firstValueFrom, Observable, of} from 'rxjs';
 import {map, startWith} from 'rxjs/operators';
-import {HttpClient, HttpErrorResponse} from '@angular/common/http';
+import {HttpErrorResponse} from '@angular/common/http';
 import {MatSelectModule} from '@angular/material/select';
 import {Currency} from '../../../core/models/currency.model';
 import {Group} from '../../../core/models/group.model';
@@ -234,11 +234,6 @@ interface CreatedUserResponse {
     </form>
   `,
   styles: [`
-    .dialog-container {
-      padding: 24px;
-    }
-
-
     .group-form-content {
       padding: 24px;
     }
@@ -332,8 +327,7 @@ export class GroupFormComponent implements OnInit {
 
   constructor(
     private fb: FormBuilder,
-    private userService: UserService,
-    private http: HttpClient,
+    private userService: UserService
   ) {
     this.groupForm = this.fb.group({
       name: ['', [Validators.required, Validators.minLength(2)]],

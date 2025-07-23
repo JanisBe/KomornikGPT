@@ -12,8 +12,6 @@ import {MatCardModule} from '@angular/material/card';
 import {MatProgressBarModule} from '@angular/material/progress-bar';
 import {MatIconModule} from '@angular/material/icon';
 import {MatDividerModule} from '@angular/material/divider';
-import {User} from '../../core/models/user.model';
-import {WebAuthnService} from '../../core/services/webauthn.service';
 
 @Component({
   selector: 'app-login',
@@ -56,7 +54,7 @@ import {WebAuthnService} from '../../core/services/webauthn.service';
               <mat-label>Password</mat-label>
               <input matInput [type]="hide ? 'password' : 'text'" formControlName="password" required>
               <button mat-icon-button matSuffix (click)="hide = !hide" type="button">
-                <mat-icon>{{hide ? 'visibility_off' : 'visibility'}}</mat-icon>
+                <mat-icon>{{ hide ? 'visibility_off' : 'visibility' }}</mat-icon>
               </button>
               @if (loginForm.get('password')?.invalid && (loginForm.get('password')?.dirty || loginForm.get('password')?.touched)) {
                 <mat-error>Hasło jest wymagane</mat-error>
@@ -254,14 +252,6 @@ import {WebAuthnService} from '../../core/services/webauthn.service';
       font-weight: 500;
     }
 
-    .fingerprint-btn {
-      background-color: #ffffff;
-      color: #000000;
-      border: 1px solid #cccccc;
-      height: 40px;
-      font-weight: 500;
-    }
-
     .divider {
       display: flex;
       align-items: center;
@@ -295,9 +285,7 @@ export class LoginComponent implements OnInit {
   isLoading = false;
   errorMessage = '';
   message: string | null = null; // Message to display feedback to the user
-  isSuccess: boolean = false; // Indicates if the last action was successful
   hide = true;
-  protected readonly matchMedia = matchMedia;
 
   constructor(
     private fb: FormBuilder,
@@ -305,26 +293,10 @@ export class LoginComponent implements OnInit {
     private socialAuthService: SocialAuthService,
     private router: Router,
     private route: ActivatedRoute,
-    private snackBar: MatSnackBar,
-    private webAuthnService: WebAuthnService
+    private snackBar: MatSnackBar
   ) {
   }
 
-  // Trigger registration process and update the UI based on the outcome
-  async register() {
-    const user: User = {
-      username: this.loginForm.get('email')?.value
-    } as User;
-    try {
-      await this.webAuthnService.register(user);
-      this.message = "Registration successful!";
-      this.isSuccess = true;
-    } catch (err) {
-      console.log(err);
-      this.message = "Registration failed. Please try again.";
-      this.isSuccess = false;
-    }
-  }
   ngOnInit(): void {
     this.loginForm = this.fb.group({
       email: ['', [Validators.required, Validators.email]],
@@ -340,6 +312,10 @@ export class LoginComponent implements OnInit {
       const email = params['email'];
       if (email) {
         this.loginForm.get('email')?.setValue(email);
+      }
+      const error = params['error'];
+      if (error) {
+        this.errorMessage = error;
       }
     });
   }
@@ -374,23 +350,6 @@ export class LoginComponent implements OnInit {
     }
   }
 
-  async loginWithFingerprint(): Promise<void> {
-    if (!this.loginForm.get('email')?.value) {
-      this.errorMessage = 'Please enter your email address first';
-      return;
-    }
-
-    try {
-      this.isLoading = true;
-      this.errorMessage = '';
-      const user: User = {username: this.loginForm.get('email')?.value} as User;
-      await this.webAuthnService.authenticate(user);
-      this.showSuccessAndRedirect();
-    } catch (error) {
-      this.handleError(error);
-    }
-  }
-
   onSubmit(): void {
     if (this.loginForm.valid) {
       const credentials: LoginRequest = this.loginForm.value;
@@ -410,11 +369,6 @@ export class LoginComponent implements OnInit {
 
   private showSuccessAndRedirect(): void {
     this.isLoading = false;
-    this.snackBar.open('Login successful', 'Close', {
-      duration: 3000,
-      horizontalPosition: 'end',
-      verticalPosition: 'top'
-    });
     this.router.navigate(['/groups']);
   }
 
@@ -423,11 +377,11 @@ export class LoginComponent implements OnInit {
     console.error(error);
 
     if (error.status === 401) {
-      this.errorMessage = 'Invalid username or password';
+      this.errorMessage = 'Złe dane logowania';
     } else if (error.status === 0) {
-      this.errorMessage = 'Unable to connect to the server';
+      this.errorMessage = 'Nie połączono z serwerem';
     } else {
-      this.errorMessage = 'An error occurred during login. Please try again.';
+      this.errorMessage = 'Nastąpił bład podczas logowania. Spróbuj ponownie.';
     }
 
     this.snackBar.open(this.errorMessage, 'Close', {
@@ -436,21 +390,5 @@ export class LoginComponent implements OnInit {
       verticalPosition: 'top',
       panelClass: ['error-snackbar']
     });
-  }
-
-  // Trigger authentication process and update the UI based on the outcome
-  async login() {
-    const user: User = {
-      username: this.loginForm.get('email')?.value
-    } as User;
-    try {
-      await this.webAuthnService.authenticate(user);
-      this.message = "Authentication successful!";
-      this.isSuccess = true;
-    } catch (err) {
-      console.log(err);
-      this.message = "Authentication failed. Please try again.";
-      this.isSuccess = false;
-    }
   }
 }

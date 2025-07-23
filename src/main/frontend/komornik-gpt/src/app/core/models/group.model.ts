@@ -28,3 +28,47 @@ export interface CreateGroupRequest {
   members: { userId?: number; userName: string; email?: string }[];
   sendInvitationEmail: boolean;
 }
+
+export interface UpdateGroupRequest {
+  name?: string;
+  description?: string;
+  isPublic?: boolean;
+  members: {
+    userId?: number;
+    userName: string;
+    email: string;
+  }[];
+}
+
+export interface CreateGroupRequest {
+  name: string;
+  members: {
+    userId?: number;
+    userName: string;
+    email?: string;
+  }[];
+}
+
+export interface GroupResponse {
+  id: number;
+  name: string;
+  users: {
+    id: number;
+    username: string;
+    email: string;
+    name: string;
+    surname: string;
+    role: string;
+  }[];
+  expenses?: Expense[];
+  createdAt?: string;
+  updatedAt?: string;
+  createdBy?: {
+    id: number;
+    username: string;
+    email: string;
+    name: string;
+    surname: string;
+    role: string;
+  };
+}

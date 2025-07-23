@@ -138,6 +138,10 @@ public class ExpenseService {
         return newExpense;
     }
 
+    public boolean hasUnpaidExpenses(Long groupId) {
+        return !expenseRepository.findAllByGroup_IdAndPaidFalse(groupId).isEmpty();
+    }
+
     @Transactional
     public Expense updateExpense(Long id, UpdateExpenseRequest request, Principal principal) {
         Expense expense = expenseRepository.findById(id)

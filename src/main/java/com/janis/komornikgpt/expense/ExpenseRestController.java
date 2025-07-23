@@ -25,6 +25,11 @@ public class ExpenseRestController {
         return expenseSettlementService.getSettlementDtos(groupId, recalculate);
     }
 
+    @GetMapping("/group/{groupId}/has-unpaid")
+    public ResponseEntity<Boolean> hasUnpaidExpenses(@PathVariable Long groupId) {
+        return ResponseEntity.ok(expenseService.hasUnpaidExpenses(groupId));
+    }
+
     @PostMapping
     public ResponseEntity<ExpenseDto> createExpense(@RequestBody CreateExpenseRequest request, Principal principal) {
         Expense expense = expenseService.createExpense(request, principal);

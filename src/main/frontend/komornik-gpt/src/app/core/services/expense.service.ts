@@ -34,6 +34,10 @@ export class ExpenseService {
     return this.http.get<Expense[]>(`${this.apiUrl}/group/${groupId}`);
   }
 
+  hasUnpaidExpenses(groupId: number): Observable<boolean> {
+    return this.http.get<boolean>(`${this.apiUrl}/group/${groupId}/has-unpaid`);
+  }
+
   createExpense(expense: CreateExpenseDto): Observable<Expense> {
     return this.http.post<Expense & { message: string }>(`${this.apiUrl}`, expense).pipe(
       tap((response) => {

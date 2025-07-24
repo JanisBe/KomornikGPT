@@ -21,6 +21,10 @@ import {DEFAULT_CATEGORY, enumValueToCategory} from '../../../core/models/expens
   standalone: true,
   imports: [CommonModule, MatTableModule, RouterLink, MatIconModule, MatIconButton, MatTooltipModule, MatDividerModule],
   styles: [`
+    .green-icon {
+      color: green;
+    }
+
     .paid-icon {
       font-size: 16px;
       height: 16px;
@@ -149,9 +153,9 @@ import {DEFAULT_CATEGORY, enumValueToCategory} from '../../../core/models/expens
               <span class="cell">
               {{ expense.description }}
                 @if (expense.isPaid) {
-                  <mat-icon matTooltip="Uregulowane" class="paid-icon">check_circle</mat-icon>
+                  <mat-icon matTooltip="Uregulowane" class="paid-icon green-icon">check_circle</mat-icon>
                 } @else {
-                  <mat-icon matTooltip="Nieuregulowane" class="paid-icon">cancel</mat-icon>
+                  <mat-icon matTooltip="Nieuregulowane" color="warn" class="paid-icon">cancel</mat-icon>
                 }
                 </span>
             </td>

@@ -268,13 +268,13 @@ export class GroupsComponent implements OnInit {
         this.groupService.createGroup(result).subscribe({
           next: (newGroup) => {
             this.groups = [...this.groups, newGroup];
-            this.snackBar.open('Group created successfully', 'Zamknij', {
+            this.snackBar.open('Grupa została utworzona', 'Zamknij', {
               duration: 3000
             });
           },
           error: (error) => {
             console.error(error);
-            this.snackBar.open('Error creating group', 'Zamknij', {
+            this.snackBar.open('Nie udało się utworzyć grupy', 'Zamknij', {
               duration: 3000
             });
           }

@@ -19,14 +19,6 @@ import {MatFormFieldModule} from "@angular/material/form-field";
 import {MatInputModule} from "@angular/material/input";
 import {map, Observable} from "rxjs";
 
-export interface RegisterRequest {
-  username: string;
-  password: string;
-  email: string;
-  name: string;
-  surname: string;
-}
-
 @Component({
   selector: 'app-register',
   standalone: true,

@@ -2,24 +2,10 @@ import {Injectable} from '@angular/core';
 import {HttpClient} from '@angular/common/http';
 import {Observable} from 'rxjs';
 import {environment} from '../../../environments/environment';
-import {Expense} from '../models/expense.model';
+import {CreateExpenseDto, Expense, SettlementDto} from '../models/expense.model';
 import {tap} from 'rxjs/operators';
 import {MatSnackBar} from '@angular/material/snack-bar';
 import {GroupExpenses} from '../models/group.model';
-
-export interface ExpenseSplitDto {
-  userId: number;
-  amountOwed: number;
-}
-
-export interface CreateExpenseDto {
-  description: string;
-  amount: number;
-  date: string;
-  payerId: number;
-  groupId: number;
-  splits: ExpenseSplitDto[];
-}
 
 @Injectable({
   providedIn: 'root'
@@ -52,10 +38,31 @@ export class ExpenseService {
     );
   }
 
+  recalculateExpense(groupId: number): Observable<SettlementDto[]> {
+    return this.http.get<SettlementDto[]>(
+      `${environment.apiUrl}/expenses/groups/${groupId}/settlement`,
+      {
+        params: {
+          recalculate: true,
+        }
+      }
+    )
+  }
+
+  calculateExpense(groupId: number): Observable<SettlementDto[]> {
+    return this.http.get<SettlementDto[]>(
+      `${environment.apiUrl}/expenses/groups/${groupId}/settlement`
+    )
+  }
+
+  settleExpense(groupId: number): Observable<any> {
+    return this.http.post(`${environment.apiUrl}/expenses/groups/${groupId}/settle`, {})
+  }
+
   updateExpense(id: number, expense: CreateExpenseDto): Observable<Expense> {
     return this.http.put<Expense>(`${this.apiUrl}/${id}`, expense).pipe(
       tap(() => {
-        this.snackBar.open('Expense updated successfully', 'Zamknij', {
+        this.snackBar.open('Wydatek został zaktualizowany', 'Zamknij', {
           duration: 3000,
           horizontalPosition: 'center',
           verticalPosition: 'bottom',

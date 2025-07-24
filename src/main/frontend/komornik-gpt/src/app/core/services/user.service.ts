@@ -2,23 +2,9 @@ import {Injectable} from '@angular/core';
 import {HttpClient} from '@angular/common/http';
 import {Observable} from 'rxjs';
 import {environment} from '../../../environments/environment';
-import {User} from '../models/user.model';
+import {CreateUserRequest, RegisterRequest, User} from '../models/user.model';
 import {AuthService} from './auth.service';
 import {map} from 'rxjs/operators';
-import {RegisterRequest} from '../../features/auth/register.component';
-
-export interface CreateUserRequest {
-  name: string;
-  surname: string;
-  username: string;
-  email: string;
-}
-
-export interface UpdateUserRequest {
-  name?: string;
-  surname?: string;
-  email?: string;
-}
 
 @Injectable({
   providedIn: 'root'

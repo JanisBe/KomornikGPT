@@ -18,29 +18,14 @@ import {MatDividerModule} from '@angular/material/divider';
 import {MatIconModule} from '@angular/material/icon';
 import {MatAutocompleteModule, MatAutocompleteSelectedEvent} from '@angular/material/autocomplete';
 import {MatCheckboxModule} from '@angular/material/checkbox';
-import {User} from '../../../core/models/user.model';
-import {CreateUserRequest, UserService} from '../../../core/services/user.service';
+import {CreatedUserResponse, MemberInput, PendingUser, User} from '../../../core/models/user.model';
+import {UserService} from '../../../core/services/user.service';
 import {firstValueFrom, Observable, of} from 'rxjs';
 import {map, startWith} from 'rxjs/operators';
 import {HttpErrorResponse} from '@angular/common/http';
 import {MatSelectModule} from '@angular/material/select';
 import {Currency} from '../../../core/models/currency.model';
 import {Group} from '../../../core/models/group.model';
-
-interface PendingUser extends CreateUserRequest {
-  tempId: string;
-}
-
-interface MemberInput {
-  userName: string;
-  email: string;
-  userId?: string | number;
-}
-
-interface CreatedUserResponse {
-  tempId: string;
-  createdUser: User;
-}
 
 @Component({
   selector: 'app-group-form',

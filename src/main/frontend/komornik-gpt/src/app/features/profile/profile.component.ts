@@ -18,19 +18,11 @@ import {MatDividerModule} from '@angular/material/divider';
 import {MatListModule} from '@angular/material/list';
 import {RouterModule} from '@angular/router';
 import {Group} from '../../core/models/group.model';
-import {User} from '../../core/models/user.model';
+import {UpdateUserRequest, User} from '../../core/models/user.model';
 import {AuthService} from '../../core/services/auth.service';
 import {GroupService} from '../../core/services/group.service';
 import {HttpErrorResponse} from '@angular/common/http';
 import {MatIconModule} from '@angular/material/icon';
-
-interface UpdateUserRequest {
-  name: string;
-  surname: string;
-  email: string;
-  currentPassword?: string;
-  newPassword?: string;
-}
 
 @Component({
   selector: 'app-profile',

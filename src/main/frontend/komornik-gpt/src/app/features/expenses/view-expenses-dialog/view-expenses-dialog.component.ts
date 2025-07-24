@@ -70,7 +70,9 @@ interface GroupedExpenses {
                           {{ expense.description | slice:0:30 }}
                         </span>
                         @if (expense.isPaid) {
-                          <mat-icon matTooltip="Uregulowane" class="paid-icon">check_circle</mat-icon>
+                          <mat-icon matTooltip="Uregulowane" class="paid-icon green-icon">check_circle</mat-icon>
+                        } @else {
+                          <mat-icon matTooltip="Nieuregulowane" color="warn" class="paid-icon">cancel</mat-icon>
                         }
                       </td>
                       <td>
@@ -226,6 +228,10 @@ interface GroupedExpenses {
       font-size: 16px;
       height: 16px;
       width: 16px;
+    }
+
+    .green-icon {
+      color: green;
     }
 
     .category-cell {

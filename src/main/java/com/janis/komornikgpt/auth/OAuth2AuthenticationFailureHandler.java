@@ -18,7 +18,7 @@ public class OAuth2AuthenticationFailureHandler implements AuthenticationFailure
     public void onAuthenticationFailure(HttpServletRequest request,
                                         HttpServletResponse response,
                                         AuthenticationException exception) throws IOException {
-        String redirectUrl = frontendUrl + "/login?error=" + exception.getMessage();
+        String redirectUrl = frontendUrl + "/login?error=" + "Problem z logowaniem z serwisami społecznościowymi";
         response.sendRedirect(redirectUrl);
     }
 }

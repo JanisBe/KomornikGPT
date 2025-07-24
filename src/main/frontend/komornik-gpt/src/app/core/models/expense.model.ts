@@ -43,3 +43,10 @@ export interface ExpenseSplitDto {
   userId: number;
   amountOwed: number;
 }
+
+export interface SettlementDto {
+  from: string;
+  to: string;
+  amount: number;
+  currency: string;
+}

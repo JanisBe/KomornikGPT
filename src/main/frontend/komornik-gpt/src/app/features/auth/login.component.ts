@@ -2,7 +2,7 @@ import {Component, OnInit} from '@angular/core';
 
 import {FormBuilder, FormGroup, ReactiveFormsModule, Validators} from '@angular/forms';
 import {ActivatedRoute, Router, RouterModule} from '@angular/router';
-import {AuthService, LoginRequest} from '../../core/services/auth.service';
+import {AuthService} from '../../core/services/auth.service';
 import {SocialAuthService} from '../../core/services/social-auth.service';
 import {MatSnackBar} from '@angular/material/snack-bar';
 import {MatInputModule} from '@angular/material/input';
@@ -12,6 +12,7 @@ import {MatCardModule} from '@angular/material/card';
 import {MatProgressBarModule} from '@angular/material/progress-bar';
 import {MatIconModule} from '@angular/material/icon';
 import {MatDividerModule} from '@angular/material/divider';
+import {LoginRequest} from '../../core/models/user.model';
 
 @Component({
   selector: 'app-login',

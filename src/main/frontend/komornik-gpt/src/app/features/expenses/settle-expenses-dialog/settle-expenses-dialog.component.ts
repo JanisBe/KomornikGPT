@@ -2,20 +2,14 @@ import {Component, Inject, OnInit} from '@angular/core';
 import {MAT_DIALOG_DATA, MatDialog, MatDialogModule, MatDialogRef} from '@angular/material/dialog';
 import {HttpClient} from '@angular/common/http';
 import {MatSnackBar} from '@angular/material/snack-bar';
-import {environment} from '../../../../environments/environment';
 import {MatTableModule} from '@angular/material/table';
 import {MatButtonModule} from '@angular/material/button';
 import {MatProgressSpinnerModule} from '@angular/material/progress-spinner';
 import {DecimalPipe, NgTemplateOutlet} from '@angular/common';
 import {MatCheckbox, MatCheckboxChange} from '@angular/material/checkbox';
 import {Group} from '../../../core/models/group.model';
-
-export interface SettlementDto {
-  from: string;
-  to: string;
-  amount: number;
-  currency: string;
-}
+import {SettlementDto} from '../../../core/models/expense.model';
+import {ExpenseService} from '../../../core/services/expense.service';
 
 @Component({
   selector: 'app-settle-expenses-dialog',
@@ -26,8 +20,11 @@ export interface SettlementDto {
     @if (!loading) {
       <div mat-dialog-content>
         @if (hasMoreCurrencies()) {
-          <span><mat-checkbox [checked]="this.checkboxState"
-            (change)="recalculate($event)">Przelicz wszystkie wydatki do {{ data.group.defaultCurrency }}</mat-checkbox></span>
+          <span>
+            <mat-checkbox [checked]="this.checkboxState"
+                          (change)="recalculate($event)">Przelicz wszystkie wydatki do {{ data.group.defaultCurrency }}
+            </mat-checkbox>
+          </span>
         }
         @if (settlements.length > 0) {
           <table mat-table [dataSource]="settlements" class="mat-elevation-z1" style="width:100%">
@@ -96,12 +93,13 @@ export class SettleExpensesDialogComponent implements OnInit {
     private dialogRef: MatDialogRef<SettleExpensesDialogComponent>,
     private http: HttpClient,
     private snackBar: MatSnackBar,
-    private dialog: MatDialog
+    private dialog: MatDialog,
+    private expenseService: ExpenseService
   ) {
   }
 
   ngOnInit(): void {
-    this.http.get<SettlementDto[]>(`${environment.apiUrl}/expenses/groups/${this.data.group.id}/settlement`).subscribe({
+    this.expenseService.calculateExpense(this.data.group.id).subscribe({
       next: settlements => {
         this.originalSettlements = settlements;
         this.settlements = settlements;
@@ -119,7 +117,7 @@ export class SettleExpensesDialogComponent implements OnInit {
     confirmRef.afterClosed().subscribe(confirmed => {
       if (confirmed) {
         this.settling = true;
-        this.http.post(`${environment.apiUrl}/expenses/groups/${this.data.group.id}/settle`, {}).subscribe({
+        this.expenseService.settleExpense(this.data.group.id).subscribe({
           next: () => {
             this.snackBar.open('Rozliczono wszystkie wydatki!', 'Zamknij', {duration: 3000});
             this.dialogRef.close(true);
@@ -153,14 +151,7 @@ export class SettleExpensesDialogComponent implements OnInit {
         this.loading = false;
         return;
       }
-      this.http.get<SettlementDto[]>(
-        `${environment.apiUrl}/expenses/groups/${this.data.group.id}/settlement`,
-        {
-          params: {
-            recalculate: true,
-          }
-        }
-      ).subscribe({
+      this.expenseService.recalculateExpense(this.data.group.id).subscribe({
         next: recalculatedSettlements => {
           this.settlements = recalculatedSettlements;
           this.recalculatedSettlements = recalculatedSettlements;

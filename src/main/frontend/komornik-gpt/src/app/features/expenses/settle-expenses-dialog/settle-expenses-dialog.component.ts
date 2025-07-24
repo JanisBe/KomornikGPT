@@ -1,6 +1,5 @@
 import {Component, Inject, OnInit} from '@angular/core';
 import {MAT_DIALOG_DATA, MatDialog, MatDialogModule, MatDialogRef} from '@angular/material/dialog';
-import {HttpClient} from '@angular/common/http';
 import {MatSnackBar} from '@angular/material/snack-bar';
 import {MatTableModule} from '@angular/material/table';
 import {MatButtonModule} from '@angular/material/button';
@@ -91,7 +90,6 @@ export class SettleExpensesDialogComponent implements OnInit {
   constructor(
     @Inject(MAT_DIALOG_DATA) public data: { group: Group; },
     private dialogRef: MatDialogRef<SettleExpensesDialogComponent>,
-    private http: HttpClient,
     private snackBar: MatSnackBar,
     private dialog: MatDialog,
     private expenseService: ExpenseService

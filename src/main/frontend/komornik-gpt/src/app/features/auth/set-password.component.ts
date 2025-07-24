@@ -9,12 +9,11 @@ import {
   Validators
 } from '@angular/forms';
 import {Router, RouterLink} from '@angular/router';
-import {HttpClient} from '@angular/common/http';
 import {MatInputModule} from '@angular/material/input';
 import {MatButtonModule} from '@angular/material/button';
-import {environment} from '../../../environments/environment';
 import {MatSnackBar} from '@angular/material/snack-bar';
 import {MatIconModule} from "@angular/material/icon";
+import {PasswordService} from '../../core/services/password.service';
 
 @Component({
   selector: 'app-set-password',
@@ -81,7 +80,7 @@ export class SetPasswordComponent {
     newPassword: ['', [Validators.required, Validators.minLength(4)]],
     confirmPassword: ['', Validators.required]
   }, {validators: this.passwordsMatchValidator, updateOn: 'blur'});
-  private http = inject(HttpClient);
+  private passwordService = inject(PasswordService);
   private router = inject(Router);
   private snackBar = inject(MatSnackBar);
 
@@ -89,19 +88,19 @@ export class SetPasswordComponent {
     if (this.form.invalid) return;
     const {newPassword} = this.form.value;
 
-    this.http.post(`${environment.serverUrl}/users/set-password`, {password: newPassword}, {
-      withCredentials: true
-    }).subscribe({
-      next: () => {
-        this.snackBar.open('Hasło zostało zaktualizowane.', 'OK', {
-          duration: 3000,
-          horizontalPosition: 'center',
-          verticalPosition: 'top',
-        });
-        this.router.navigate(['/groups'])
-      },
-      error: () => this.error = 'Nie udało się ustawić hasła.'
-    });
+    if (newPassword != null) {
+      this.passwordService.setPassword(newPassword).subscribe({
+        next: () => {
+          this.snackBar.open('Hasło zostało zaktualizowane.', 'OK', {
+            duration: 3000,
+            horizontalPosition: 'center',
+            verticalPosition: 'top',
+          });
+          this.router.navigate(['/groups'])
+        },
+        error: () => this.error = 'Nie udało się ustawić hasła.'
+      });
+    }
   }
 
   passwordsMatchValidator(form: AbstractControl): ValidationErrors | null {

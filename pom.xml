@@ -116,6 +116,11 @@
             <scope>test</scope>
             <version>${spring.security.test.version}</version>
         </dependency>
+        <dependency>
+            <groupId>io.micrometer</groupId>
+            <artifactId>micrometer-registry-prometheus</artifactId>
+            <version>1.15.2</version>
+        </dependency>
     </dependencies>
     <build>
         <plugins>
@@ -257,7 +262,7 @@
             </properties>
         </profile>
         <profile>
-            <id>docker-build-local</id>
+            <id>docker-local</id>
             <properties>
                 <frontend.build.script>run buildLocal</frontend.build.script>
             </properties>

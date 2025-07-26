@@ -141,7 +141,7 @@ import {MatExpansionModule} from "@angular/material/expansion";
 
     .mat-expansion-panel-header {
       padding: 0 16px;
-      font-family: var(--mdc-list-list-item-label-text-font);
+      font-family: var(--mdc-list-list-item-label-text-font),serif;
       font-size: var(--mdc-list-list-item-label-text-size);
       font-weight: var(--mdc-list-list-item-label-text-weight);
     }

@@ -118,7 +118,6 @@ interface GroupedExpenses {
 
     .header {
       display: flex;
-      justify-content: space-between;
       align-items: baseline;
       margin-bottom: 24px;
       background: white;

@@ -44,7 +44,7 @@ export class CopyUrlButtonComponent {
   @Input() viewToken?: string = '';
 
   copyUrl(): void {
-    let url = window.location.origin + '/groups/' + this.groupId;
+    let url = window.location.href;
     if (!!this.viewToken) {
       url += '?token=' + this.viewToken;
     }

@@ -10,7 +10,6 @@ import {MatListModule} from '@angular/material/list';
 import {AuthService} from '../../core/services/auth.service';
 import {MatProgressSpinner} from '@angular/material/progress-spinner';
 import {MatTooltipModule} from '@angular/material/tooltip';
-import {ViewExpensesDialogComponent} from '../expenses/view-expenses-dialog/view-expenses-dialog.component';
 import {MatDialog} from '@angular/material/dialog';
 import {SettleExpensesDialogComponent} from '../expenses/settle-expenses-dialog';
 import {AddExpenseDialogComponent} from '../expenses/add-expense-dialog/add-expense-dialog.component';

@@ -36,3 +36,4 @@ daneDoKont.properties
 /src/main/frontend/komornik-gpt/node_modules
 /certs/
 docker-compose.yml
+local.Dockerfile

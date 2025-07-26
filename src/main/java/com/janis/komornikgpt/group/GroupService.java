@@ -102,6 +102,9 @@ public class GroupService {
             group.setDescription(request.description());
         }
         group.setPublic(request.isPublic());
+        if (request.isPublic()) {
+            group.setViewToken(UUID.randomUUID().toString().substring(0, 8));
+        }
         if (request.members() != null) {
             List<User> users = new ArrayList<>();
             for (UpdateGroupRequest.MemberRequest memberRequest : request.members()) {

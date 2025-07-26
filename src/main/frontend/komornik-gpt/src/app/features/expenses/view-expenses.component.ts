@@ -304,10 +304,8 @@ interface GroupedExpenses {
         flex-shrink: 0;
       }
 
-      /* Specific style for the td containing splits */
       td[data-label="Kto"] {
         text-align: left;
-        /* No flex properties here, .splits-container handles it */
       }
     }
   `]

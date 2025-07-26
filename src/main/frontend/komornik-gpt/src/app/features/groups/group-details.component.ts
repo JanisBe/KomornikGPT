@@ -132,19 +132,16 @@ export class GroupDetailsComponent implements OnInit {
       this.loading = false;
       return;
     }
-    this.isAuthenticated = this.authService.isAuthenticated();
     this.authService.getCurrentUser().subscribe(
       (user) => {
         this.currentUser = user;
+        this.isAuthenticated = !!user;
       }
     );
     this.groupService.getGroup(+id, viewToken).subscribe({
       next: (group) => {
         this.group = group;
         this.loading = false;
-        if (!group.isPublic && !this.isAuthenticated) {
-          this.error = 'Ta grupa jest prywatna. Zaloguj się, aby do niej wejść';
-        }
       },
       error: () => {
         this.error = 'Nie znaleziono grupy lub nie masz dostępu do niej';

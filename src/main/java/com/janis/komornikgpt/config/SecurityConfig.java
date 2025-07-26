@@ -6,6 +6,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
@@ -26,7 +27,7 @@ import java.util.List;
 @EnableWebSecurity
 @RequiredArgsConstructor
 public class SecurityConfig {
-    public static final String[] ALLOWED_URLS = {"/",
+    public static final String[] ALLOWED_GET_URLS = {"/",
             "/index.html",
             "/favicon.ico",
             "/*.png",
@@ -45,11 +46,13 @@ public class SecurityConfig {
             "/auth/callback",
             "/login",
             "/login/**",
-            "/reset-password",
-            "/api/users/check/**",
             "/manifest.webmanifest",
             "/api/webauthn/**",
             "/assets/**"};
+    public static final String[] ALLOWED_POST_URLS = {
+            "/reset-password",
+            "/api/auth/**",
+            "/api/users/**"};
     private final OAuth2AuthenticationSuccessHandler oAuth2AuthenticationSuccessHandler;
     private final OAuth2AuthenticationFailureHandler oAuth2AuthenticationFailureHandler;
     private final JwtAuthenticationFilter jwtAuthFilter;
@@ -64,7 +67,8 @@ public class SecurityConfig {
                 .sessionManagement(session -> session
                         .sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers(ALLOWED_URLS).permitAll()
+                        .requestMatchers(HttpMethod.GET, ALLOWED_GET_URLS).permitAll()
+                        .requestMatchers(HttpMethod.POST, ALLOWED_POST_URLS).permitAll()
                         .anyRequest().authenticated()
                 )
                 .oauth2Login(oauth2 -> oauth2

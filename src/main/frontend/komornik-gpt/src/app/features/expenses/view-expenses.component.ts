@@ -38,29 +38,29 @@ interface GroupedExpenses {
           <h2>Wydatki dla {{ group.name }}</h2>
         </div>
       }
-
-      @if (loading) {
-        <div class="text-center mt-4">
-          <mat-spinner></mat-spinner>
-        </div>
-      } @else {
-        @for (group of groupedExpenses; track group.date) {
-          <div class="date-group">
-            <div class="date-header">
-              {{ group.date | date:'shortDate':'':'pl' }}
-            </div>
-            <div class="table-wrapper">
-              <table>
-                <thead>
-                <tr>
-                  <th>Opis</th>
-                  <th>Kategoria</th>
-                  <th>Kwota</th>
-                  <th>Płacił</th>
-                  <th>Kto</th>
-                </tr>
-                </thead>
-                <tbody>
+      <div class="expenses-content">
+        @if (loading) {
+          <div class="text-center mt-4">
+            <mat-spinner></mat-spinner>
+          </div>
+        } @else {
+          @for (group of groupedExpenses; track group.date) {
+            <div class="date-group">
+              <div class="date-header">
+                {{ group.date | date:'shortDate':'':'pl' }}
+              </div>
+              <div class="table-wrapper">
+                <table>
+                  <thead>
+                  <tr>
+                    <th>Opis</th>
+                    <th>Kategoria</th>
+                    <th>Kwota</th>
+                    <th>Płacił</th>
+                    <th>Kto</th>
+                  </tr>
+                  </thead>
+                  <tbody>
                   @for (expense of group.expenses; track expense.id) {
                     <tr>
                       <td>
@@ -97,12 +97,13 @@ interface GroupedExpenses {
                       </td>
                     </tr>
                   }
-                </tbody>
-              </table>
+                  </tbody>
+                </table>
+              </div>
             </div>
-          </div>
+          }
         }
-      }
+      </div>
     </div>
   `,
   styles: [`
@@ -112,8 +113,10 @@ interface GroupedExpenses {
 
     .container {
       padding: 24px;
-      max-height: 80vh;
+      height: 85vh;
       box-sizing: border-box;
+      display: flex;
+      flex-direction: column;
     }
 
     .header {
@@ -121,9 +124,12 @@ interface GroupedExpenses {
       align-items: baseline;
       margin-bottom: 24px;
       background: white;
-      position: sticky;
-      top: 0;
-      z-index: 3;
+      flex-shrink: 0;
+    }
+
+    .expenses-content {
+      overflow-y: auto;
+      flex-grow: 1;
     }
 
     h2 {
@@ -179,6 +185,10 @@ interface GroupedExpenses {
       position: sticky;
       top: 0;
       z-index: 2;
+      height: 48px;
+      box-sizing: border-box;
+      display: flex;
+      align-items: center;
     }
 
     .splits-container {

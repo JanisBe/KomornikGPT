@@ -127,7 +127,6 @@ interface GroupedExpenses {
     }
 
     .dialog-container {
-      padding: 24px;
       max-height: 80vh;
       box-sizing: border-box;
     }

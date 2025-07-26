@@ -20,4 +20,7 @@ public interface UserRepository extends JpaRepository<User, Long> {
 
     @Query("SELECT u FROM User u JOIN u.groups g WHERE g.id = :groupId")
     List<User> findAllByGroupId(@Param("groupId") Long groupId);
+
+    @Query("SELECT DISTINCT u FROM User u JOIN u.groups g JOIN g.users u2 WHERE u2.id = :userId")
+    List<User> findFriendsByUserId(@Param("userId") Long userId);
 }

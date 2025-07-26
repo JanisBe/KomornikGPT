@@ -19,8 +19,12 @@ export class GroupService {
     );
   }
 
-  getGroup(id: number): Observable<Group> {
-    return this.http.get<GroupResponse>(`${this.apiUrl}/${id}`).pipe(
+  getGroup(id: number, viewToken?: string | null): Observable<Group> {
+    let url = `${this.apiUrl}/${id}`;
+    if (!!viewToken) {
+      url += '?viewToken=' + viewToken;
+    }
+    return this.http.get<GroupResponse>(url).pipe(
       map(group => this.mapGroupResponse(group))
     );
   }

@@ -126,8 +126,9 @@ export class GroupDetailsComponent implements OnInit {
 
   ngOnInit(): void {
     const id = this.route.snapshot.paramMap.get('id');
+    const viewToken = this.route.snapshot.queryParamMap.get('token');
     if (!id) {
-      this.error = 'No group id provided.';
+      this.error = 'Nieprawidłowy identyfikator grupy';
       this.loading = false;
       return;
     }
@@ -137,16 +138,16 @@ export class GroupDetailsComponent implements OnInit {
         this.currentUser = user;
       }
     );
-    this.groupService.getGroup(+id).subscribe({
+    this.groupService.getGroup(+id, viewToken).subscribe({
       next: (group) => {
         this.group = group;
         this.loading = false;
         if (!group.isPublic && !this.isAuthenticated) {
-          this.error = 'This group is private. Please log in to see more details.';
+          this.error = 'Ta grupa jest prywatna. Zaloguj się, aby do niej wejść';
         }
       },
       error: () => {
-        this.error = 'Group not found or you do not have access.';
+        this.error = 'Nie znaleziono grupy lub nie masz dostępu do niej';
         this.loading = false;
       }
     });

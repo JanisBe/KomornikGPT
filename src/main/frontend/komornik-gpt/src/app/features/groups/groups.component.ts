@@ -61,8 +61,8 @@ import {CopyUrlButtonComponent} from '../expenses/copy-url-button';
             <mat-card class="group-card">
               <mat-card-header>
                 <mat-card-title>
-                  <copy-url-button/>
                   <a [routerLink]="'/groups/' + group.id" class="hand">
+                    <copy-url-button [url]="windowOrigin + '/groups/' + group.id+ '?token=' + group.viewToken"/>
                     {{ group.name }}
                     <span matTooltip="{{ group.isPublic ? 'Publiczna' : 'Prywatna' }}">
                       <mat-icon>{{ group.isPublic ? 'public' : 'lock' }}</mat-icon>
@@ -219,6 +219,7 @@ import {CopyUrlButtonComponent} from '../expenses/copy-url-button';
 export class GroupsComponent implements OnInit {
   groups: Group[] = [];
   currentUser: User | null = null;
+  windowOrigin: string = window.location.origin;
 
   constructor(
     private groupService: GroupService,

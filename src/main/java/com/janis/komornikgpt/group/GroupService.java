@@ -13,6 +13,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
@@ -42,6 +43,9 @@ public class GroupService {
         group.setDescription(request.description());
         group.setCreatedBy(creator);
         group.setPublic(request.isPublic());
+        if (request.isPublic()) {
+            group.setViewToken(UUID.randomUUID().toString().substring(0, 8));
+        }
         group.setDefaultCurrency(request.defaultCurrency());
         List<User> users = new ArrayList<>();
 

@@ -1,4 +1,4 @@
-import {Component} from '@angular/core';
+import {Component, Input} from '@angular/core';
 import {Clipboard, ClipboardModule} from '@angular/cdk/clipboard';
 import {MatSnackBar, MatSnackBarModule} from '@angular/material/snack-bar';
 import {MatIconModule} from '@angular/material/icon';
@@ -17,7 +17,7 @@ import {MatTooltipModule} from '@angular/material/tooltip';
     MatTooltipModule
   ],
   template: `
-    <button matTooltip="Skopiuj link do tej grupy" mat-icon-button (click)="copyUrl()" aria-label="Kopiuj link">
+    <button matTooltip="Skopiuj link do tego rozliczenia" mat-icon-button (click)="copyUrl()" aria-label="Kopiuj link">
       <mat-icon class="copy-icon">content_copy</mat-icon>
     </button>
   `,
@@ -40,10 +40,11 @@ export class CopyUrlButtonComponent {
   ) {
   }
 
+  @Input() url: string = '';
+
   copyUrl(): void {
-    const url = window.location.href;
-    this.clipboard.copy(url);
-    this.snackBar.open('Skopiowano URL do schowka!', 'Zamknij', {
+    this.clipboard.copy(this.url);
+    this.snackBar.open('Skopiowano URL rozliczenia do schowka!', 'Zamknij', {
       duration: 3000
     });
   }

@@ -26,6 +26,7 @@ import {HttpErrorResponse} from '@angular/common/http';
 import {MatSelectModule} from '@angular/material/select';
 import {Currency} from '../../../core/models/currency.model';
 import {Group} from '../../../core/models/group.model';
+import {AuthService} from '../../../core/services/auth.service';
 
 @Component({
   selector: 'app-group-form',
@@ -69,7 +70,7 @@ import {Group} from '../../../core/models/group.model';
       <div class="form-row">
         <div class="checkbox-column">
           <mat-checkbox formControlName="isPublic" class="mb-2">Grupa publiczna</mat-checkbox>
-          @if (shouldShowSendInvitationEmail) {
+          @if (shouldShowSendEmail) {
             <mat-checkbox formControlName="sendInvitationEmail" class="mb-2">Wyślij e-mail z zaproszeniem do nowych
               członków
             </mat-checkbox>
@@ -100,7 +101,8 @@ import {Group} from '../../../core/models/group.model';
                 <input matInput
                        formControlName="userName"
                        [matAutocomplete]="auto"
-                       (input)="onUserNameInput($index)">
+                       (input)="onUserNameInput($index)"
+                       (blur)="onUserNameBlur($index)">
                 @if (member.get('userName')?.errors?.['required']) {
                   <mat-error>Nazwa uzytkownika jest wymagana</mat-error>
                 }
@@ -114,16 +116,18 @@ import {Group} from '../../../core/models/group.model';
                 </mat-autocomplete>
               </mat-form-field>
 
-              <mat-form-field appearance="outline">
-                <mat-label>Email</mat-label>
-                <input matInput formControlName="email" type="email" required>
-                @if (member.get('email')?.errors?.['required']) {
-                  <mat-error>Email jest wymagany</mat-error>
-                }
-                @if (member.get('email')?.errors?.['email']) {
-                  <mat-error>Dodaj poprawny adres email</mat-error>
-                }
-              </mat-form-field>
+              @if (!member.get('userId')?.value || member.get('userId')?.value?.toString().startsWith('temp_')) {
+                <mat-form-field appearance="outline">
+                  <mat-label>Email</mat-label>
+                  <input matInput formControlName="email" type="email" required>
+                  @if (member.get('email')?.errors?.['required']) {
+                    <mat-error>Email jest wymagany</mat-error>
+                  }
+                  @if (member.get('email')?.errors?.['email']) {
+                    <mat-error>Dodaj poprawny adres email</mat-error>
+                  }
+                </mat-form-field>
+              }
             </div>
 
             <button mat-icon-button color="warn" type="button"
@@ -313,6 +317,10 @@ import {Group} from '../../../core/models/group.model';
     ::ng-deep .mat-expansion-panel-header-description {
       white-space: normal;
     }
+
+    ::ng-deep .mat-mdc-form-field-subscript-wrapper {
+      min-height: 1px;
+    }
   `]
 })
 export class GroupFormComponent implements OnInit {
@@ -325,11 +333,12 @@ export class GroupFormComponent implements OnInit {
   pendingUsers: PendingUser[] = [];
   filteredUsers: Observable<User[]>[] = [];
   currencies = Object.values(Currency);
+  shouldShowSendEmail = false;
   private tempIdCounter = 0;
-
   constructor(
     private fb: FormBuilder,
-    private userService: UserService
+    private userService: UserService,
+    private authService: AuthService
   ) {
     this.groupForm = this.fb.group({
       name: ['', [Validators.required, Validators.minLength(2)]],
@@ -346,6 +355,32 @@ export class GroupFormComponent implements OnInit {
       username: ['', [Validators.required], this.usernameExistsAsyncValidator()],
       email: ['', [Validators.required, Validators.email], this.emailExistsAsyncValidator()]
     }, {updateOn: "blur"});
+  }
+
+  ngOnInit(): void {
+    this.authService.getCurrentUser().subscribe((user: User) => {
+      this.userService.findUsersFriends(user.id!).subscribe({
+        next: (users: User[]) => {
+          this.availableUsers = users;
+          if (this.group) {
+            this.group.members.forEach(member => {
+              this.addMember(member);
+            });
+            this.groupForm.patchValue({
+              name: this.group.name,
+              description: this.group.description,
+              isPublic: this.group.isPublic ?? false,
+              currency: this.group.defaultCurrency || Currency.PLN
+            });
+          } else {
+            this.addMember();
+          }
+        },
+        error: (error: unknown) => {
+          console.error(error);
+        }
+      });
+    });
   }
 
   usernameExistsAsyncValidator(): AsyncValidatorFn {
@@ -381,30 +416,6 @@ export class GroupFormComponent implements OnInit {
     });
   }
 
-  ngOnInit(): void {
-    this.userService.getUsers().subscribe({
-      next: (users: User[]) => {
-        this.availableUsers = users;
-        if (this.group) {
-          this.group.members.forEach(member => {
-            this.addMember(member);
-          });
-          this.groupForm.patchValue({
-            name: this.group.name,
-            description: this.group.description,
-            isPublic: this.group.isPublic ?? false,
-            currency: this.group.defaultCurrency || Currency.PLN
-          });
-        } else {
-          this.addMember();
-        }
-      },
-      error: (error: unknown) => {
-        console.error(error);
-      }
-    });
-  }
-
   createMemberFormGroup(member?: User): FormGroup {
     return this.fb.group({
       userName: [member?.name || '', Validators.required],
@@ -416,7 +427,6 @@ export class GroupFormComponent implements OnInit {
   addMember(member?: User): void {
     const memberGroup = this.createMemberFormGroup(member);
     this.members.push(memberGroup);
-
     const index = this.members.length - 1;
     this.setupAutoComplete(index);
   }
@@ -438,6 +448,15 @@ export class GroupFormComponent implements OnInit {
         startWith(userName),
         map(value => this._filter(value || ''))
       );
+    }
+  }
+
+  onUserNameBlur(index: number): void {
+    const memberGroup = this.members.at(index);
+    const userNameControl = memberGroup.get('userName');
+    if (!!userNameControl?.value) {
+      console.log(userNameControl.value)
+      this.shouldShowSendEmail = true
     }
   }
 
@@ -475,7 +494,6 @@ export class GroupFormComponent implements OnInit {
       });
       this.members.push(memberGroup);
       this.setupAutoComplete(this.members.length - 1);
-
       this.newUserForm.reset();
     }
   }

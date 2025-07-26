@@ -55,7 +55,8 @@ public class Group {
 
     @Column(name = "is_public")
     private boolean isPublic = false;
-
+    @Column(name = "view_token")
+    private String viewToken;
     @PrePersist
     protected void onCreate() {
         createdAt = LocalDateTime.now();

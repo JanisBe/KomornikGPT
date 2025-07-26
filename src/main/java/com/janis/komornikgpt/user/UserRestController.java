@@ -99,4 +99,12 @@ public class UserRestController {
     public ResponseEntity<Boolean> checkEmailExists(@RequestParam String email) {
         return ResponseEntity.ok(userService.checkEmailExists(email));
     }
+
+    @GetMapping("/{userId}/friends")
+    public ResponseEntity<List<UserDto>> getUserFriends(@PathVariable Long userId) {
+        List<UserDto> friends = userService.findFriendsByUserId(userId).stream()
+                .map(UserDto::fromUser)
+                .collect(Collectors.toList());
+        return ResponseEntity.ok(friends);
+    }
 }

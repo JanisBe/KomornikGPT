@@ -31,9 +31,9 @@ public class GroupRestController {
     }
 
     @GetMapping("/{id}")
-    public GroupDto getGroupById(@PathVariable Long id, Principal principal) {
+    public GroupDto getGroupById(@PathVariable Long id, @RequestParam(required = false) String viewToken, Principal principal) {
         Group group = groupService.findById(id);
-        if (group.isPublic()) {
+        if (group.isPublic() && viewToken.equals(group.getViewToken())) {
             return GroupDto.fromGroup(group);
         }
         Long userId = extractUserId(principal);

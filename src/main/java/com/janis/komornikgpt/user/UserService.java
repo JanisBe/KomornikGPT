@@ -181,4 +181,8 @@ public class UserService implements UserDetailsService {
     public boolean checkEmailExists(String email) {
         return userRepository.existsByEmail(email);
     }
+
+    public List<User> findFriendsByUserId(Long userId) {
+        return userRepository.findFriendsByUserId(userId);
+    }
 }

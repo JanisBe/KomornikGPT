@@ -13,6 +13,7 @@ export interface Group {
   createdBy?: User;
   isPublic?: boolean;
   defaultCurrency?: Currency;
+  viewToken?: string;
 }
 
 export interface GroupExpenses {

@@ -3,15 +3,16 @@ TRUNCATE TABLE expense_splits, expenses, group_users, groups, users RESTART IDEN
 INSERT INTO users (username, email, password, name, surname, role, enabled, requires_password_setup)
 VALUES ('a', 'a@a.pl', '$2a$10$N9qo8uLOickgx2ZMRZoMyea7wdtWgtb7pfXoReLE2qQR2N4VuAbtO', 'John', 'Doe', 'USER', true,
         false),
-       ('jane_smith', 'q@q.pl', '$2a$10$N9qo8uLOickgx2ZMRZoMyea7wdtWgtb7pfXoReLE2qQR2N4VuAbtO', 'Jane', 'Smith', 'USER',
+       ('jane_smith', 'janis666@gmail.com', '$2a$10$N9qo8uLOickgx2ZMRZoMyea7wdtWgtb7pfXoReLE2qQR2N4VuAbtO', 'Jane',
+        'Smith', 'USER',
         true, false),
        ('admin', 'admin@example.com', '$2a$10$N9qo8uLOickgx2ZMRZoMyea7wdtWgtb7pfXoReLE2qQR2N4VuAbtO', 'Admin', 'User',
         'ADMIN', true, false);
 
 -- Insert sample group
-INSERT INTO groups (name, description, created_at, created_by_id, is_public, default_currency)
-VALUES ('Family Trip', 'Expenses from our summer vacation', NOW(), 1, false, 'PLN'),
-       ('Public group', 'Test public group', NOW(), 1, true, 'EUR');
+INSERT INTO groups (name, description, created_at, created_by_id, is_public, default_currency, view_token)
+VALUES ('Family Trip', 'Expenses from our summer vacation', NOW(), 1, false, 'PLN', null),
+       ('Public group', 'Test public group', NOW(), 1, true, 'EUR', 'test-token2');
 
 -- Insert group members
 INSERT INTO group_users (group_id, user_id)

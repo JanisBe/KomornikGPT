@@ -50,7 +50,7 @@ interface GroupedExpenses {
                 {{ group.date | date:'shortDate':'':'pl' }}
               </div>
               <div class="table-wrapper">
-                <table>
+                <table class="expenses-table">
                   <thead>
                   <tr>
                     <th>Opis</th>
@@ -62,8 +62,8 @@ interface GroupedExpenses {
                   </thead>
                   <tbody>
                   @for (expense of group.expenses; track expense.id) {
-                    <tr>
-                      <td>
+                    <tr class="expense-row">
+                      <td data-label="Opis">
                         <span [matTooltip]="expense.date | date:'medium':'':'pl'" matTooltipPosition="above">
                           {{ expense.description | slice:0:30 }}
                         </span>
@@ -73,7 +73,7 @@ interface GroupedExpenses {
                           <mat-icon matTooltip="Nieuregulowane" color="warn" class="paid-icon">cancel</mat-icon>
                         }
                       </td>
-                      <td>
+                      <td data-label="Kategoria">
                         <div class="category-cell">
                           <mat-icon
                             [matTooltip]="(expense.category?.mainCategory || 'Bez Kategorii') + ' - ' + (expense.category?.subCategory || 'Ogólne')">
@@ -82,15 +82,17 @@ interface GroupedExpenses {
                           <span class="category-name">{{ expense.category?.subCategory || 'Ogólne' }}</span>
                         </div>
                       </td>
-                      <td>{{ expense.amount | number:'1.2-2' }} {{ expense.currency }}</td>
-                      <td><span matTooltip="{{expense.payer.email}}">{{ expense.payer.name }}</span></td>
-                      <td>
+                      <td data-label="Kwota">{{ expense.amount | number:'1.2-2' }} {{ expense.currency }}</td>
+                      <td data-label="Płacił"><span matTooltip="{{expense.payer.email}}">{{ expense.payer.name }}</span>
+                      </td>
+                      <td data-label="Kto">
                         <div class="splits-container">
                           @for (split of expense.splits; track split.id) {
-                            <div class="split-item" [class.paid]="split.isPaid">
+                            <div class="split-item" [class.paid]="split.isPaid"
+                                 [class.owner]="split.user.id === expense.payer.id">
                               <span
                                 matTooltip="{{split.user.email}}">{{ split.user.name }}</span>:
-                              {{ split.amountOwed | number:'1.2-2' }}
+                              <span>{{ split.amountOwed | number:'1.2-2' }}</span>
                             </div>
                           }
                         </div>
@@ -144,19 +146,19 @@ interface GroupedExpenses {
       padding: 0;
     }
 
-    table {
+    .expenses-table {
       width: 100%;
       border-collapse: collapse;
       margin-bottom: 24px;
     }
 
-    thead {
+    .expenses-table thead {
       position: sticky;
       top: 48px; /* Height of date header */
       z-index: 2;
     }
 
-    th {
+    .expenses-table th {
       background: white;
       padding: 12px;
       text-align: left;
@@ -166,7 +168,7 @@ interface GroupedExpenses {
       white-space: nowrap;
     }
 
-    td {
+    .expenses-table td {
       padding: 12px;
       border-bottom: 1px solid rgba(0, 0, 0, 0.12);
       color: rgba(0, 0, 0, 0.87);
@@ -209,6 +211,10 @@ interface GroupedExpenses {
       color: #4caf50;
     }
 
+    .split-item.owner {
+      font-weight: bold;
+    }
+
     .paid-icon {
       font-size: 16px;
       height: 16px;
@@ -233,8 +239,76 @@ interface GroupedExpenses {
       font-size: 0.9em;
     }
 
-    tr:hover {
+    .expenses-table tr:hover {
       background: rgba(0, 0, 0, 0.04);
+    }
+
+    @media (max-width: 768px) {
+      .expenses-table, .expenses-table thead, .expenses-table tbody, .expenses-table th, .expenses-table td, .expenses-table tr {
+        display: block;
+      }
+
+      .expenses-table thead {
+        display: none;
+      }
+
+      .expenses-table tr {
+        margin-bottom: 15px;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+      }
+
+      .expenses-table td {
+        border: none;
+        border-bottom: 1px solid #eee;
+        position: relative;
+        padding-left: 120px; /* Adjusted padding to accommodate label */
+        text-align: right;
+      }
+
+      .expenses-table td:last-child {
+        border-bottom: 0;
+      }
+
+      .expenses-table td:before {
+        position: absolute;
+        left: 6px;
+        width: 110px; /* Fixed width for the label */
+        content: attr(data-label);
+        font-weight: bold;
+        text-align: left;
+        white-space: nowrap;
+      }
+
+      .category-cell {
+        justify-content: flex-end;
+      }
+
+      .category-cell mat-icon {
+        margin-right: 8px;
+      }
+
+      .splits-container {
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+        gap: 8px;
+        overflow-x: auto;
+        white-space: nowrap;
+        width: 100%;
+        padding-bottom: 5px;
+      }
+
+      .split-item {
+        white-space: nowrap;
+        flex-shrink: 0;
+      }
+
+      /* Specific style for the td containing splits */
+      td[data-label="Kto"] {
+        text-align: left;
+        /* No flex properties here, .splits-container handles it */
+      }
     }
   `]
 })

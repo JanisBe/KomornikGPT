@@ -166,11 +166,7 @@ export class GroupDetailsComponent implements OnInit {
   }
 
   viewExpenses(group: Group): void {
-    this.dialog.open(ViewExpensesDialogComponent, {
-      width: '80%',
-      height: '80%',
-      data: {group}
-    });
+    this.router.navigate(['/groups', group.id, 'expenses']);
   }
 
   settleExpenses(group: Group): void {

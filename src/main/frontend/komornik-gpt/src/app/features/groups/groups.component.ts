@@ -4,7 +4,7 @@ import {MatCardModule} from '@angular/material/card';
 import {MatIconModule} from '@angular/material/icon';
 import {MatButtonModule} from '@angular/material/button';
 import {MatDialog, MatDialogModule} from '@angular/material/dialog';
-import {RouterModule} from '@angular/router';
+import {RouterModule, Router} from '@angular/router';
 import {Group} from '../../core/models/group.model';
 import {MatTooltipModule} from '@angular/material/tooltip';
 import {GroupService} from '../../core/services/group.service';
@@ -226,7 +226,8 @@ export class GroupsComponent implements OnInit {
     private dialog: MatDialog,
     private authService: AuthService,
     private snackBar: MatSnackBar,
-    private expenseService: ExpenseService
+    private expenseService: ExpenseService,
+    private router: Router
   ) {
   }
 
@@ -372,11 +373,7 @@ export class GroupsComponent implements OnInit {
   }
 
   viewExpenses(group: Group): void {
-    this.dialog.open(ViewExpensesDialogComponent, {
-      width: '80%',
-      height: '80%',
-      data: {group}
-    });
+    this.router.navigate(['/groups', group.id, 'expenses']);
   }
 
   settleExpenses(group: Group): void {

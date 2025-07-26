@@ -36,12 +36,14 @@ public class GroupRestController {
         if (group.isPublic() && viewToken != null && !viewToken.equals(group.getViewToken())) {
             return GroupDto.fromGroup(group);
         }
-        Long userId = extractUserId(principal);
-        if (group.getUsers().stream().filter(user -> user.getId().equals(userId)).findAny().isEmpty()) {
-            throw new GroupNotFoundException("Nie należysz do tej grupy: " + id);
-        } else {
-            return GroupDto.fromGroup(group);
+        if (principal != null) {
+            Long userId = extractUserId(principal);
+            if (group.getUsers().stream().anyMatch(user -> user.getId().equals(userId))) {
+                return GroupDto.fromGroup(group);
+            }
         }
+
+        throw new GroupNotFoundException("Nie znaleziono grupy lub nie masz dostępu do niej: " + id);
     }
 
     @PostMapping

@@ -220,7 +220,7 @@ import {Group} from '../../../core/models/group.model';
   `,
   styles: [`
     .group-form-content {
-      padding: 24px;
+      padding-top: 24px;
     }
 
     .form-field {
@@ -260,6 +260,7 @@ import {Group} from '../../../core/models/group.model';
 
     .member-row {
       display: flex;
+      flex-wrap: wrap;
       align-items: center;
       gap: 16px;
       margin-bottom: 16px;
@@ -267,6 +268,7 @@ import {Group} from '../../../core/models/group.model';
 
     .form-row {
       display: flex;
+      flex-wrap: wrap;
       align-items: flex-start;
       gap: 16px;
       margin-bottom: 16px;
@@ -284,6 +286,13 @@ import {Group} from '../../../core/models/group.model';
       flex: 1;
     }
 
+    @media (max-width: 768px) {
+      .member-inputs {
+        flex-direction: column;
+        gap: 0;
+      }
+    }
+
     .member-inputs mat-form-field {
       flex: 1;
     }
@@ -295,6 +304,14 @@ import {Group} from '../../../core/models/group.model';
     h3 {
       margin: 0 0 16px 0;
       font-weight: 500;
+    }
+
+    mat-expansion-panel-header {
+      height: auto;
+    }
+
+    ::ng-deep .mat-expansion-panel-header-description {
+      white-space: normal;
     }
   `]
 })

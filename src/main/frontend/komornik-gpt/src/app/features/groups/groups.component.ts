@@ -260,7 +260,8 @@ export class GroupsComponent implements OnInit {
 
   createGroup(): void {
     const dialogRef = this.dialog.open(CreateGroupDialogComponent, {
-      width: '70%'
+      width: '95%',
+      maxWidth: '90vw'
     });
 
     dialogRef.afterClosed().subscribe(result => {

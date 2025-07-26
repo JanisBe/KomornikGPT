@@ -124,7 +124,8 @@ public class UserService implements UserDetailsService {
         }
 
         if (userRepository.existsByEmail(request.email())) {
-            throw new ResourceAlreadyExistsException("Email is already taken");
+            return userRepository.findByEmail(request.email())
+                    .orElseThrow(() -> new RuntimeException("User not found"));
         }
 
         User user = new User();

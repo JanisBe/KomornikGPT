@@ -70,11 +70,9 @@ import {AuthService} from '../../../core/services/auth.service';
       <div class="form-row">
         <div class="checkbox-column">
           <mat-checkbox formControlName="isPublic" class="mb-2">Grupa publiczna</mat-checkbox>
-          @if (shouldShowSendEmail) {
-            <mat-checkbox formControlName="sendInvitationEmail" class="mb-2">Wyślij e-mail z zaproszeniem do nowych
-              członków
+            <mat-checkbox formControlName="sendInvitationEmail" class="mb-2">
+              Wyślij e-mail z zaproszeniem do nowych członków
             </mat-checkbox>
-          }
         </div>
         <div class="form-field currency-field">
           <mat-form-field appearance="outline">
@@ -97,14 +95,13 @@ import {AuthService} from '../../../core/services/auth.service';
           <div [formGroupName]="$index" class="member-row">
             <div class="member-inputs">
               <mat-form-field appearance="outline">
-                <mat-label>Nazwa użytkownika</mat-label>
+                <mat-label>Nazwa użytkownika</mat-label>
                 <input matInput
                        formControlName="userName"
                        [matAutocomplete]="auto"
-                       (input)="onUserNameInput($index)"
-                       (blur)="onUserNameBlur($index)">
+                       (input)="onUserNameInput($index)">
                 @if (member.get('userName')?.errors?.['required']) {
-                  <mat-error>Nazwa uzytkownika jest wymagana</mat-error>
+                  <mat-error>Nazwa użytkownika jest wymagana</mat-error>
                 }
                 <mat-autocomplete #auto="matAutocomplete"
                                   (optionSelected)="onUserSelected($event, $index)">
@@ -333,8 +330,8 @@ export class GroupFormComponent implements OnInit {
   pendingUsers: PendingUser[] = [];
   filteredUsers: Observable<User[]>[] = [];
   currencies = Object.values(Currency);
-  shouldShowSendEmail = false;
   private tempIdCounter = 0;
+
   constructor(
     private fb: FormBuilder,
     private userService: UserService,
@@ -346,7 +343,7 @@ export class GroupFormComponent implements OnInit {
       members: this.fb.array([]),
       isPublic: [false],
       currency: [Currency.PLN, Validators.required],
-      sendInvitationEmail: [false]
+      sendInvitationEmail: [true]
     });
 
     this.newUserForm = this.fb.group({
@@ -409,13 +406,6 @@ export class GroupFormComponent implements OnInit {
     return this.groupForm.get('members') as FormArray;
   }
 
-  get shouldShowSendInvitationEmail(): boolean {
-    return this.members.controls.some(memberControl => {
-      const userId = memberControl.get('userId')?.value;
-      return userId === undefined || userId === null || String(userId).startsWith('temp_');
-    });
-  }
-
   createMemberFormGroup(member?: User): FormGroup {
     return this.fb.group({
       userName: [member?.name || '', Validators.required],
@@ -451,19 +441,10 @@ export class GroupFormComponent implements OnInit {
     }
   }
 
-  onUserNameBlur(index: number): void {
-    const memberGroup = this.members.at(index);
-    const userNameControl = memberGroup.get('userName');
-    if (!!userNameControl?.value) {
-      console.log(userNameControl.value)
-      this.shouldShowSendEmail = true
-    }
-  }
-
   onUserSelected(event: MatAutocompleteSelectedEvent, index: number): void {
     const selectedUserName = event.option.value;
     const selectedUser = this.availableUsers.find(user => user.name === selectedUserName);
-
+    console.log(selectedUser);
     if (selectedUser) {
       const memberGroup = this.members.at(index);
       memberGroup.patchValue({

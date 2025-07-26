@@ -40,10 +40,15 @@ export class CopyUrlButtonComponent {
   ) {
   }
 
-  @Input() url: string = '';
+  @Input() groupId!: number;
+  @Input() viewToken?: string = '';
 
   copyUrl(): void {
-    this.clipboard.copy(this.url);
+    let url = window.location.origin + '/groups/' + this.groupId;
+    if (!!this.viewToken) {
+      url += '?token=' + this.viewToken;
+    }
+    this.clipboard.copy(url);
     this.snackBar.open('Skopiowano URL rozliczenia do schowka!', 'Zamknij', {
       duration: 3000
     });

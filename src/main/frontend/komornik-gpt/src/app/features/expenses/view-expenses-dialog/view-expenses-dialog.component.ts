@@ -12,6 +12,7 @@ import {AddExpenseDialogComponent} from '../add-expense-dialog/add-expense-dialo
 import {ConfirmDeleteDialogComponent} from './confirm-delete-dialog.component';
 import {SettleExpensesDialogComponent} from '../settle-expenses-dialog';
 import {DEFAULT_CATEGORY, enumValueToCategory} from '../../../core/models/expense-category.model';
+import {CopyUrlButtonComponent} from '../copy-url-button';
 
 interface GroupedExpenses {
   date: Date;
@@ -27,11 +28,13 @@ interface GroupedExpenses {
     MatButtonModule,
     MatIconModule,
     MatTooltipModule,
-    MatSnackBarModule
+    MatSnackBarModule,
+    CopyUrlButtonComponent
   ],
   template: `
     <div class="dialog-container">
       <div class="dialog-header">
+        <copy-url-button [groupId]="data.group.id" [viewToken]="data.group.viewToken"></copy-url-button>
         <h2 mat-dialog-title>Wydatki dla {{ data.group.name }}</h2>
         <div class="row" (click)="settleExpenses(data.group)"> Rozlicz wydatki
           <button mat-icon-button color="primary"

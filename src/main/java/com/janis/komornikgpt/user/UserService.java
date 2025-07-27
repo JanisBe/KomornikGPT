@@ -1,6 +1,9 @@
 package com.janis.komornikgpt.user;
 
-import com.janis.komornikgpt.exception.*;
+import com.janis.komornikgpt.exception.TokenAlreadyExistsException;
+import com.janis.komornikgpt.exception.UserAlreadyExistsException;
+import com.janis.komornikgpt.exception.UserNotFoundException;
+import com.janis.komornikgpt.exception.UsernameAlreadyExistsException;
 import com.janis.komornikgpt.mail.EmailService;
 import com.janis.komornikgpt.mail.VerificationToken;
 import com.janis.komornikgpt.mail.VerificationTokenRepository;
@@ -119,20 +122,23 @@ public class UserService implements UserDetailsService {
 
     @Transactional
     public UserCreationResult createUserWithoutPassword(CreateUserWithoutPasswordRequest request) {
-        if (userRepository.existsByUsername(request.username())) {
-            throw new ResourceAlreadyExistsException("Username is already taken");
-        }
-
         if (userRepository.existsByEmail(request.email())) {
             User existingUser = userRepository.findByEmail(request.email())
-                    .orElseThrow(() -> new RuntimeException("User not found"));
+                    .orElseThrow(() -> new RuntimeException("User not found")); // Should not happen if existsByEmail is true
             return new UserCreationResult(existingUser, false, null);
+        }
+
+        String uniqueUsername = request.username();
+        int suffix = 1;
+        while (userRepository.existsByUsername(uniqueUsername)) {
+            uniqueUsername = request.username() + suffix;
+            suffix++;
         }
 
         User user = new User();
         user.setName(request.name());
         user.setSurname(request.surname());
-        user.setUsername(request.username());
+        user.setUsername(uniqueUsername); // Use the unique username
         user.setEmail(request.email());
         user.setRole(Role.USER);
         user.setRequiresPasswordSetup(true);

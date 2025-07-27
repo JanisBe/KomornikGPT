@@ -86,13 +86,9 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 || path.startsWith("/images/")
                 || path.startsWith("/login")
                 || path.startsWith("/register")
-                || path.startsWith("/api/pwd/")
-                || path.startsWith("/api/auth/login")
-                || path.startsWith("/api/users/create")
-                || path.startsWith("/api/users/check")
+                || path.startsWith("/api/pwd/set-password")
                 || path.startsWith("/.well-known/")
-                || path.startsWith("/auth/callback")
-                || path.startsWith("/api/webauthn/")
+
                 || path.matches(".*\\.(png|gif|svg|jpg|html|css|js)$");
     }
 }

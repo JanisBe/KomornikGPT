@@ -60,7 +60,9 @@
         <h1>Witaj w Komorniku!</h1>
     </div>
     <div class="content">
-        <p>Dziękujemy za rejestrację. Proszę, kliknij poniższy przycisk, aby aktywować swoje konto:</p>
+        <p>Dziękujemy za rejestrację.</p>
+        <p> Twoja nazwa użytkownika to: <strong th:text="${username}"></strong></p>
+        <p>Proszę, kliknij poniższy przycisk, aby aktywować swoje konto:</p>
         <p style="text-align: center;">
             <a class="button" th:href="${verificationUrl}">Aktywuj konto</a>
         </p>

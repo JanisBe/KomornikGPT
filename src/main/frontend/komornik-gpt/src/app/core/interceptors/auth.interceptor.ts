@@ -11,12 +11,10 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
   const router = inject(Router);
   const authService = inject(AuthService);
 
-  // Always include credentials for cookie-based auth
   req = req.clone({
     withCredentials: true
   });
 
-  // Skip auth check for public paths
   if (PUBLIC_PATHS.some(path => req.url.includes(path))) {
     return next(req);
   }

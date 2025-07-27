@@ -29,7 +29,7 @@ public class EmailService {
     }
 
     @Async
-    public void sendVerificationEmail(String email, String token) {
+    public void sendVerificationEmail(String email, String token, String username) {
         try {
             MimeMessage message = mailSender.createMimeMessage();
             MimeMessageHelper helper = new MimeMessageHelper(message, true);
@@ -37,6 +37,7 @@ public class EmailService {
 
             Context context = new Context();
             context.setVariable("verificationUrl", verificationUrl);
+            context.setVariable("username", username);
 
             String htmlContent = templateEngine.process("verification-email", context);
 
@@ -123,7 +124,7 @@ public class EmailService {
             MimeMessage message = mailSender.createMimeMessage();
             MimeMessageHelper helper = new MimeMessageHelper(message, true);
 
-            String setPasswordUrl = String.format("%s/set-password-with-token?token=%s", frontendUrl, token);
+            String setPasswordUrl = String.format("%s/set-password?token=%s", frontendUrl, token);
 
             Context context = new Context();
             context.setVariable("groupName", groupName);

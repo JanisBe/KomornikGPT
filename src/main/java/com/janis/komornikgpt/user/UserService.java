@@ -58,7 +58,7 @@ public class UserService implements UserDetailsService {
         VerificationToken vt = new VerificationToken(token, user, LocalDateTime.now().plusHours(24));
         verificationTokenRepository.save(vt);
 
-        emailService.sendVerificationEmail(user.getEmail(), token);
+        emailService.sendVerificationEmail(user.getEmail(), token, request.getUsername());
 
         return userRepository.save(user);
     }

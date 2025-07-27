@@ -23,4 +23,8 @@ export class PasswordService {
   setPassword(newPassword: string): Observable<void> {
     return this.http.post<void>(`${this.apiUrl}/set-password`, {password: newPassword});
   }
+
+  setPasswordWithToken(newPassword: string, token: string): Observable<void> {
+    return this.http.post<void>(`${this.apiUrl}/set-password-with-token?token=${token}`, {password: newPassword});
+  }
 }

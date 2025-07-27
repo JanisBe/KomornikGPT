@@ -1,4 +1,4 @@
-import {Component, inject} from '@angular/core';
+import {Component, inject, OnInit} from '@angular/core';
 
 import {
   AbstractControl,
@@ -8,7 +8,7 @@ import {
   ValidationErrors,
   Validators
 } from '@angular/forms';
-import {Router, RouterLink} from '@angular/router';
+import {ActivatedRoute, Router, RouterLink} from '@angular/router';
 import {MatInputModule} from '@angular/material/input';
 import {MatButtonModule} from '@angular/material/button';
 import {MatSnackBar} from '@angular/material/snack-bar';
@@ -71,7 +71,7 @@ import {PasswordService} from '../../core/services/password.service';
     }
   `]
 })
-export class SetPasswordComponent {
+export class SetPasswordComponent implements OnInit {
   error: string | undefined;
   hide = true;
   hideConfirm = true;
@@ -83,13 +83,27 @@ export class SetPasswordComponent {
   private passwordService = inject(PasswordService);
   private router = inject(Router);
   private snackBar = inject(MatSnackBar);
+  private route = inject(ActivatedRoute);
+  private token: string | null = null;
+
+  ngOnInit(): void {
+    this.token = this.route.snapshot.queryParamMap.get('token');
+    if (!this.token) {
+      this.router.navigate(['/login']);
+    }
+  }
 
   onSubmit(): void {
-    if (this.form.invalid) return;
+    if (this.form.invalid || !this.token) return;
     const {newPassword} = this.form.value;
-
+    let changePassword$;
     if (newPassword != null) {
-      this.passwordService.setPassword(newPassword).subscribe({
+      if (!this.token) {
+        changePassword$ = this.passwordService.setPassword(newPassword);
+      } else {
+        changePassword$ = this.passwordService.setPasswordWithToken(newPassword, this.token);
+      }
+      changePassword$.subscribe({
         next: () => {
           this.snackBar.open('Hasło zostało zaktualizowane.', 'OK', {
             duration: 3000,
@@ -98,7 +112,13 @@ export class SetPasswordComponent {
           });
           this.router.navigate(['/groups'])
         },
-        error: () => this.error = 'Nie udało się ustawić hasła.'
+        error: (error) => {
+          if (error.status === 404) {
+            this.error = 'Token jest nieprawidłowy.'
+          } else {
+            this.error = 'Nie udało się ustawić hasła.'
+          }
+        }
       });
     }
   }

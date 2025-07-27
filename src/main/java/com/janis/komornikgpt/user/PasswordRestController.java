@@ -1,6 +1,7 @@
 package com.janis.komornikgpt.user;
 
 import com.janis.komornikgpt.auth.JwtTokenProvider;
+import com.janis.komornikgpt.exception.TokenMissingException;
 import com.janis.komornikgpt.mail.ForgotPasswordRequest;
 import com.janis.komornikgpt.mail.SetPasswordRequest;
 import com.janis.komornikgpt.mail.VerificationToken;
@@ -10,6 +11,7 @@ import org.springframework.core.env.Environment;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
@@ -29,8 +31,10 @@ public class PasswordRestController {
 
     @GetMapping("/confirm-email")
     public ResponseEntity<Void> confirm(@RequestParam String token) {
-        VerificationToken vt = tokenRepo.findByToken(token)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Token not found"));
+        VerificationToken vt = tokenRepo.findByToken(token).orElse(null);
+        if (vt == null) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
+        }
 
         if (vt.getExpiryDate().isBefore(LocalDateTime.now())) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
@@ -48,6 +52,7 @@ public class PasswordRestController {
 
     @PostMapping("/set-password")
     public ResponseEntity<Void> setPassword(@RequestBody SetPasswordRequest request, Authentication authentication) {
+        Authentication authentication1 = SecurityContextHolder.getContext().getAuthentication();
         if (authentication == null) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
@@ -97,7 +102,7 @@ public class PasswordRestController {
         VerificationToken vt = getVerificationToken(token);
 
         if (vt.getExpiryDate().isBefore(LocalDateTime.now())) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Token expired");
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Token expired");
         }
 
         User user = vt.getUser();
@@ -111,7 +116,7 @@ public class PasswordRestController {
 
     private VerificationToken getVerificationToken(String token) {
         return tokenRepo.findByToken(token)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Token not found"));
+                .orElseThrow(() -> new TokenMissingException("Token not found"));
     }
 
 }

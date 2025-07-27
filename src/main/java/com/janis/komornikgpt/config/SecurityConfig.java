@@ -52,7 +52,8 @@ public class SecurityConfig {
     public static final String[] ALLOWED_POST_URLS = {
             "/reset-password",
             "/api/auth/**",
-            "/api/users/**"};
+            "/api/users/**",
+            "/api/pwd/**",};
     private final OAuth2AuthenticationSuccessHandler oAuth2AuthenticationSuccessHandler;
     private final OAuth2AuthenticationFailureHandler oAuth2AuthenticationFailureHandler;
     private final JwtAuthenticationFilter jwtAuthFilter;
@@ -80,7 +81,7 @@ public class SecurityConfig {
                         headers
                                 .xssProtection(xss -> xss.headerValue(XXssProtectionHeaderWriter.HeaderValue.ENABLED_MODE_BLOCK))
                                 .contentSecurityPolicy(cps -> cps.policyDirectives(
-                                        "default-src 'none'; img-src * 'self' data: https:; font-src 'self' https:; connect-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline' http: https:; object-src 'none';  manifest-src 'self'")))
+                                        "default-src 'none'; img-src * 'self' data: https:; font-src 'self' https:; connect-src 'self' https://fonts.gstatic.com; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline' http: https:; object-src 'none';  manifest-src 'self'")))
                 .logout(logout -> logout
                         .logoutSuccessUrl(url)
                         .invalidateHttpSession(true)

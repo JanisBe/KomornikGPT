@@ -52,7 +52,8 @@ public class UserRestController {
     @PostMapping("/create-without-password")
     public ResponseEntity<UserDto> createUserWithoutPassword(
             @Valid @RequestBody CreateUserWithoutPasswordRequest request) {
-        User user = userService.createUserWithoutPassword(request);
+        UserCreationResult userResult = userService.createUserWithoutPassword(request);
+        User user = userResult.user();
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(UserDto.fromUser(user));
     }

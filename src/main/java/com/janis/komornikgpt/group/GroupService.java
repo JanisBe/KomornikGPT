@@ -2,10 +2,7 @@ package com.janis.komornikgpt.group;
 
 import com.janis.komornikgpt.exception.GroupNotFoundException;
 import com.janis.komornikgpt.mail.EmailService;
-import com.janis.komornikgpt.user.CreateUserWithoutPasswordRequest;
-import com.janis.komornikgpt.user.User;
-import com.janis.komornikgpt.user.UserRepository;
-import com.janis.komornikgpt.user.UserService;
+import com.janis.komornikgpt.user.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
@@ -63,9 +60,12 @@ public class GroupService {
                         "", // Empty surname for now
                         memberRequest.userName(), // Using userName as username
                         memberRequest.email());
-                user = userService.createUserWithoutPassword(createUserRequest);
-                if (request.sendInvitationEmail()) {
-                    emailService.sendGroupInvitationEmail(user.getEmail(), request.name(), creator.getUsername());
+                UserCreationResult userResult = userService.createUserWithoutPassword(createUserRequest);
+                user = userResult.user();
+                if (userResult.isNewUser()) {
+                    emailService.sendGroupInvitationAndSetPasswordEmail(user.getEmail(), request.name(), creator.getUsername(), userResult.verificationToken());
+                } else {
+                    emailService.sendGroupInvitationEmail(user.getEmail(), request.name(), creator.getUsername(), group.getId());
                 }
             }
             users.add(user);
@@ -121,7 +121,14 @@ public class GroupService {
                             "", // Empty surname for now
                             memberRequest.userName(), // Using userName as username
                             memberRequest.email());
-                    user = userService.createUserWithoutPassword(createUserRequest);
+                    UserCreationResult userResult = userService.createUserWithoutPassword(createUserRequest);
+                    user = userResult.user();
+                    // For existing groups, we assume invitation email is always sent if a new member is added
+                    if (userResult.isNewUser()) {
+                        emailService.sendGroupInvitationAndSetPasswordEmail(user.getEmail(), group.getName(), currentUser.getUsername(), userResult.verificationToken());
+                    } else {
+                        emailService.sendGroupInvitationEmail(user.getEmail(), group.getName(), currentUser.getUsername(), group.getId());
+                    }
                 }
                 users.add(user);
             }

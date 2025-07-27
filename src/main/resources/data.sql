@@ -3,7 +3,7 @@ TRUNCATE TABLE expense_splits, expenses, group_users, groups, users RESTART IDEN
 INSERT INTO users (username, email, password, name, surname, role, enabled, requires_password_setup)
 VALUES ('a', 'a@a.pl', '$2a$10$N9qo8uLOickgx2ZMRZoMyea7wdtWgtb7pfXoReLE2qQR2N4VuAbtO', 'John', 'Doe', 'USER', true,
         false),
-       ('jane_smith', 'janis666@gmail.com', '$2a$10$N9qo8uLOickgx2ZMRZoMyea7wdtWgtb7pfXoReLE2qQR2N4VuAbtO', 'Jane',
+       ('jane_smith', 'janis66ddd6@gmail.com', '$2a$10$N9qo8uLOickgx2ZMRZoMyea7wdtWgtb7pfXoReLE2qQR2N4VuAbtO', 'Jane',
         'Smith', 'USER',
         true, false),
        ('admin', 'admin@example.com', '$2a$10$N9qo8uLOickgx2ZMRZoMyea7wdtWgtb7pfXoReLE2qQR2N4VuAbtO', 'Admin', 'User',

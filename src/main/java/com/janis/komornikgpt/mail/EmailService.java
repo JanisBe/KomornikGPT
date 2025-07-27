@@ -78,7 +78,7 @@ public class EmailService {
             MimeMessage message = mailSender.createMimeMessage();
             MimeMessageHelper helper = new MimeMessageHelper(message, true);
 
-            String setUrl = String.format("%s/set-password-with-token?token=%s", url, token);
+            String setUrl = String.format("%s/set-password?token=%s", url, token);
             Context context = new Context();
             context.setVariable("setUrl", setUrl);
 
@@ -95,18 +95,17 @@ public class EmailService {
     }
 
     @Async
-    public void sendGroupInvitationEmail(String toEmail, String groupName, String token) {
+    public void sendGroupInvitationEmail(String toEmail, String groupName, String creatorName, Long groupId) {
         try {
             MimeMessage message = mailSender.createMimeMessage();
             MimeMessageHelper helper = new MimeMessageHelper(message, true);
 
-            String joinUrl = String.format("%s/set-password?token=%s", url, token);
-
             Context context = new Context();
             context.setVariable("groupName", groupName);
-            context.setVariable("joinUrl", joinUrl);
+            context.setVariable("creatorName", creatorName);
+            context.setVariable("groupLink", String.format("%s/groups/%d", frontendUrl, groupId));
 
-            String htmlContent = templateEngine.process("group-invitation-email", context);
+            String htmlContent = templateEngine.process("group-invitation-existing-user-email", context);
 
             helper.setTo(toEmail);
             helper.setSubject("Zaproszenie do grupy");
@@ -115,6 +114,31 @@ public class EmailService {
             mailSender.send(message);
         } catch (MessagingException ex) {
             log.error("Failed to send group invitation email: {}", ex.getMessage());
+        }
+    }
+
+    @Async
+    public void sendGroupInvitationAndSetPasswordEmail(String toEmail, String groupName, String creatorName, String token) {
+        try {
+            MimeMessage message = mailSender.createMimeMessage();
+            MimeMessageHelper helper = new MimeMessageHelper(message, true);
+
+            String setPasswordUrl = String.format("%s/set-password-with-token?token=%s", frontendUrl, token);
+
+            Context context = new Context();
+            context.setVariable("groupName", groupName);
+            context.setVariable("creatorName", creatorName);
+            context.setVariable("setPasswordUrl", setPasswordUrl);
+
+            String htmlContent = templateEngine.process("group-invitation-email", context);
+
+            helper.setTo(toEmail);
+            helper.setSubject("Zaproszenie do grupy i ustawienie hasła");
+            helper.setText(htmlContent, true);
+
+            mailSender.send(message);
+        } catch (MessagingException ex) {
+            log.error("Failed to send group invitation and set password email: {}", ex.getMessage());
         }
     }
 }

@@ -15,8 +15,7 @@ public record CreateGroupRequest(
         @Size(max = 1000, message = "Description must not exceed 1000 characters") String description,
         boolean isPublic,
         @NotNull(message = "Default currency is required") Currency defaultCurrency,
-        @NotNull(message = "Members are required") List<MemberRequest> members,
-        boolean sendInvitationEmail) {
+        @NotNull(message = "Members are required") List<MemberRequest> members) {
     public record MemberRequest(
             Long userId,
             @NotBlank(message = "User name is required") String userName,

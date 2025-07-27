@@ -23,7 +23,7 @@ import {MatExpansionModule} from "@angular/material/expansion";
       <button mat-icon-button class="menu-button" (click)="sidenav.toggle()">
         <mat-icon>menu</mat-icon>
       </button>
-      <span class="app-name" routerLink="/">KomornikGPT</span>
+      <span class="app-name" routerLink="/">Komornik</span>
 
       <span class="spacer"></span>
 

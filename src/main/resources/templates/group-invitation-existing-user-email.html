@@ -56,18 +56,13 @@
 <body>
 <div class="container">
     <div class="header">
-        <h1>Zaproszenie do grupy</h1>
+        <h1>Zaproszenie do grupy th:text="${groupName}"</h1>
     </div>
     <div class="content">
         <p>Witaj w Komorniku!</p>
         <p>Zostałeś zaproszony przez <strong th:text="${creatorName}"></strong> do grupy <strong
                 th:text="${groupName}"></strong>.</p>
-        <p>Aby dołączyć do grupy i ustawić swoje hasło, kliknij poniższy przycisk:</p>
-        <p style="text-align: center;">
-            <a class="button" th:href="${setPasswordUrl}">Dołącz do grupy i ustaw hasło</a>
-        </p>
-        <p>Jeśli przycisk nie działa, skopiuj i wklej poniższy link do przeglądarki:</p>
-        <p><a th:href="${setPasswordUrl}" th:text="${setPasswordUrl}"></a></p>
+        <p>Możesz teraz zobaczyć szczegóły grupy w aplikacji, klikając <a th:href="${groupLink}">tutaj</a>.</p>
     </div>
 </div>
 </body>

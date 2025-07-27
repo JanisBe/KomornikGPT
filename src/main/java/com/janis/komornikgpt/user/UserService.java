@@ -118,14 +118,15 @@ public class UserService implements UserDetailsService {
     }
 
     @Transactional
-    public User createUserWithoutPassword(CreateUserWithoutPasswordRequest request) {
+    public UserCreationResult createUserWithoutPassword(CreateUserWithoutPasswordRequest request) {
         if (userRepository.existsByUsername(request.username())) {
             throw new ResourceAlreadyExistsException("Username is already taken");
         }
 
         if (userRepository.existsByEmail(request.email())) {
-            return userRepository.findByEmail(request.email())
+            User existingUser = userRepository.findByEmail(request.email())
                     .orElseThrow(() -> new RuntimeException("User not found"));
+            return new UserCreationResult(existingUser, false, null);
         }
 
         User user = new User();
@@ -142,9 +143,8 @@ public class UserService implements UserDetailsService {
         VerificationToken vt = new VerificationToken(token, user, LocalDateTime.now().plusHours(48));
         verificationTokenRepository.save(vt);
 
-        emailService.sendSetPasswordEmail(user.getEmail(), token);
-
-        return userRepository.save(user);
+        User savedUser = userRepository.save(user);
+        return new UserCreationResult(savedUser, true, token);
     }
 
     public User findByEmail(String email) {

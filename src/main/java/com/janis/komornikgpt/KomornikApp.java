@@ -6,10 +6,10 @@ import org.springframework.scheduling.annotation.EnableAsync;
 
 @SpringBootApplication
 @EnableAsync
-public class KomornikGptApplication {
+public class KomornikApp {
 
     public static void main(String[] args) {
-        SpringApplication.run(KomornikGptApplication.class, args);
+        SpringApplication.run(KomornikApp.class, args);
     }
 
 }

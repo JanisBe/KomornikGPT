@@ -50,7 +50,6 @@ public class SecurityConfig {
             "/api/webauthn/**",
             "/assets/**"};
     public static final String[] ALLOWED_POST_URLS = {
-            "/reset-password",
             "/api/auth/**",
             "/api/users/**",
             "/api/pwd/**",};

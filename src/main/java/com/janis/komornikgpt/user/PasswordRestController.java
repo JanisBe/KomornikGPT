@@ -42,12 +42,38 @@ public class PasswordRestController {
         user.setEnabled(true);
         userService.saveUser(user);
         tokenRepo.delete(vt);
-        UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
-                user,
-                null,
-                user.getAuthorities());
+        return loginUser(response, user);
+    }
 
-        return authRestController.loginInternal(authToken, response);
+    @PostMapping("/forgot-password")
+    public ResponseEntity<Void> forgotPassword(@RequestBody ForgotPasswordRequest request) {
+        boolean emailSent = userService.handleForgotPasswordRequest(request.email());
+
+        if (!emailSent) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+        }
+
+        return ResponseEntity.ok().build();
+    }
+
+    @PostMapping("/reset-password")
+    public ResponseEntity<?> resetPassword(
+            @RequestParam String token,
+            @RequestBody SetPasswordRequest request,
+            HttpServletResponse response
+    ) {
+        VerificationToken vt = getVerificationToken(token);
+
+        if (vt.getExpiryDate().isBefore(LocalDateTime.now())) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Token jest już nieważny");
+        }
+
+        User user = vt.getUser();
+        user.setPassword(passwordEncoder.encode(request.password()));
+        userService.saveUser(user);
+//        tokenRepo.delete(vt);
+
+        return loginUser(response, user);
     }
 
     @PostMapping("/set-password")
@@ -63,40 +89,11 @@ public class PasswordRestController {
         return ResponseEntity.status(HttpStatus.FOUND).location(URI.create(env.getProperty("frontend.url"))).build();
     }
 
-    @PostMapping("/forgot-password")
-    public ResponseEntity<Void> forgotPassword(@RequestBody ForgotPasswordRequest request) {
-        boolean emailSent = userService.handleForgotPasswordRequest(request.email());
-
-        if (!emailSent) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
-        }
-
-        return ResponseEntity.ok().build();
-    }
-
-    @PostMapping("/reset-password")
-    public ResponseEntity<String> resetPassword(
-            @RequestParam String token,
-            @RequestBody SetPasswordRequest request
-    ) {
-        VerificationToken vt = getVerificationToken(token);
-
-        if (vt.getExpiryDate().isBefore(LocalDateTime.now())) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Token jest już nieważny");
-        }
-
-        User user = vt.getUser();
-        user.setPassword(passwordEncoder.encode(request.password()));
-        userService.saveUser(user);
-        tokenRepo.delete(vt);
-
-        return ResponseEntity.ok("Hasło ustawione pomyślnie");
-    }
-
     @PostMapping("/set-password-with-token")
-    public ResponseEntity<String> setPasswordWithToken(
+    public ResponseEntity<?> setPasswordWithToken(
             @RequestParam String token,
-            @RequestBody SetPasswordRequest request
+            @RequestBody SetPasswordRequest request,
+            HttpServletResponse response
     ) {
         VerificationToken vt = getVerificationToken(token);
 
@@ -108,9 +105,9 @@ public class PasswordRestController {
         user.setPassword(passwordEncoder.encode(request.password()));
         user.setEnabled(true);
         userService.saveUser(user);
-        tokenRepo.delete(vt);
+//        tokenRepo.delete(vt);
 
-        return ResponseEntity.ok("Hasło ustawione pomyślnie");
+        return loginUser(response, user);
     }
 
     private VerificationToken getVerificationToken(String token) {
@@ -118,4 +115,12 @@ public class PasswordRestController {
                 .orElseThrow(() -> new TokenMissingException("Nie znaleziono tokena"));
     }
 
+    private ResponseEntity<?> loginUser(HttpServletResponse response, User user) {
+        UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
+                user,
+                null,
+                user.getAuthorities());
+
+        return authRestController.loginInternal(authToken, response);
+    }
 }

@@ -87,8 +87,8 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 || path.startsWith("/login")
                 || path.startsWith("/register")
                 || path.startsWith("/api/pwd/set-password")
+                || path.startsWith("/api/pwd/reset-password")
                 || path.startsWith("/.well-known/")
-
                 || path.matches(".*\\.(png|gif|svg|jpg|html|css|js)$");
     }
 }

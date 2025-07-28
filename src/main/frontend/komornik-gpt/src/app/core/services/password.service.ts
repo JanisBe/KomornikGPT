@@ -17,7 +17,7 @@ export class PasswordService {
   }
 
   resetPassword(token: string, password: string): Observable<void> {
-    return this.http.post<void>(`${this.apiUrl}/reset-password`, {token, password});
+    return this.http.post<void>(`${this.apiUrl}/reset-password?token=${token}`, {password});
   }
 
   setPassword(newPassword: string): Observable<void> {

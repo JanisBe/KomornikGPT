@@ -177,8 +177,12 @@ export class ResetPasswordComponent implements OnInit {
           this.router.navigate(['/login']);
         },
         error: (err) => {
+          if (err.status === 404) {
+            this.errorMessage = 'Twój token jest nieprawidłowy lub przedawniony. Spróbuj ponownie.';
+          } else {
+            this.errorMessage = 'Wystąpił błąd podczas resetowania hasła. Spróbuj ponownie.';
+          }
           this.isLoading = false;
-          this.errorMessage = 'Wystąpił błąd podczas resetowania hasła. Spróbuj ponownie.';
           console.error(err);
         }
       });

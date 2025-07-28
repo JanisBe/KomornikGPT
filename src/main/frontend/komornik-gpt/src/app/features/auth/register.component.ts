@@ -54,6 +54,8 @@ import {map, Observable} from "rxjs";
               <input matInput formControlName="email" required>
               @if (registerForm.get('email')?.errors?.['emailExists']) {
                 <mat-error>Email jest już zajęty.</mat-error>
+              } @else if (registerForm.get('email')?.errors?.['email'] && (registerForm.get('email')?.dirty || registerForm.get('email')?.touched)) {
+                <mat-error>Email niepoprawny</mat-error>
               }
             </mat-form-field>
 

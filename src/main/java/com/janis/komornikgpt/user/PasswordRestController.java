@@ -1,17 +1,18 @@
 package com.janis.komornikgpt.user;
 
-import com.janis.komornikgpt.auth.JwtTokenProvider;
+import com.janis.komornikgpt.auth.AuthRestController;
 import com.janis.komornikgpt.exception.TokenMissingException;
 import com.janis.komornikgpt.mail.ForgotPasswordRequest;
 import com.janis.komornikgpt.mail.SetPasswordRequest;
 import com.janis.komornikgpt.mail.VerificationToken;
 import com.janis.komornikgpt.mail.VerificationTokenRepository;
+import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.core.env.Environment;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
@@ -25,16 +26,13 @@ import java.time.LocalDateTime;
 public class PasswordRestController {
     private final VerificationTokenRepository tokenRepo;
     private final UserService userService;
-    private final JwtTokenProvider jwtService;
     private final PasswordEncoder passwordEncoder;
     private final Environment env;
+    private final AuthRestController authRestController;
 
     @GetMapping("/confirm-email")
-    public ResponseEntity<Void> confirm(@RequestParam String token) {
-        VerificationToken vt = tokenRepo.findByToken(token).orElse(null);
-        if (vt == null) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
-        }
+    public ResponseEntity<?> confirm(@RequestParam String token, HttpServletResponse response) {
+        VerificationToken vt = getVerificationToken(token);
 
         if (vt.getExpiryDate().isBefore(LocalDateTime.now())) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
@@ -44,15 +42,16 @@ public class PasswordRestController {
         user.setEnabled(true);
         userService.saveUser(user);
         tokenRepo.delete(vt);
+        UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
+                user,
+                null,
+                user.getAuthorities());
 
-        String email = user.getEmail();
-        String url = env.getProperty("frontend.url") + "/login?email=" + email;
-        return ResponseEntity.status(HttpStatus.FOUND).location(URI.create(url)).build();
+        return authRestController.loginInternal(authToken, response);
     }
 
     @PostMapping("/set-password")
     public ResponseEntity<Void> setPassword(@RequestBody SetPasswordRequest request, Authentication authentication) {
-        Authentication authentication1 = SecurityContextHolder.getContext().getAuthentication();
         if (authentication == null) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
@@ -83,7 +82,7 @@ public class PasswordRestController {
         VerificationToken vt = getVerificationToken(token);
 
         if (vt.getExpiryDate().isBefore(LocalDateTime.now())) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Token expired");
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Token jest już nieważny");
         }
 
         User user = vt.getUser();
@@ -91,7 +90,7 @@ public class PasswordRestController {
         userService.saveUser(user);
         tokenRepo.delete(vt);
 
-        return ResponseEntity.ok("Password has been reset successfully");
+        return ResponseEntity.ok("Hasło ustawione pomyślnie");
     }
 
     @PostMapping("/set-password-with-token")
@@ -102,7 +101,7 @@ public class PasswordRestController {
         VerificationToken vt = getVerificationToken(token);
 
         if (vt.getExpiryDate().isBefore(LocalDateTime.now())) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Token expired");
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Token jest już nieważny");
         }
 
         User user = vt.getUser();
@@ -111,12 +110,12 @@ public class PasswordRestController {
         userService.saveUser(user);
         tokenRepo.delete(vt);
 
-        return ResponseEntity.ok("Password has been set successfully");
+        return ResponseEntity.ok("Hasło ustawione pomyślnie");
     }
 
     private VerificationToken getVerificationToken(String token) {
         return tokenRepo.findByToken(token)
-                .orElseThrow(() -> new TokenMissingException("Token not found"));
+                .orElseThrow(() -> new TokenMissingException("Nie znaleziono tokena"));
     }
 
 }

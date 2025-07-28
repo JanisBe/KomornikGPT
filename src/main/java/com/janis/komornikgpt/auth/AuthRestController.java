@@ -22,7 +22,7 @@ import java.util.Map;
 @RequestMapping("/api/auth")
 @RequiredArgsConstructor
 @Slf4j
-public class AuthController {
+public class AuthRestController {
     private final AuthenticationManager authenticationManager;
     private final JwtTokenProvider jwtTokenProvider;
     private final UserService userService;
@@ -30,38 +30,26 @@ public class AuthController {
     @Value("${jwt.cookie.name:JWT_TOKEN}")
     private String cookieName;
 
-    @PostMapping("/logout")
-    public ResponseEntity<Void> logout(HttpServletResponse response) {
-        // Clear the JWT cookie
-        Cookie cookie = new Cookie(cookieName, null);
-        cookie.setHttpOnly(true);
-        cookie.setSecure(true);
-        cookie.setPath("/");
-        cookie.setMaxAge(0); // Delete the cookie
-        response.addCookie(cookie);
-
-        // Clear security context
-        SecurityContextHolder.clearContext();
-
-        return ResponseEntity.ok().build();
-    }
-
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody LoginRequest request, HttpServletResponse response) {
         Authentication authentication = authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(request.getEmail(), request.getPassword()));
+
+        return loginInternal(authentication, response);
+    }
+
+    public ResponseEntity<?> loginInternal(Authentication authentication, HttpServletResponse response) {
 
         SecurityContextHolder.getContext().setAuthentication(authentication);
         String username = authentication.getName();
         User user = userService.getUserByUsername(username);
         String jwt = jwtTokenProvider.generateToken(user);
 
-        // Set JWT as HttpOnly, Secure cookie
         Cookie cookie = new Cookie(cookieName, jwt);
         cookie.setHttpOnly(true);
         cookie.setSecure(true);
         cookie.setPath("/");
-        cookie.setMaxAge(24 * 60 * 60); // 1 day, or use your configured expiration
+        cookie.setMaxAge(24 * 60 * 60);
         response.addCookie(cookie);
 
 
@@ -83,11 +71,9 @@ public class AuthController {
     }
 
     private User findUserByIdentifier(String identifier) {
-        // Try email first
         try {
             return userService.getUserByEmail(identifier);
         } catch (UserNotFoundException e) {
-            // If not found by email, try username
             return userService.getUserByUsername(identifier);
         }
     }

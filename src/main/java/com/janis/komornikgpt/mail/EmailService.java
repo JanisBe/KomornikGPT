@@ -33,7 +33,7 @@ public class EmailService {
         try {
             MimeMessage message = mailSender.createMimeMessage();
             MimeMessageHelper helper = new MimeMessageHelper(message, true);
-            String verificationUrl = String.format("%s/confirm-email?token=%s", url, token);
+            String verificationUrl = String.format("%s/confirm-email?token=%s", frontendUrl, token);
 
             Context context = new Context();
             context.setVariable("verificationUrl", verificationUrl);

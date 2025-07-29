@@ -63,7 +63,7 @@ import {
 
       <form [formGroup]="expenseForm" (ngSubmit)="onSubmit()">
         <mat-dialog-content>
-          <div class="form-row">
+          <div class="form-row category-name-row">
             <div class="category-selector" #categorySelector>
               <div class="category-icon-container" (mouseenter)="openMainMenu()">
                 <mat-icon class="category-main-icon">{{ selectedCategoryIcon }}</mat-icon>
@@ -156,9 +156,8 @@ import {
           <div class="form-row">
             <div class="form-field flex-1">
               <mat-form-field appearance="outline" class="full-width">
-                <mat-label>Data</mat-label>
+                <mat-label>Data DD/MM/YYYY</mat-label>
                 <input matInput [matDatepicker]="picker" formControlName="date" required/>
-                <mat-hint>DD/MM/YYYY</mat-hint>
                 <mat-datepicker-toggle matSuffix [for]="picker"></mat-datepicker-toggle>
                 <mat-datepicker #picker></mat-datepicker>
                 @if (expenseForm.get('date')?.errors?.['required']) {
@@ -236,7 +235,7 @@ import {
           </div>
         </mat-dialog-content>
 
-        <mat-dialog-actions align="end">
+        <mat-dialog-actions>
           <button mat-button mat-dialog-close type="button">
             <mat-icon>close</mat-icon>
             Anuluj
@@ -258,19 +257,24 @@ import {
   `,
   styles: [`
     :host {
-      display: block;
+      display: flex;
+      flex-direction: column;
+      height: 100%;
     }
 
     .dialog-container {
+      display: flex;
+      flex-direction: column;
+      height: 100%;
       padding: 24px;
-      max-height: 90vh;
       box-sizing: border-box;
     }
 
     form {
       display: flex;
       flex-direction: column;
-      height: 100%;
+      flex: 1;
+      overflow: hidden;
     }
 
     .form-field {
@@ -282,12 +286,11 @@ import {
     }
 
     mat-dialog-content {
-      display: block;
-      min-width: 400px;
-      margin: 0;
-      padding: 0;
-      max-height: calc(90vh - 140px) !important;
+      flex: 1;
       overflow-y: auto;
+      min-width: 400px;
+      padding: 0 8px;
+      margin: 0 -8px;
     }
 
     mat-dialog-actions {
@@ -295,6 +298,8 @@ import {
       margin: 0;
       min-height: 52px;
       border-top: 1px solid rgba(0, 0, 0, 0.12);
+      display: flex;
+      justify-content: center;
     }
 
     mat-dialog-actions button {
@@ -305,7 +310,7 @@ import {
       display: flex;
       align-items: center;
       justify-content: space-between;
-      padding: 8px;
+      padding-bottom: 16px;
     }
 
     .close-button {
@@ -461,7 +466,7 @@ import {
     }
 
     h2 {
-      margin: 0 0 24px 0;
+      margin: 0;
       font-size: 20px;
       font-weight: 500;
     }
@@ -503,7 +508,6 @@ import {
       mat-dialog-content {
         min-width: unset;
         width: 100%;
-        max-height: calc(90vh - 120px) !important;
       }
 
       .form-row {
@@ -511,10 +515,27 @@ import {
         gap: 0;
       }
 
-      .amount-field,
-      .currency-field,
-      .flex-1 {
+      .form-row .form-field {
         width: 100%;
+      }
+
+      .category-name-row {
+        flex-direction: row;
+        align-items: center;
+        gap: 16px;
+      }
+
+      .category-name-row .category-selector {
+        flex-shrink: 0;
+      }
+
+      .category-name-row .form-field {
+        width: auto;
+        flex: 1;
+      }
+
+      .category-name-row ::ng-deep .mat-mdc-form-field-infix {
+        width: auto;
       }
 
       .splits-section {
@@ -530,7 +551,6 @@ import {
         margin: 0 0 16px 0;
       }
     }
-
   `]
 })
 export class AddExpenseDialogComponent {
@@ -541,7 +561,6 @@ export class AddExpenseDialogComponent {
   isEditMode = false;
   group!: Group;
   expense?: Expense;
-  isEdit?: boolean;
   selectedCategory: ExpenseCategory = DEFAULT_CATEGORY;
   showMainCategories = false;
   showSubcategoriesMenu = false;

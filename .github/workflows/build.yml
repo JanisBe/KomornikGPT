@@ -95,5 +95,5 @@ jobs:
           key: ${{ secrets.SERVER_SSH_KEY }}
           script: |
             sudo docker compose stop
-            docker compose pull app
-            docker compose up -d
+            sudo docker compose pull app
+            sudo docker compose up -d

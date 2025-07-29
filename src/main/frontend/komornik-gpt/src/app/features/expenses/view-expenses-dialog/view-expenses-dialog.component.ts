@@ -13,6 +13,9 @@ import {ConfirmDeleteDialogComponent} from './confirm-delete-dialog.component';
 import {SettleExpensesDialogComponent} from '../settle-expenses-dialog';
 import {DEFAULT_CATEGORY, enumValueToCategory} from '../../../core/models/expense-category.model';
 import {CopyUrlButtonComponent} from '../copy-url-button';
+import {BreakpointObserver, Breakpoints} from '@angular/cdk/layout';
+import {map} from 'rxjs/operators';
+import {Observable} from 'rxjs';
 
 interface GroupedExpenses {
   date: Date;
@@ -263,13 +266,17 @@ interface GroupedExpenses {
 export class ViewExpensesDialogComponent implements OnInit {
   expenses: Expense[] = [];
   groupedExpenses: GroupedExpenses[] = [];
+  isMobile$: Observable<boolean>;
 
   constructor(
     @Inject(MAT_DIALOG_DATA) public data: { group: Group },
     private expenseService: ExpenseService,
     private snackBar: MatSnackBar,
-    private dialog: MatDialog
+    private dialog: MatDialog,
+    private breakpointObserver: BreakpointObserver
   ) {
+    this.isMobile$ = this.breakpointObserver.observe(Breakpoints.Handset)
+      .pipe(map(result => result.matches));
   }
 
   ngOnInit() {
@@ -328,32 +335,40 @@ export class ViewExpensesDialogComponent implements OnInit {
   }
 
   editExpense(expense: Expense) {
-    const dialogRef = this.dialog.open(AddExpenseDialogComponent, {
-      width: '70%',
-      data: {
-        group: this.data.group,
-        expense,
-        isEdit: true
-      }
-    });
+    this.isMobile$.subscribe(isMobile => {
+      const dialogConfig = {
+        data: {
+          group: this.data.group,
+          expense,
+          isEdit: true
+        },
+        width: isMobile ? '100vw' : '800px',
+        maxWidth: isMobile ? '100vw' : '90vw',
+        height: isMobile ? '100vh' : undefined,
+        maxHeight: isMobile ? '100vh' : '90vh',
+        panelClass: isMobile ? 'mobile-dialog-container' : undefined
+      };
 
-    dialogRef.afterClosed().subscribe(result => {
-      if (result) {
-        this.expenseService.updateExpense(expense.id, result).subscribe({
-          next: () => {
-            this.snackBar.open('Expense updated successfully', 'Close', {
-              duration: 3000
-            });
-            this.loadExpenses();
-          },
-          error: (error) => {
-            console.error(error);
-            this.snackBar.open('Error updating expense', 'Close', {
-              duration: 3000
-            });
-          }
-        });
-      }
+      const dialogRef = this.dialog.open(AddExpenseDialogComponent, dialogConfig);
+
+      dialogRef.afterClosed().subscribe(result => {
+        if (result) {
+          this.expenseService.updateExpense(expense.id, result).subscribe({
+            next: () => {
+              this.snackBar.open('Expense updated successfully', 'Close', {
+                duration: 3000
+              });
+              this.loadExpenses();
+            },
+            error: (error) => {
+              console.error(error);
+              this.snackBar.open('Error updating expense', 'Close', {
+                duration: 3000
+              });
+            }
+          });
+        }
+      });
     });
   }
 
@@ -390,3 +405,4 @@ export class ViewExpensesDialogComponent implements OnInit {
     });
   }
 }
+

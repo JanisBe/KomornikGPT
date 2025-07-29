@@ -71,7 +71,7 @@ public class PasswordRestController {
         User user = vt.getUser();
         user.setPassword(passwordEncoder.encode(request.password()));
         userService.saveUser(user);
-//        tokenRepo.delete(vt);
+        tokenRepo.delete(vt);
 
         return loginUser(response, user);
     }
@@ -105,7 +105,7 @@ public class PasswordRestController {
         user.setPassword(passwordEncoder.encode(request.password()));
         user.setEnabled(true);
         userService.saveUser(user);
-//        tokenRepo.delete(vt);
+        tokenRepo.delete(vt);
 
         return loginUser(response, user);
     }

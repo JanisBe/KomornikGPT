@@ -14,7 +14,7 @@ import {CreateGroupDialogComponent} from './create-group-dialog/create-group-dia
 import {AuthService} from '../../core/services/auth.service';
 import {MatSnackBar, MatSnackBarModule} from '@angular/material/snack-bar';
 import {User} from '../../core/models/user.model';
-import {forkJoin} from 'rxjs';
+import {forkJoin, Observable} from 'rxjs';
 import {AddExpenseDialogComponent} from '../expenses/add-expense-dialog/add-expense-dialog.component';
 import {ExpenseService} from '../../core/services/expense.service';
 import {HttpErrorResponse} from '@angular/common/http';
@@ -23,6 +23,8 @@ import {MatNativeDateModule} from '@angular/material/core';
 import {DATE_PROVIDERS} from '../../core/config/date.config';
 import {SettleExpensesDialogComponent} from '../expenses/settle-expenses-dialog';
 import {CopyUrlButtonComponent} from '../expenses/copy-url-button';
+import {BreakpointObserver, Breakpoints} from '@angular/cdk/layout';
+import {map} from 'rxjs/operators';
 
 @Component({
   selector: 'app-groups',
@@ -219,6 +221,7 @@ export class GroupsComponent implements OnInit {
   groups: Group[] = [];
   currentUser: User | null = null;
   windowOrigin: string = window.location.origin;
+  isMobile$: Observable<boolean>;
 
   constructor(
     private groupService: GroupService,
@@ -226,8 +229,11 @@ export class GroupsComponent implements OnInit {
     private authService: AuthService,
     private snackBar: MatSnackBar,
     private expenseService: ExpenseService,
-    private router: Router
+    private router: Router,
+    private breakpointObserver: BreakpointObserver
   ) {
+    this.isMobile$ = this.breakpointObserver.observe(Breakpoints.Handset)
+      .pipe(map(result => result.matches));
   }
 
   ngOnInit(): void {
@@ -388,27 +394,35 @@ export class GroupsComponent implements OnInit {
   }
 
   addExpense(group: Group): void {
-    const dialogRef = this.dialog.open(AddExpenseDialogComponent, {
-      width: '70%',
-      data: {group, currentUser: this.currentUser}
-    });
+    this.isMobile$.subscribe(isMobile => {
+      const dialogConfig = {
+        data: {group, currentUser: this.currentUser},
+        width: isMobile ? '100vw' : '800px',
+        maxWidth: isMobile ? '100vw' : '90vw',
+        height: isMobile ? '100vh' : undefined,
+        maxHeight: isMobile ? '100vh' : '90vh',
+        panelClass: isMobile ? 'mobile-dialog-container' : undefined
+      };
 
-    dialogRef.afterClosed().subscribe(result => {
-      if (result) {
-        this.expenseService.createExpense(result).subscribe({
-          next: () => {
-            this.snackBar.open('Wydatek został dodany', 'Zamknij', {
-              duration: 3000
-            });
-          },
-          error: (error: HttpErrorResponse) => {
-            console.error(error);
-            this.snackBar.open('Bład podczas dodawania wydatku', 'Zamknij', {
-              duration: 3000
-            });
-          }
-        });
-      }
+      const dialogRef = this.dialog.open(AddExpenseDialogComponent, dialogConfig);
+
+      dialogRef.afterClosed().subscribe(result => {
+        if (result) {
+          this.expenseService.createExpense(result).subscribe({
+            next: () => {
+              this.snackBar.open('Wydatek został dodany', 'Zamknij', {
+                duration: 3000
+              });
+            },
+            error: (error: HttpErrorResponse) => {
+              console.error(error);
+              this.snackBar.open('Bład podczas dodawania wydatku', 'Zamknij', {
+                duration: 3000
+              });
+            }
+          });
+        }
+      });
     });
   }
 }

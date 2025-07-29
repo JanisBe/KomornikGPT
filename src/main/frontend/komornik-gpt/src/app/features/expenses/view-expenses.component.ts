@@ -85,7 +85,7 @@ interface GroupedExpenses {
                       <td data-label="Kwota">{{ expense.amount | number:'1.2-2' }} {{ expense.currency }}</td>
                       <td data-label="Płacił"><span matTooltip="{{expense.payer.email}}">{{ expense.payer.name }}</span>
                       </td>
-                      <td data-label="Kto">
+                      <td data-label="Kto"><br>
                         <div class="splits-container">
                           @for (split of expense.splits; track split.id) {
                             <div class="split-item" [class.paid]="split.isPaid"
@@ -296,7 +296,7 @@ interface GroupedExpenses {
         overflow-x: auto;
         white-space: nowrap;
         width: 100%;
-        padding-bottom: 5px;
+        padding-top: 5px;
       }
 
       .split-item {
@@ -306,6 +306,7 @@ interface GroupedExpenses {
 
       td[data-label="Kto"] {
         text-align: left;
+        padding-left: 8px !important;
       }
     }
   `]

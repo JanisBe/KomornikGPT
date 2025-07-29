@@ -1,8 +1,7 @@
 /* You can add global styles to this file, and also import other style files */
+@import "@angular/material/prebuilt-themes/indigo-pink.css";
 
-@use "bootstrap/scss/bootstrap" as *;
-
-body {
-  min-height: 100vh;
-  background-color: #f8f9fa;
+.mobile-dialog-container .mat-mdc-dialog-container .mdc-dialog__surface {
+  border-radius: 0;
+  padding: 16px; // Możesz dostosować padding
 }

@@ -1,5 +1,4 @@
 import {Component, OnInit} from '@angular/core';
-
 import {ActivatedRoute, Router, RouterModule} from '@angular/router';
 import {GroupService} from '../../core/services/group.service';
 import {Group} from '../../core/models/group.model';
@@ -19,6 +18,9 @@ import {User} from '../../core/models/user.model';
 import {MatSnackBar} from '@angular/material/snack-bar';
 import {EditGroupDialogComponent} from './edit-group-dialog/edit-group-dialog.component';
 import {DeleteGroupDialogComponent} from './delete-group-dialog/delete-group-dialog.component';
+import {BreakpointObserver, Breakpoints} from '@angular/cdk/layout';
+import {map} from 'rxjs/operators';
+import {Observable} from 'rxjs';
 
 @Component({
   selector: 'app-group-details',
@@ -112,6 +114,8 @@ export class GroupDetailsComponent implements OnInit {
   error: string | null = null;
   isAuthenticated = false;
   currentUser: User | null = null;
+  isMobile$: Observable<boolean>;
+
   constructor(
     private route: ActivatedRoute,
     private groupService: GroupService,
@@ -119,8 +123,11 @@ export class GroupDetailsComponent implements OnInit {
     private dialog: MatDialog,
     private expenseService: ExpenseService,
     private snackBar: MatSnackBar,
-    private router: Router
+    private router: Router,
+    private breakpointObserver: BreakpointObserver
   ) {
+    this.isMobile$ = this.breakpointObserver.observe(Breakpoints.Handset)
+      .pipe(map(result => result.matches));
   }
 
   ngOnInit(): void {
@@ -181,27 +188,35 @@ export class GroupDetailsComponent implements OnInit {
   }
 
   addExpense(group: Group): void {
-    const dialogRef = this.dialog.open(AddExpenseDialogComponent, {
-      width: '70%',
-      data: {group, currentUser: this.currentUser}
-    });
+    this.isMobile$.subscribe(isMobile => {
+      const dialogConfig = {
+        data: {group, currentUser: this.currentUser},
+        width: isMobile ? '100vw' : '800px',
+        maxWidth: isMobile ? '100vw' : '90vw',
+        height: isMobile ? '100vh' : undefined,
+        maxHeight: isMobile ? '100vh' : '90vh',
+        panelClass: isMobile ? 'mobile-dialog-container' : undefined
+      };
 
-    dialogRef.afterClosed().subscribe(result => {
-      if (result) {
-        this.expenseService.createExpense(result).subscribe({
-          next: () => {
-            this.snackBar.open('Wydatek został dodany', 'Zamknij', {
-              duration: 3000
-            });
-          },
-          error: (error: HttpErrorResponse) => {
-            console.error(error);
-            this.snackBar.open('Bład podczas dodawania wydatku', 'Zamknij', {
-              duration: 3000
-            });
-          }
-        });
-      }
+      const dialogRef = this.dialog.open(AddExpenseDialogComponent, dialogConfig);
+
+      dialogRef.afterClosed().subscribe(result => {
+        if (result) {
+          this.expenseService.createExpense(result).subscribe({
+            next: () => {
+              this.snackBar.open('Wydatek został dodany', 'Zamknij', {
+                duration: 3000
+              });
+            },
+            error: (error: HttpErrorResponse) => {
+              console.error(error);
+              this.snackBar.open('Bład podczas dodawania wydatku', 'Zamknij', {
+                duration: 3000
+              });
+            }
+          });
+        }
+      });
     });
   }
 

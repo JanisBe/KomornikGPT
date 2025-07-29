@@ -94,7 +94,7 @@ import {AuthService} from '../../../core/services/auth.service';
         @for (member of members.controls; track $index) {
           <div [formGroupName]="$index" class="member-row">
             <div class="member-inputs">
-              <mat-form-field appearance="outline">
+              <mat-form-field appearance="outline" class="username-field">
                 <mat-label>Nazwa użytkownika</mat-label>
                 <input matInput
                        formControlName="userName"
@@ -114,7 +114,7 @@ import {AuthService} from '../../../core/services/auth.service';
               </mat-form-field>
 
               @if (!member.get('userId')?.value || member.get('userId')?.value?.toString().startsWith('temp_')) {
-                <mat-form-field appearance="outline">
+                <mat-form-field appearance="outline" class="email-field">
                   <mat-label>Email</mat-label>
                   <input matInput formControlName="email" type="email" required>
                   @if (member.get('email')?.errors?.['required']) {
@@ -125,20 +125,20 @@ import {AuthService} from '../../../core/services/auth.service';
                   }
                 </mat-form-field>
               }
-            </div>
 
-            <button mat-icon-button color="warn" type="button"
-                    (click)="removeMember($index)"
-                    [disabled]="members.length <= 1">
-              <mat-icon>close</mat-icon>
-            </button>
+              <button mat-icon-button color="warn" type="button" class="remove-member-btn"
+                      (click)="removeMember($index)"
+                      [disabled]="members.length <= 1">
+                <mat-icon>close</mat-icon>
+              </button>
+            </div>
           </div>
         }
 
         <div class="add-member-link">
           <a mat-button color="primary" (click)="addMember()">
             <mat-icon>add</mat-icon>
-            Dodaj członka
+            Dodaj kolejnego członka
           </a>
         </div>
       </div>
@@ -282,20 +282,27 @@ import {AuthService} from '../../../core/services/auth.service';
     }
 
     .member-inputs {
-      display: flex;
+      display: grid;
+      grid-template-columns: 2fr 1fr auto;
       gap: 16px;
-      flex: 1;
+    }
+
+    .remove-member-btn {
+      grid-column: 3;
     }
 
     @media (max-width: 768px) {
       .member-inputs {
-        flex-direction: column;
-        gap: 0;
+        grid-template-columns: 1fr auto;
+        grid-template-areas:
+          "username remove"
+          "email email";
+        gap: 8px 16px;
       }
-    }
 
-    .member-inputs mat-form-field {
-      flex: 1;
+      .username-field { grid-area: username; }
+      .email-field { grid-area: email; }
+      .remove-member-btn { grid-area: remove; }
     }
 
     .add-member-link {
@@ -321,6 +328,7 @@ import {AuthService} from '../../../core/services/auth.service';
   `]
 })
 export class GroupFormComponent implements OnInit {
+  [x: string]: any;
   @Input() group: Group | undefined;
   @Output() formSubmitted = new EventEmitter<any>();
 

@@ -266,28 +266,35 @@ export class GroupsComponent implements OnInit {
   }
 
   createGroup(): void {
-    const dialogRef = this.dialog.open(CreateGroupDialogComponent, {
-      width: '95%',
-      maxWidth: '90vw'
-    });
+    this.isMobile$.subscribe(isMobile => {
+      const dialogConfig = {
+        width: isMobile ? '100vw' : '800px',
+        maxWidth: isMobile ? '100vw' : '90vw',
+        height: isMobile ? '100vh' : undefined,
+        maxHeight: isMobile ? '100vh' : '90vh',
+        panelClass: isMobile ? 'mobile-dialog-container' : undefined
+      };
 
-    dialogRef.afterClosed().subscribe(result => {
-      if (result) {
-        this.groupService.createGroup(result).subscribe({
-          next: (newGroup) => {
-            this.groups = [...this.groups, newGroup];
-            this.snackBar.open('Grupa została utworzona', 'Zamknij', {
-              duration: 3000
-            });
-          },
-          error: (error) => {
-            console.error(error);
-            this.snackBar.open('Nie udało się utworzyć grupy', 'Zamknij', {
-              duration: 3000
-            });
-          }
-        });
-      }
+      const dialogRef = this.dialog.open(CreateGroupDialogComponent, dialogConfig);
+
+      dialogRef.afterClosed().subscribe(result => {
+        if (result) {
+          this.groupService.createGroup(result).subscribe({
+            next: (newGroup) => {
+              this.groups = [...this.groups, newGroup];
+              this.snackBar.open('Grupa została utworzona', 'Zamknij', {
+                duration: 3000
+              });
+            },
+            error: (error) => {
+              console.error(error);
+              this.snackBar.open('Nie udało się utworzyć grupy', 'Zamknij', {
+                duration: 3000
+              });
+            }
+          });
+        }
+      });
     });
   }
 

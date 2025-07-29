@@ -12,18 +12,42 @@ import {GroupFormComponent} from '../group-form/group-form.component';
     GroupFormComponent
   ],
   template: `
-    <h2 mat-dialog-title>Utwórz nową grupę</h2>
-    <mat-dialog-content>
-      <app-group-form #groupFormRef (formSubmitted)="dialogRef.close($event)"></app-group-form>
-    </mat-dialog-content>
-    <mat-dialog-actions align="end">
-      <button mat-button mat-dialog-close>Anuluj</button>
-      <button mat-raised-button color="primary" (click)="groupFormRef.onSubmit()">Utwórz</button>
-    </mat-dialog-actions>
+    <div class="dialog-container">
+      <h2 mat-dialog-title>Utwórz nową grupę</h2>
+      <mat-dialog-content>
+        <app-group-form #groupFormRef (formSubmitted)="dialogRef.close($event)"></app-group-form>
+      </mat-dialog-content>
+      <mat-dialog-actions>
+        <button mat-button mat-dialog-close>Anuluj</button>
+        <button mat-raised-button color="primary" (click)="groupFormRef.onSubmit()">Utwórz</button>
+      </mat-dialog-actions>
+    </div>
   `,
   styles: [`
+    :host {
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+    }
+
+    .dialog-container {
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+      padding: 24px;
+      box-sizing: border-box;
+    }
+
+    mat-dialog-content {
+      flex: 1;
+      overflow-y: auto;
+    }
+
     mat-dialog-actions {
+      display: flex;
+      justify-content: space-between;
       padding: 16px 24px;
+      border-top: 1px solid rgba(0, 0, 0, 0.12);
     }
 
     mat-dialog-actions button {

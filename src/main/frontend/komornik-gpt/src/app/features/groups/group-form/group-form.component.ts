@@ -1,15 +1,7 @@
 import {Component, EventEmitter, Input, OnInit, Output} from '@angular/core';
 import {MatDialogModule} from '@angular/material/dialog';
 import {CommonModule} from '@angular/common';
-import {
-  AbstractControl,
-  AsyncValidatorFn,
-  FormArray,
-  FormBuilder,
-  FormGroup,
-  ReactiveFormsModule,
-  Validators
-} from '@angular/forms';
+import {FormArray, FormBuilder, FormGroup, ReactiveFormsModule, Validators} from '@angular/forms';
 import {MatButtonModule} from '@angular/material/button';
 import {MatFormFieldModule} from '@angular/material/form-field';
 import {MatInputModule} from '@angular/material/input';
@@ -18,11 +10,10 @@ import {MatDividerModule} from '@angular/material/divider';
 import {MatIconModule} from '@angular/material/icon';
 import {MatAutocompleteModule, MatAutocompleteSelectedEvent} from '@angular/material/autocomplete';
 import {MatCheckboxModule} from '@angular/material/checkbox';
-import {CreatedUserResponse, MemberInput, PendingUser, User} from '../../../core/models/user.model';
+import {MemberInput, User} from '../../../core/models/user.model';
 import {UserService} from '../../../core/services/user.service';
-import {firstValueFrom, Observable, of} from 'rxjs';
+import {Observable} from 'rxjs';
 import {map, startWith} from 'rxjs/operators';
-import {HttpErrorResponse} from '@angular/common/http';
 import {MatSelectModule} from '@angular/material/select';
 import {Currency} from '../../../core/models/currency.model';
 import {Group} from '../../../core/models/group.model';
@@ -142,81 +133,6 @@ import {AuthService} from '../../../core/services/auth.service';
           </a>
         </div>
       </div>
-
-      <mat-divider></mat-divider>
-
-      <mat-expansion-panel class="mt-3">
-        <mat-expansion-panel-header>
-          <mat-panel-title>
-            Dodaj nowego użytkownika
-          </mat-panel-title>
-          <mat-panel-description>
-            Dodaj nowego członka grupy, który nie ma konta
-          </mat-panel-description>
-        </mat-expansion-panel-header>
-
-        <form [formGroup]="newUserForm" class="mt-3">
-          <div class="form-field">
-            <mat-form-field appearance="outline" class="full-width">
-              <mat-label>Imię</mat-label>
-              <input matInput formControlName="name" placeholder="Podaj imie" required>
-              @if (newUserForm.get('name')?.errors?.['required']) {
-                <mat-error>Imie jest wymagane</mat-error>
-              }
-            </mat-form-field>
-          </div>
-
-          <div class="form-field">
-            <mat-form-field appearance="outline" class="full-width">
-              <mat-label>Nazwisko</mat-label>
-              <input matInput formControlName="surname" placeholder="Podaj nazwisko" required>
-              @if (newUserForm.get('surname')?.errors?.['required']) {
-                <mat-error>Nazwisko jest wymagane</mat-error>
-              }
-            </mat-form-field>
-          </div>
-
-          <div class="form-field">
-            <mat-form-field appearance="outline" class="full-width">
-              <mat-label>Nazwa użytkownika</mat-label>
-              <input matInput formControlName="username" placeholder="Podaj nazwę użytkownika" required
-                     (blur)="newUserForm.get('username')?.updateValueAndValidity()">
-              @if (newUserForm.get('username')?.errors?.['required']) {
-                <mat-error>Nazwa użytkownika jest wymagana</mat-error>
-              }
-              @if (newUserForm.get('username')?.errors?.['usernameExists']) {
-                <mat-error>Nazwa użytkownika jest już zajęta</mat-error>
-              }
-            </mat-form-field>
-          </div>
-
-          <div class="form-field">
-            <mat-form-field appearance="outline" class="full-width">
-              <mat-label>Email</mat-label>
-              <input matInput formControlName="email" placeholder="Podaj adres e-mail" type="email" required
-                     (blur)="newUserForm.get('email')?.updateValueAndValidity()">
-              @if (newUserForm.get('email')?.errors?.['required']) {
-                <mat-error>Email jest wymagany</mat-error>
-              }
-              @if (newUserForm.get('email')?.errors?.['email']) {
-                <mat-error>Wprowadź poprawny adres e-mail</mat-error>
-              }
-              @if (newUserForm.get('email')?.errors?.['emailExists']) {
-                <mat-error>Email jest już zajęty</mat-error>
-              }
-            </mat-form-field>
-          </div>
-
-          <div class="form-actions">
-            <button mat-raised-button color="primary"
-                    type="button"
-                    [disabled]="!newUserForm.valid"
-                    (click)="addNewUser()">
-              Dodaj do grupy
-            </button>
-          </div>
-        </form>
-      </mat-expansion-panel>
     </form>
   `,
   styles: [`
@@ -245,46 +161,21 @@ import {AuthService} from '../../../core/services/auth.service';
       margin-left: 8px;
     }
 
-    .mt-3 {
-      margin-top: 16px;
-    }
-
-    .form-actions {
-      display: flex;
-      justify-content: flex-end;
-      margin-top: 16px;
-    }
-
-    .members-container {
+    ó .members-container {
       margin: 24px 0;
     }
 
     .member-row {
       display: flex;
-      flex-wrap: wrap;
       align-items: center;
-      gap: 16px;
       margin-bottom: 16px;
-    }
-
-    .form-row {
-      display: flex;
-      flex-wrap: wrap;
-      align-items: flex-start;
-      gap: 16px;
-      margin-bottom: 16px;
-    }
-
-    .checkbox-column {
-      display: flex;
-      flex-direction: column;
-      flex: 1;
     }
 
     .member-inputs {
       display: grid;
-      grid-template-columns: 2fr 1fr auto;
+      grid-template-columns: 1fr 1fr auto;
       gap: 16px;
+      align-items: center;
     }
 
     .remove-member-btn {
@@ -300,9 +191,17 @@ import {AuthService} from '../../../core/services/auth.service';
         gap: 8px 16px;
       }
 
-      .username-field { grid-area: username; }
-      .email-field { grid-area: email; }
-      .remove-member-btn { grid-area: remove; }
+      .username-field {
+        grid-area: username;
+      }
+
+      .email-field {
+        grid-area: email;
+      }
+
+      .remove-member-btn {
+        grid-area: remove;
+      }
     }
 
     .add-member-link {
@@ -318,13 +217,6 @@ import {AuthService} from '../../../core/services/auth.service';
       height: auto;
     }
 
-    ::ng-deep .mat-expansion-panel-header-description {
-      white-space: normal;
-    }
-
-    ::ng-deep .mat-mdc-form-field-subscript-wrapper {
-      min-height: 1px;
-    }
   `]
 })
 export class GroupFormComponent implements OnInit {
@@ -333,12 +225,9 @@ export class GroupFormComponent implements OnInit {
   @Output() formSubmitted = new EventEmitter<any>();
 
   groupForm: FormGroup;
-  newUserForm: FormGroup;
   availableUsers: User[] = [];
-  pendingUsers: PendingUser[] = [];
   filteredUsers: Observable<User[]>[] = [];
   currencies = Object.values(Currency);
-  private tempIdCounter = 0;
 
   constructor(
     private fb: FormBuilder,
@@ -353,13 +242,6 @@ export class GroupFormComponent implements OnInit {
       currency: [Currency.PLN, Validators.required],
       sendInvitationEmail: [true]
     });
-
-    this.newUserForm = this.fb.group({
-      name: ['', Validators.required],
-      surname: ['', Validators.required],
-      username: ['', [Validators.required], this.usernameExistsAsyncValidator()],
-      email: ['', [Validators.required, Validators.email], this.emailExistsAsyncValidator()]
-    }, {updateOn: "blur"});
   }
 
   ngOnInit(): void {
@@ -386,28 +268,6 @@ export class GroupFormComponent implements OnInit {
         }
       });
     });
-  }
-
-  usernameExistsAsyncValidator(): AsyncValidatorFn {
-    return (control: AbstractControl): Observable<{ [key: string]: any } | null> => {
-      if (!control.value) {
-        return of(null);
-      }
-      return this.userService.checkUsernameExists(control.value).pipe(
-        map(exists => (exists ? {usernameExists: true} : null))
-      );
-    };
-  }
-
-  emailExistsAsyncValidator(): AsyncValidatorFn {
-    return (control: AbstractControl): Observable<{ [key: string]: any } | null> => {
-      if (!control.value) {
-        return of(null);
-      }
-      return this.userService.checkEmailExists(control.value).pipe(
-        map(exists => (exists ? {emailExists: true} : null))
-      );
-    };
   }
 
   get members(): FormArray {
@@ -463,80 +323,32 @@ export class GroupFormComponent implements OnInit {
     }
   }
 
-  addNewUser(): void {
-    if (this.newUserForm.valid) {
-      const formValue = this.newUserForm.value;
-      const tempId = `temp_${this.tempIdCounter++}`;
-
-      const newUser: PendingUser = {
-        ...formValue,
-        tempId
-      };
-
-      this.pendingUsers = [...this.pendingUsers, newUser];
-
-      const memberGroup = this.createMemberFormGroup();
-      memberGroup.patchValue({
-        userName: formValue.name,
-        email: formValue.email,
-        userId: tempId
-      });
-      this.members.push(memberGroup);
-      this.setupAutoComplete(this.members.length - 1);
-      this.newUserForm.reset();
-    }
-  }
-
   async onSubmit(): Promise<void> {
     if (this.groupForm.valid) {
       const formValue = this.groupForm.value;
 
-      try {
-        const createdUsers = await Promise.all(
-          this.pendingUsers.map(async (pendingUser): Promise<CreatedUserResponse> => {
-            const {tempId, ...userData} = pendingUser;
-            const createdUser = await firstValueFrom<User>(
-              this.userService.createUser(userData)
-            );
-            return {tempId, createdUser};
-          })
-        );
-
-        const memberData = formValue.members.map((member: MemberInput) => {
-          if (member.userId) {
-            const createdUser = createdUsers.find(u => u.tempId === member.userId);
-            if (createdUser) {
-              return {
-                userId: createdUser.createdUser.id,
-                userName: member.userName,
-                email: member.email
-              };
-            }
-            return {
-              userId: parseInt(member.userId.toString()),
-              userName: member.userName,
-              email: member.email
-            };
-          }
+      const memberData = formValue.members.map((member: MemberInput) => {
+        if (member.userId) {
           return {
+            userId: parseInt(member.userId.toString()),
             userName: member.userName,
             email: member.email
           };
-        });
-
-        this.formSubmitted.emit({
-          name: formValue.name,
-          description: formValue.description,
-          members: memberData,
-          isPublic: formValue.isPublic,
-          defaultCurrency: formValue.currency,
-          sendInvitationEmail: formValue.sendInvitationEmail
-        });
-      } catch (error: unknown) {
-        if (error instanceof HttpErrorResponse) {
-          console.error(error);
         }
-      }
+        return {
+          userName: member.userName,
+          email: member.email
+        };
+      });
+
+      this.formSubmitted.emit({
+        name: formValue.name,
+        description: formValue.description,
+        members: memberData,
+        isPublic: formValue.isPublic,
+        defaultCurrency: formValue.currency,
+        sendInvitationEmail: formValue.sendInvitationEmail
+      });
     }
   }
 

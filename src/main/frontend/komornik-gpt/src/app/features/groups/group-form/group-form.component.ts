@@ -161,7 +161,7 @@ import {AuthService} from '../../../core/services/auth.service';
       margin-left: 8px;
     }
 
-    ó .members-container {
+    .members-container {
       margin: 24px 0;
     }
 
@@ -312,7 +312,6 @@ export class GroupFormComponent implements OnInit {
   onUserSelected(event: MatAutocompleteSelectedEvent, index: number): void {
     const selectedUserName = event.option.value;
     const selectedUser = this.availableUsers.find(user => user.name === selectedUserName);
-    console.log(selectedUser);
     if (selectedUser) {
       const memberGroup = this.members.at(index);
       memberGroup.patchValue({

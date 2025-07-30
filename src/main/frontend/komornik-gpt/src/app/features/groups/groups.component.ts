@@ -62,8 +62,8 @@ import {map} from 'rxjs/operators';
             <mat-card class="group-card">
               <mat-card-header>
                 <mat-card-title>
+                  <copy-url-button [groupId]="group.id" [viewToken]="group.viewToken" [groupName]="group.name"/>
                   <a [routerLink]="'/groups/' + group.id" class="hand">
-                    <copy-url-button [groupId]="group.id" [viewToken]="group.viewToken"/>
                     {{ group.name }}
                     <span matTooltip="{{ group.isPublic ? 'Publiczna' : 'Prywatna' }}">
                       <mat-icon>{{ group.isPublic ? 'public' : 'lock' }}</mat-icon>
@@ -157,6 +157,18 @@ import {map} from 'rxjs/operators';
     mat-card-content {
       flex: 1;
       padding: 16px;
+    }
+
+    mat-card-title {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    mat-card-title copy-url-button {
+      display: flex;
+      align-items: center;
+      margin-top: -20px;
     }
 
     mat-card-title a {

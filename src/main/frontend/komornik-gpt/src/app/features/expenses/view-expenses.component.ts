@@ -34,7 +34,7 @@ interface GroupedExpenses {
     <div class="container">
       @if (group) {
         <div class="header">
-          <copy-url-button [groupId]="group.id" [viewToken]="group.viewToken"></copy-url-button>
+          <copy-url-button [groupId]="group.id" [viewToken]="group.viewToken" [groupName]="group.name"></copy-url-button>
           <h2>Wydatki dla {{ group.name }}</h2>
         </div>
       }
@@ -244,6 +244,9 @@ interface GroupedExpenses {
     }
 
     @media (max-width: 768px) {
+      .container{
+        padding: 0;
+      }
       .expenses-table, .expenses-table thead, .expenses-table tbody, .expenses-table th, .expenses-table td, .expenses-table tr {
         display: block;
       }

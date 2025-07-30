@@ -37,7 +37,7 @@ interface GroupedExpenses {
   template: `
     <div class="dialog-container">
       <div class="dialog-header">
-        <copy-url-button [groupId]="data.group.id" [viewToken]="data.group.viewToken"></copy-url-button>
+        <copy-url-button [groupId]="data.group.id" [viewToken]="data.group.viewToken" [groupName]="data.group.name"></copy-url-button>
         <h2 mat-dialog-title>Wydatki dla {{ data.group.name }}</h2>
         <div class="row" (click)="settleExpenses(data.group)"> Rozlicz wydatki
           <button mat-icon-button color="primary"

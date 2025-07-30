@@ -21,20 +21,37 @@ import {User} from '../../../core/models/user.model';
           Zapisz zmiany
         </button>
       </app-group-form>
-      <mat-dialog-actions align="end">
+      <mat-dialog-actions>
         <button mat-button mat-dialog-close>Anuluj</button>
         <button mat-raised-button color="primary" type="submit" (click)="groupFormRef.onSubmit()">OK</button>
       </mat-dialog-actions>
     </div>
   `,
   styles: [`
+    :host {
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+    }
+
     .dialog-container {
+      display: flex;
+      flex-direction: column;
+      height: 100%;
       padding: 24px;
+      box-sizing: border-box;
+    }
+
+    mat-dialog-content {
+      flex: 1;
+      overflow-y: auto;
     }
 
     mat-dialog-actions {
+      display: flex;
+      justify-content: space-between;
       padding: 16px 0 0 0;
-      margin-bottom: 0;
+      border-top: 1px solid rgba(0, 0, 0, 0.12);
     }
 
     mat-dialog-actions button {

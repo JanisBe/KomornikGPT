@@ -333,33 +333,41 @@ export class GroupsComponent implements OnInit {
       return;
     }
 
-    const dialogRef = this.dialog.open(EditGroupDialogComponent, {
-      width: '70%',
-      data: {group, currentUser: this.currentUser}
-    });
+    this.isMobile$.subscribe(isMobile => {
+      const dialogConfig = {
+        data: {group, currentUser: this.currentUser},
+        width: isMobile ? '100vw' : '800px',
+        maxWidth: isMobile ? '100vw' : '90vw',
+        height: isMobile ? '100vh' : undefined,
+        maxHeight: isMobile ? '100vh' : '90vh',
+        panelClass: isMobile ? 'mobile-dialog-container' : undefined
+      };
 
-    dialogRef.afterClosed().subscribe(result => {
-      if (result) {
-        this.groupService.updateGroup(group.id, result).subscribe({
-          next: (updatedGroup) => {
-            const index = this.groups.findIndex(g => g.id === updatedGroup.id);
-            if (index !== -1) {
-              this.groups[index] = updatedGroup;
-              this.groups = [...this.groups];
-              console.log(this.groups)// Trigger change detection
+      const dialogRef = this.dialog.open(EditGroupDialogComponent, dialogConfig);
+
+      dialogRef.afterClosed().subscribe(result => {
+        if (result) {
+          this.groupService.updateGroup(group.id, result).subscribe({
+            next: (updatedGroup) => {
+              const index = this.groups.findIndex(g => g.id === updatedGroup.id);
+              if (index !== -1) {
+                this.groups[index] = updatedGroup;
+                this.groups = [...this.groups];
+                console.log(this.groups)// Trigger change detection
+              }
+              this.snackBar.open('Grupa została zaktualizowana', 'Zamknij', {
+                duration: 3000
+              });
+            },
+            error: (error) => {
+              console.error(error);
+              this.snackBar.open('Bład podczas aktualizacji grupy', 'Zamknij', {
+                duration: 3000
+              });
             }
-            this.snackBar.open('Grupa została zaktualizowana', 'Zamknij', {
-              duration: 3000
-            });
-          },
-          error: (error) => {
-            console.error(error);
-            this.snackBar.open('Bład podczas aktualizacji grupy', 'Zamknij', {
-              duration: 3000
-            });
-          }
-        });
-      }
+          });
+        }
+      });
     });
   }
 

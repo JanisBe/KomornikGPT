@@ -5,6 +5,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -31,6 +32,10 @@ public interface ExpenseRepository extends JpaRepository<Expense, Long> {
 
     List<Expense> findAllByGroup_IdAndPaidFalse(Long groupId);
 
+    @Query("SELECT SUM(es.amountOwed) FROM ExpenseSplit es WHERE es.user.id = :userId AND es.expense.group.id = :groupId AND es.expense.paid = false")
+    BigDecimal sumUnpaidAmountOwedByUserIdAndGroupId(@Param("userId") Long userId, @Param("groupId") Long groupId);
 
+    @Query("SELECT COUNT(es.amountOwed) FROM ExpenseSplit es WHERE es.user.id = :userId AND es.expense.group.id = :groupId AND es.expense.paid = false")
+    BigDecimal countUnpaidAmountOwedByUserIdAndGroupId(@Param("userId") Long userId, @Param("groupId") Long groupId);
 
 }

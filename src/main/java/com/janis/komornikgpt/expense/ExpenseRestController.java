@@ -95,4 +95,9 @@ public class ExpenseRestController {
         expenseSettlementService.settleGroup(groupId);
         return ResponseEntity.noContent().build();
     }
+
+    @GetMapping("/groups/{groupId}/user/{userId}/can-be-deleted")
+    public ResponseEntity<Boolean> canUserBeDeletedFromGroup(@PathVariable Long userId, @PathVariable Long groupId) {
+        return ResponseEntity.ok(expenseService.canUserBeDeletedFromGroup(userId, groupId));
+    }
 }

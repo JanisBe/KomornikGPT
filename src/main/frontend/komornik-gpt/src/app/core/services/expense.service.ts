@@ -78,4 +78,8 @@ export class ExpenseService {
   getExpenseForUser(userId: number): Observable<GroupExpenses[]> {
     return this.http.get<GroupExpenses[]>(`${this.apiUrl}/user/${userId}`);
   }
+
+  canUserBeDeletedFromGroup(groupId: number, userId: number): Observable<boolean> {
+    return this.http.get<boolean>(`${this.apiUrl}/groups/${groupId}/user/${userId}/can-be-deleted`);
+  }
 }

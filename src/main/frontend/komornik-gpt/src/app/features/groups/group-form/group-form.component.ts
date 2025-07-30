@@ -12,12 +12,14 @@ import {MatAutocompleteModule, MatAutocompleteSelectedEvent} from '@angular/mate
 import {MatCheckboxModule} from '@angular/material/checkbox';
 import {MemberInput, User} from '../../../core/models/user.model';
 import {UserService} from '../../../core/services/user.service';
-import {Observable} from 'rxjs';
+import {firstValueFrom, Observable} from 'rxjs';
 import {map, startWith} from 'rxjs/operators';
 import {MatSelectModule} from '@angular/material/select';
 import {Currency} from '../../../core/models/currency.model';
 import {Group} from '../../../core/models/group.model';
 import {AuthService} from '../../../core/services/auth.service';
+import {ExpenseService} from '../../../core/services/expense.service';
+import {MatSnackBar, MatSnackBarModule} from '@angular/material/snack-bar';
 
 @Component({
   selector: 'app-group-form',
@@ -35,6 +37,7 @@ import {AuthService} from '../../../core/services/auth.service';
     MatCheckboxModule,
     MatSelectModule,
     MatDialogModule,
+    MatSnackBarModule
   ],
   template: `
     <form [formGroup]="groupForm" (ngSubmit)="onSubmit()" class="group-form-content">
@@ -61,9 +64,9 @@ import {AuthService} from '../../../core/services/auth.service';
       <div class="form-row">
         <div class="checkbox-column">
           <mat-checkbox formControlName="isPublic" class="mb-2">Grupa publiczna</mat-checkbox>
-            <mat-checkbox formControlName="sendInvitationEmail" class="mb-2">
-              Wyślij e-mail z zaproszeniem do nowych członków
-            </mat-checkbox>
+          <mat-checkbox formControlName="sendInvitationEmail" class="mb-2">
+            Wyślij e-mail z zaproszeniem do nowych członków
+          </mat-checkbox>
         </div>
         <div class="form-field currency-field">
           <mat-form-field appearance="outline">
@@ -220,7 +223,7 @@ import {AuthService} from '../../../core/services/auth.service';
   `]
 })
 export class GroupFormComponent implements OnInit {
-  [x: string]: any;
+
   @Input() group: Group | undefined;
   @Output() formSubmitted = new EventEmitter<any>();
 
@@ -232,7 +235,9 @@ export class GroupFormComponent implements OnInit {
   constructor(
     private fb: FormBuilder,
     private userService: UserService,
-    private authService: AuthService
+    private authService: AuthService,
+    private expenseService: ExpenseService,
+    private snackBar: MatSnackBar
   ) {
     this.groupForm = this.fb.group({
       name: ['', [Validators.required, Validators.minLength(2)]],
@@ -289,11 +294,34 @@ export class GroupFormComponent implements OnInit {
     this.setupAutoComplete(index);
   }
 
-  removeMember(index: number): void {
-    if (this.members.length > 1) {
-      this.members.removeAt(index);
-      this.filteredUsers.splice(index, 1);
+  async removeMember(index: number): Promise<void> {
+    if (this.members.length <= 1) {
+      return;
     }
+
+    const memberToRemove = this.members.at(index);
+    const userId = memberToRemove.get('userId')?.value;
+
+    if (this.group?.id && userId) {
+      try {
+        const canDelete = await firstValueFrom(this.expenseService.canUserBeDeletedFromGroup(this.group.id, userId));
+        if (!canDelete) {
+          this.snackBar.open('Nie można usunąć użytkownika, ponieważ ma już wydatki w tej grupie.', 'Zamknij', {
+            duration: 5000
+          });
+          return;
+        }
+      } catch (error) {
+        console.error('Błąd podczas sprawdzania możliwości usunięcia użytkownika:', error);
+        this.snackBar.open('Wystąpił błąd podczas sprawdzania wydatków użytkownika.', 'Zamknij', {
+          duration: 5000
+        });
+        return;
+      }
+    }
+
+    this.members.removeAt(index);
+    this.filteredUsers.splice(index, 1);
   }
 
   onUserNameInput(index: number): void {

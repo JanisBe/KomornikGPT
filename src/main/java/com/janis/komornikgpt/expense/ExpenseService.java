@@ -168,4 +168,9 @@ public class ExpenseService {
 
         return expenseRepository.save(expense);
     }
+
+    public boolean canUserBeDeletedFromGroup(Long userId, Long groupId) {
+        BigDecimal sum = expenseRepository.countUnpaidAmountOwedByUserIdAndGroupId(userId, groupId);
+        return sum != null && sum.compareTo(BigDecimal.ZERO) < 0;
+    }
 }

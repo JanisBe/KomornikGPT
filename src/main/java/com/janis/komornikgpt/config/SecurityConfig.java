@@ -35,6 +35,7 @@ public class SecurityConfig {
             "/*.svg",
             "/*.jpg",
             "/*.html",
+            "/*.json",
             "/*.css",
             "/*.js",
             "/api/auth/**",
@@ -69,32 +70,38 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(HttpMethod.GET, ALLOWED_GET_URLS).permitAll()
                         .requestMatchers(HttpMethod.POST, ALLOWED_POST_URLS).permitAll()
-                        .anyRequest().authenticated()
-                )
+                        .anyRequest().authenticated())
                 .oauth2Login(oauth2 -> oauth2
                         .successHandler(oAuth2AuthenticationSuccessHandler)
                         .failureHandler(oAuth2AuthenticationFailureHandler))
                 .sessionManagement(session -> session
                         .sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-                .headers(headers ->
-                        headers
-                                .xssProtection(xss -> xss.headerValue(XXssProtectionHeaderWriter.HeaderValue.ENABLED_MODE_BLOCK))
-                                .contentSecurityPolicy(cps -> cps.policyDirectives(
-                                        "default-src 'none'; img-src * 'self' data: https:; font-src 'self' https:; connect-src 'self' https://fonts.gstatic.com; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline' http: https:; object-src 'none';  manifest-src 'self'")))
+                .headers(headers -> headers
+                        .xssProtection(xss -> xss.headerValue(
+                                XXssProtectionHeaderWriter.HeaderValue.ENABLED_MODE_BLOCK))
+                        .contentSecurityPolicy(cps -> cps.policyDirectives(
+                                "default-src 'self'; " +
+                                        "script-src 'self' 'unsafe-inline' 'unsafe-eval'; " +
+                                        "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; " +
+                                        "font-src 'self' https://fonts.gstatic.com; " +
+                                        "img-src 'self' data:; " +
+                                        "connect-src 'self' http://localhost:8080 http://localhost:4200 ws://localhost:4200 https://fonts.googleapis.com https://fonts.gstatic.com https://komornik.site; " +
+                                        "object-src 'none'; " +
+                                        "frame-ancestors 'none'; " +
+                                        "manifest-src 'self'")))
                 .logout(logout -> logout
                         .logoutSuccessUrl(url)
                         .invalidateHttpSession(true)
-                        .deleteCookies("JWT_TOKEN", "JSESSIONID")
-                )
+                        .deleteCookies("JWT_TOKEN", "JSESSIONID"))
                 .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class)
                 .addFilterAfter(new SpaWebFilter(), BasicAuthenticationFilter.class)
-                .exceptionHandling(exceptionHandling ->
-                        exceptionHandling.authenticationEntryPoint(new JwtAuthenticationEntryPoint())
-                )
+                .exceptionHandling(exceptionHandling -> exceptionHandling
+                        .authenticationEntryPoint(new JwtAuthenticationEntryPoint()))
                 .with(new WebAuthnConfigurer<>(),
                         (passkeys) -> passkeys.rpName("Spring Security Relying Party")
                                 .rpId("localhost")
-                                .allowedOrigins("http://localhost:8080", "https://localhost:4200"));
+                                .allowedOrigins("http://localhost:8080",
+                                        "https://localhost:4200"));
         return http.build();
     }
 
@@ -107,8 +114,7 @@ public class SecurityConfig {
                 "http://localhost:80",
                 "http://localhost",
                 "http://127.0.0.1",
-                "http://127.0.0.1:80"
-        );
+                "http://127.0.0.1:80");
 
         configuration.setAllowedOrigins(allowedOrigins);
 

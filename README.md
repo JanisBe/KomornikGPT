@@ -1,0 +1,1 @@
+arcyprojekt do rozliczeń kasy

@@ -8,11 +8,6 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 @Configuration
 public class WebConfig implements WebMvcConfigurer {
 
-//	@Bean
-//	public JavaMailSender javaMailSender() {
-//		return new JavaMailSenderImpl();
-//	}
-
 	@Bean
 	public RestClient restClient(RestClient.Builder builder) {
 		return builder.build();

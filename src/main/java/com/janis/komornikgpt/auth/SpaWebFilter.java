@@ -11,14 +11,13 @@ import java.io.IOException;
 
 public class SpaWebFilter extends OncePerRequestFilter {
 
-    /**
-     * Forwards any unmapped paths (except those containing a period) to the client {@code index.html}.
-     */
     @Override
     protected void doFilterInternal(HttpServletRequest request, @NonNull HttpServletResponse response,
                                     @NonNull FilterChain filterChain) throws ServletException, IOException {
         String path = request.getRequestURI();
         if (!path.startsWith("/api") &&
+                !path.startsWith("/oauth2") &&
+                !path.startsWith("/login/oauth2") &&
                 !path.contains(".") &&
                 !path.contains("/users") &&
                 path.matches("/(.*)")) {

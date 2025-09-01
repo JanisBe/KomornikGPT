@@ -78,6 +78,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 || path.equals("/index.html")
                 || path.equals("/manifest.webmanifest")
                 || path.startsWith("/assets/")
+                || path.startsWith("/icons/")
                 || path.startsWith("/oauth2")
                 || path.startsWith("/logout")
                 || path.startsWith("/favicon")

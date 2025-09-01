@@ -105,8 +105,8 @@
                 },
                 "fonts": true
               },
-              "sourceMap": false,
-              "namedChunks": false,
+              "sourceMap": true,
+              "namedChunks": true,
               "aot": true,
               "extractLicenses": true,
               "serviceWorker": "ngsw-config.json"

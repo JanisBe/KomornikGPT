@@ -7,6 +7,7 @@ import {MatDialog, MatDialogModule} from '@angular/material/dialog';
 import {Router, RouterModule} from '@angular/router';
 import {Group} from '../../core/models/group.model';
 import {MatTooltipModule} from '@angular/material/tooltip';
+import {MatMenuModule} from '@angular/material/menu';
 import {GroupService} from '../../core/services/group.service';
 import {DeleteGroupDialogComponent} from './delete-group-dialog/delete-group-dialog.component';
 import {EditGroupDialogComponent} from './edit-group-dialog/edit-group-dialog.component';
@@ -39,7 +40,8 @@ import {map} from 'rxjs/operators';
     RouterModule,
     MatDatepickerModule,
     MatNativeDateModule,
-    CopyUrlButtonComponent
+    CopyUrlButtonComponent,
+    MatMenuModule
   ],
   providers: [
     MatDatepickerModule,
@@ -70,6 +72,23 @@ import {map} from 'rxjs/operators';
                     </span>
                   </a>
                 </mat-card-title>
+                <div class="card-menu">
+                  <button mat-icon-button [matMenuTriggerFor]="cardMenu" matTooltip="Więcej opcji">
+                    <mat-icon>more_vert</mat-icon>
+                  </button>
+                  <mat-menu #cardMenu="matMenu" xPosition="before">
+                    <button mat-menu-item (click)="editGroup(group)"
+                            [disabled]="!canEditGroup(group)">
+                      <mat-icon>edit</mat-icon>
+                      <span>Edytuj grupę</span>
+                    </button>
+                    <button mat-menu-item (click)="deleteGroup(group)"
+                            [disabled]="!canDeleteGroup(group)">
+                      <mat-icon>delete</mat-icon>
+                      <span>Usuń grupę</span>
+                    </button>
+                  </mat-menu>
+                </div>
               </mat-card-header>
               <mat-card-content>
                 <p class="mb-0">Członkowie:</p>
@@ -83,16 +102,6 @@ import {map} from 'rxjs/operators';
                 <button mat-icon-button color="primary" (click)="addExpense(group)"
                         matTooltip="Dodaj wydatek">
                   <mat-icon>add_shopping_cart</mat-icon>
-                </button>
-                <button mat-icon-button color="primary" (click)="editGroup(group)"
-                        [disabled]="!canEditGroup(group)"
-                        [matTooltip]="canEditGroup(group) ? 'Edytuj grupę' : 'Możesz edytkować tylko grupy, które stworzyłeś'">
-                  <mat-icon>edit</mat-icon>
-                </button>
-                <button mat-icon-button color="warn" (click)="deleteGroup(group)"
-                        [disabled]="!canDeleteGroup(group)"
-                        [matTooltip]="canDeleteGroup(group) ? 'Skasuj grupę' : 'Możesz skasować tylko grupy, które stworzyłeś'">
-                  <mat-icon>delete</mat-icon>
                 </button>
                 <button mat-icon-button color="accent" (click)="viewExpenses(group)"
                         matTooltip="Zobacz wydatki">
@@ -159,10 +168,21 @@ import {map} from 'rxjs/operators';
       padding: 16px;
     }
 
+    mat-card-header {
+      position: relative;
+    }
+
     mat-card-title {
       display: flex;
       align-items: center;
       gap: 8px;
+      padding-right: 48px;
+    }
+
+    .card-menu {
+      position: absolute;
+      top: 8px;
+      right: 8px;
     }
 
     mat-card-title copy-url-button {

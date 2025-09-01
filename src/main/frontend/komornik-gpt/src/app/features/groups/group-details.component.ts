@@ -10,6 +10,7 @@ import {AuthService} from '../../core/services/auth.service';
 import {MatProgressSpinner} from '@angular/material/progress-spinner';
 import {MatTooltipModule} from '@angular/material/tooltip';
 import {MatDialog} from '@angular/material/dialog';
+import {MatMenuModule} from '@angular/material/menu';
 import {SettleExpensesDialogComponent} from '../expenses/settle-expenses-dialog';
 import {AddExpenseDialogComponent} from '../expenses/add-expense-dialog/add-expense-dialog.component';
 import {HttpErrorResponse} from '@angular/common/http';
@@ -25,29 +26,43 @@ import {Observable} from 'rxjs';
 @Component({
   selector: 'app-group-details',
   standalone: true,
-  imports: [RouterModule, MatCardModule, MatIconModule, MatButtonModule, MatListModule, MatProgressSpinner, MatTooltipModule],
+  imports: [RouterModule, MatCardModule, MatIconModule, MatButtonModule, MatListModule, MatProgressSpinner, MatTooltipModule, MatMenuModule],
   template: `
     @if (group; as g) {
       <div class="container mt-4">
         <mat-card>
           <mat-card-header>
             <mat-card-title>
-              <div style="display: flex; align-items: center;">
+              <div class="header-content">
                 <span>{{ g.name }}</span>
-                <mat-icon style="margin-left: 13px;" (click)="viewExpenses(group)" matTooltip="Zobacz wydatki">receipt
-                </mat-icon>
-                <mat-icon style="margin-left: 13px;" (click)="settleExpenses(group)" matTooltip="Rozlicz wydatki">
-                  payments
-                </mat-icon>
-                <mat-icon style="margin-left: 13px;" (click)="addExpense(group)" matTooltip="Dodaj wydatek">
-                  add_shopping_cart
-                </mat-icon>
-                <mat-icon style="margin-left: 13px;" (click)="editGroup(group)" matTooltip="Edytuj grupę"
-                          [hidden]="!canEditGroup(group)">edit
-                </mat-icon>
-                <mat-icon style="margin-left: 13px; color: red" (click)="deleteGroup(group)" matTooltip="Usuń grupę"
-                          [hidden]="!canDeleteGroup(group)">delete
-                </mat-icon>
+                <div class="action-icons">
+                  <button mat-icon-button (click)="viewExpenses(group)" matTooltip="Zobacz wydatki">
+                    <mat-icon>receipt</mat-icon>
+                  </button>
+                  <button mat-icon-button (click)="settleExpenses(group)" matTooltip="Rozlicz wydatki">
+                    <mat-icon>payments</mat-icon>
+                  </button>
+                  <button mat-icon-button (click)="addExpense(group)" matTooltip="Dodaj wydatek">
+                    <mat-icon>add_shopping_cart</mat-icon>
+                  </button>
+                </div>
+                <div class="card-menu">
+                  <button mat-icon-button [matMenuTriggerFor]="cardMenu" matTooltip="Więcej opcji">
+                    <mat-icon>more_vert</mat-icon>
+                  </button>
+                  <mat-menu #cardMenu="matMenu" xPosition="before">
+                    <button mat-menu-item (click)="editGroup(group)"
+                            [disabled]="!canEditGroup(group)">
+                      <mat-icon>edit</mat-icon>
+                      <span>Edytuj grupę</span>
+                    </button>
+                    <button mat-menu-item (click)="deleteGroup(group)"
+                            [disabled]="!canDeleteGroup(group)">
+                      <mat-icon>delete</mat-icon>
+                      <span>Usuń grupę</span>
+                    </button>
+                  </mat-menu>
+                </div>
               </div>
             </mat-card-title>
           </mat-card-header>
@@ -105,6 +120,43 @@ import {Observable} from 'rxjs';
 
     mat-card {
       margin-top: 24px;
+    }
+
+    mat-card-header {
+      position: relative;
+    }
+
+    .header-content {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      width: 100%;
+      padding-right: 48px;
+    }
+
+    .action-icons {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .card-menu {
+      position: absolute;
+      top: 8px;
+      right: 8px;
+    }
+
+    @media (max-width: 768px) {
+      .header-content {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 12px;
+        padding-right: 48px;
+      }
+
+      .action-icons {
+        align-self: flex-end;
+      }
     }
   `]
 })

@@ -281,6 +281,8 @@ import {MatSnackBar} from '@angular/material/snack-bar';
       display: flex;
       flex-direction: column;
       height: 100%;
+      /* Obsługa safe area dla urządzeń mobilnych */
+      padding-bottom: env(safe-area-inset-bottom, 0px);
     }
 
     .dialog-container {
@@ -319,6 +321,8 @@ import {MatSnackBar} from '@angular/material/snack-bar';
       margin: 0;
       min-height: 52px;
       border-top: 1px solid rgba(0, 0, 0, 0.12);
+      /* Dodaj padding na dole dla urządzeń mobilnych */
+      padding-bottom: env(safe-area-inset-bottom, 16px);
     }
 
     .dialog-actions-container {
@@ -543,8 +547,15 @@ import {MatSnackBar} from '@angular/material/snack-bar';
     }
 
     @media (max-width: 600px) {
+      :host {
+        max-height: calc(100vh - env(safe-area-inset-bottom, 0px) - 20px);
+        height: auto;
+      }
+
       .dialog-container {
         padding: 16px;
+        max-height: calc(100vh - env(safe-area-inset-bottom, 0px) - 40px);
+        height: auto;
       }
 
       mat-dialog-content {
@@ -601,6 +612,21 @@ import {MatSnackBar} from '@angular/material/snack-bar';
 
       .left-actions, .right-actions {
         justify-content: center;
+      }
+
+      /* Dodatkowy padding na dole dla urządzeń mobilnych */
+      mat-dialog-actions {
+        padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 24px);
+        margin-bottom: 0;
+      }
+
+      /* Zapewnij, że przyciski są zawsze widoczne */
+      .dialog-actions-container {
+        position: relative;
+        z-index: 10;
+        background: white;
+        margin: 0 -16px;
+        padding: 12px 16px;
       }
     }
   `]

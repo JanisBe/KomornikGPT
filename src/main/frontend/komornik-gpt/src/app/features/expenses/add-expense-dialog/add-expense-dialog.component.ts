@@ -224,7 +224,11 @@ import {MatSnackBar} from '@angular/material/snack-bar';
                     min="0"
                     (input)="updateTotalSplit()"
                   />
-                  <mat-icon matSuffix>person_outline</mat-icon>
+                  <mat-icon matSuffix
+                            class="person-icon-clickable"
+                            (click)="assignFullAmountToMember(member.id)"
+                            matTooltip="Przypisz całą kwotę do {{ member.name }}">person_outline
+                  </mat-icon>
                   @if (getSplitControl(member.id.toString())?.errors?.['required']) {
                     <mat-error>Kwota wymagana</mat-error>
                   }
@@ -508,6 +512,16 @@ import {MatSnackBar} from '@angular/material/snack-bar';
       margin-bottom: 8px;
     }
 
+    .person-icon-clickable {
+      cursor: pointer;
+      transition: color 0.2s ease;
+    }
+
+    .person-icon-clickable:hover {
+      color: #1976d2;
+      transform: scale(1.1);
+    }
+
     /* Custom scrollbar styles */
     mat-dialog-content::-webkit-scrollbar {
       width: 8px;
@@ -734,6 +748,25 @@ export class AddExpenseDialogComponent {
       }
       splitsGroup.get(member.id.toString())?.setValue(share);
     });
+
+    this.updateTotalSplit();
+  }
+
+  assignFullAmountToMember(memberId: number) {
+    const totalAmount = parseFloat(this.expenseForm.get('amount')?.value);
+    if (!totalAmount) {
+      return;
+    }
+
+    const splitsGroup = this.expenseForm.get('splits') as FormGroup;
+
+    // Ustaw wszystkim 0
+    this.data.group.members.forEach(member => {
+      splitsGroup.get(member.id.toString())?.setValue(0);
+    });
+
+    // Ustaw wybranej osobie 100% kwoty
+    splitsGroup.get(memberId.toString())?.setValue(totalAmount);
 
     this.updateTotalSplit();
   }

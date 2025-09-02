@@ -1,6 +1,7 @@
 package com.janis.komornikgpt.config;
 
 import com.janis.komornikgpt.auth.*;
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
@@ -14,6 +15,7 @@ import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.security.web.authentication.www.BasicAuthenticationFilter;
 import org.springframework.security.web.header.writers.XXssProtectionHeaderWriter;
+import org.springframework.security.web.util.matcher.RequestMatcher;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
@@ -73,6 +75,7 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(HttpMethod.GET, ALLOWED_GET_URLS).permitAll()
                         .requestMatchers(HttpMethod.POST, ALLOWED_POST_URLS).permitAll()
+                        .requestMatchers(expensesWithViewTokenMatcher()).permitAll()
                         .anyRequest().authenticated())
                 .oauth2Login(oauth2 -> oauth2
                         .successHandler(oAuth2AuthenticationSuccessHandler)
@@ -92,6 +95,19 @@ public class SecurityConfig {
                 .exceptionHandling(exceptionHandling -> exceptionHandling
                         .authenticationEntryPoint(new JwtAuthenticationEntryPoint()));
         return http.build();
+    }
+
+    private RequestMatcher expensesWithViewTokenMatcher() {
+        return (HttpServletRequest request) -> {
+            String uri = request.getRequestURI();
+            String method = request.getMethod();
+            String viewToken = request.getParameter("viewToken");
+
+            return "GET".equals(method) &&
+                    uri.matches("/api/expenses/group/\\d+") &&
+                    viewToken != null &&
+                    !viewToken.trim().isEmpty();
+        };
     }
 
     @Bean

@@ -1,6 +1,6 @@
 import {Injectable} from '@angular/core';
 import {HttpClient} from '@angular/common/http';
-import {BehaviorSubject, filter, Observable, shareReplay, take, tap} from 'rxjs';
+import {BehaviorSubject, catchError, filter, Observable, of, shareReplay, take, tap} from 'rxjs';
 import {Router} from '@angular/router';
 import {LoginRequest, LoginResponse, UpdateUserRequest, User} from '../models/user.model';
 import {environment} from '../../../environments/environment';
@@ -84,6 +84,23 @@ export class AuthService {
     return this.authCheckInProgress;
   }
 
+  getCurrentUserOrNull(): Observable<User | null> {
+    return this.http.get<User>(`${this.apiUrl}/auth/user`, {withCredentials: true})
+      .pipe(
+        tap((user: any) => {
+          if (user && user.authenticated) {
+            this.currentUserSubject.next(user);
+          } else {
+            this.currentUserSubject.next(null);
+          }
+        }),
+        catchError(() => {
+          this.currentUserSubject.next(null);
+          return of(null);
+        })
+      );
+  }
+
   updateProfile(request: UpdateUserRequest): Observable<User> {
     return this.http.put<User>(`${this.apiUrl}/users/me`, request, {withCredentials: true})
       .pipe(
@@ -116,6 +133,12 @@ export class AuthService {
   }
 
   private checkAuthStatus(): void {
+    // Don't check auth status if user has token in URL - let them access public content
+    if (this.hasTokenInUrl()) {
+      this.currentUserSubject.next(null);
+      return;
+    }
+
     this.getCurrentUser().subscribe({
       next: (response: any) => {
         if (response.authenticated) {
@@ -132,5 +155,10 @@ export class AuthService {
         this.currentUserSubject.next(null);
       }
     });
+  }
+
+  private hasTokenInUrl(): boolean {
+    // Use window.location.href as router.url might not be available in constructor
+    return window.location.href.includes('token=');
   }
 }

@@ -16,8 +16,12 @@ export class ExpenseService {
   constructor(private http: HttpClient, private snackBar: MatSnackBar) {
   }
 
-  getExpensesByGroup(groupId: number): Observable<Expense[]> {
-    return this.http.get<Expense[]>(`${this.apiUrl}/group/${groupId}`);
+  getExpensesByGroup(groupId: number, viewToken?: string | null): Observable<Expense[]> {
+    let url = `${this.apiUrl}/group/${groupId}`;
+    if (!!viewToken) {
+      url += '?viewToken=' + viewToken;
+    }
+    return this.http.get<Expense[]>(url);
   }
 
   hasUnpaidExpenses(groupId: number): Observable<boolean> {

@@ -77,7 +77,7 @@ export class CopyUrlButtonComponent implements OnInit {
     if (navigator.share) {
       navigator.share({
         title: 'Rozliczenia grupy ' + this.groupName,
-        text: 'To jest naprawdę mocna rzecz...',
+        text: 'Rozliczenia grupy ' + this.groupName,
         url: this.url
       }).catch(() => {
       });

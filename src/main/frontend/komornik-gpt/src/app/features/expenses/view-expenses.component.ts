@@ -38,7 +38,8 @@ interface GroupedExpenses {
     <div class="container">
       @if (group) {
         <div class="header">
-          <copy-url-button [groupId]="group.id" [viewToken]="group.viewToken" [groupName]="group.name"></copy-url-button>
+          <copy-url-button [groupId]="group.id" [viewToken]="group.viewToken"
+                           [groupName]="group.name"></copy-url-button>
           <h2>Wydatki dla {{ group.name }}</h2>
         </div>
       }
@@ -65,47 +66,49 @@ interface GroupedExpenses {
                   </tr>
                   </thead>
                   <tbody>
-                  @for (expense of group.expenses; track expense.id) {
-                    <tr class="expense-row">
-                      <td data-label="Opis">
-                        <span class="expense-description" 
-                              (click)="editExpense(expense)"
-                              [matTooltip]="expense.date | date:'medium':'':'pl'" 
+                    @for (expense of group.expenses; track expense.id) {
+                      <tr class="expense-row">
+                        <td data-label="Opis">
+                        <span [class.expense-description]="currentUser"
+                              [class.expense-description-readonly]="!currentUser"
+                              (click)="currentUser?.authenticated ? editExpense(expense) : null"
+                              [matTooltip]="expense.date | date:'medium':'':'pl'"
                               matTooltipPosition="above">
                           {{ expense.description | slice:0:30 }}
                         </span>
-                        @if (expense.isPaid) {
-                          <mat-icon matTooltip="Uregulowane" class="paid-icon green-icon">check_circle</mat-icon>
-                        } @else {
-                          <mat-icon matTooltip="Nieuregulowane" color="warn" class="paid-icon">cancel</mat-icon>
-                        }
-                      </td>
-                      <td data-label="Kategoria">
-                        <div class="category-cell">
-                          <mat-icon
-                            [matTooltip]="(expense.category?.mainCategory || 'Bez Kategorii') + ' - ' + (expense.category?.subCategory || 'Ogólne')">
-                            {{ expense.category?.icon || 'category' }}
-                          </mat-icon>
-                          <span class="category-name">{{ expense.category?.subCategory || 'Ogólne' }}</span>
-                        </div>
-                      </td>
-                      <td data-label="Kwota">{{ expense.amount | number:'1.2-2' }} {{ expense.currency }}</td>
-                      <td data-label="Płacił"><span matTooltip="{{expense.payer.email}}">{{ expense.payer.name }}</span>
-                      </td>
-                      <td data-label="Kto"><br>
-                        <div class="splits-container">
-                          @for (split of expense.splits; track split.id) {
-                            <div class="split-item" [class.paid]="split.isPaid"
-                                 [class.owner]="split.user.id === expense.payer.id">
+                          @if (expense.isPaid) {
+                            <mat-icon matTooltip="Uregulowane" class="paid-icon green-icon">check_circle</mat-icon>
+                          } @else {
+                            <mat-icon matTooltip="Nieuregulowane" color="warn" class="paid-icon">cancel</mat-icon>
+                          }
+                        </td>
+                        <td data-label="Kategoria">
+                          <div class="category-cell">
+                            <mat-icon
+                              [matTooltip]="(expense.category?.mainCategory || 'Bez Kategorii') + ' - ' + (expense.category?.subCategory || 'Ogólne')">
+                              {{ expense.category?.icon || 'category' }}
+                            </mat-icon>
+                            <span class="category-name">{{ expense.category?.subCategory || 'Ogólne' }}</span>
+                          </div>
+                        </td>
+                        <td data-label="Kwota">{{ expense.amount | number:'1.2-2' }} {{ expense.currency }}</td>
+                        <td data-label="Płacił"><span
+                          matTooltip="{{expense.payer.email}}">{{ expense.payer.name }}</span>
+                        </td>
+                        <td data-label="Kto"><br>
+                          <div class="splits-container">
+                            @for (split of expense.splits; track split.id) {
+                              <div class="split-item" [class.paid]="split.isPaid"
+                                   [class.owner]="split.user.id === expense.payer.id">
                               <span
                                 matTooltip="{{split.user.email}}">{{ split.user.name }}</span>:
-                              <span>{{ split.amountOwed | number:'1.2-2' }}</span>
-                            </div>
-                          }
-                        </div>
-                      </td>
-                    </tr>
-                  }
+                                <span>{{ split.amountOwed | number:'1.2-2' }}</span>
+                              </div>
+                            }
+                          </div>
+                        </td>
+                      </tr>
+                    }
                   </tbody>
                 </table>
               </div>
@@ -260,6 +263,12 @@ interface GroupedExpenses {
       color: #1565c0;
     }
 
+    .expense-description-readonly {
+      cursor: default;
+      color: inherit;
+      text-decoration: none;
+    }
+
     @media (max-width: 768px) {
       .container{
         padding: 0;
@@ -337,7 +346,7 @@ export class ViewExpensesComponent implements OnInit {
   group: Group | null = null;
   loading = true;
   currentUser: User | null = null;
-
+  viewToken: string | null = null;
   constructor(
     private expenseService: ExpenseService,
     private snackBar: MatSnackBar,
@@ -351,16 +360,16 @@ export class ViewExpensesComponent implements OnInit {
 
   ngOnInit() {
     const id = this.route.snapshot.paramMap.get('id');
-    const viewToken = this.route.snapshot.queryParamMap.get('token');
+    this.viewToken = this.route.snapshot.queryParamMap.get('token');
     if (!id) {
       this.router.navigate(['/groups']);
       return;
     }
-    this.authService.getCurrentUser().subscribe(user => {
+    this.authService.getCurrentUserOrNull().subscribe(user => {
       this.currentUser = user;
     });
 
-    this.groupService.getGroup(+id, viewToken).subscribe({
+    this.groupService.getGroup(+id, this.viewToken).subscribe({
         next: (group) => {
           this.group = group;
           this.loadExpenses();
@@ -380,7 +389,7 @@ export class ViewExpensesComponent implements OnInit {
     if (!this.group) {
       return;
     }
-    this.expenseService.getExpensesByGroup(this.group.id).subscribe({
+    this.expenseService.getExpensesByGroup(this.group.id, this.viewToken).subscribe({
       next: (expenses) => {
         this.expenses = expenses.map(expense => {
           const category = typeof expense.category === 'string'

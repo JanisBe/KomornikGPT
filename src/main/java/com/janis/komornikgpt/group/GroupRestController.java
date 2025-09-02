@@ -33,7 +33,7 @@ public class GroupRestController {
     @GetMapping("/{id}")
     public GroupDto getGroupById(@PathVariable Long id, @RequestParam(required = false) String viewToken, Principal principal) {
         Group group = groupService.findById(id);
-        if (group.isPublic() && viewToken != null && !viewToken.equals(group.getViewToken())) {
+        if (group.isPublic() && viewToken != null && viewToken.equals(group.getViewToken())) {
             return GroupDto.fromGroup(group);
         }
         if (principal != null) {

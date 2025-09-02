@@ -81,11 +81,21 @@ public class ExpenseService {
         expenseRepository.delete(expense);
     }
 
-    public List<Expense> findAllByGroupId(Long groupId, Principal principal) {
-        // Check if user is member of the group
-        if (!groupService.isUserMemberOfGroup(principal.getName(), groupId)) {
+    public List<Expense> findAllByGroupId(Long groupId, Principal principal, String viewToken) {
+        // If viewToken is provided, validate it for public access
+        if (viewToken != null && !viewToken.trim().isEmpty()) {
+            if (!groupService.checkViewToken(groupId, viewToken)) {
+                throw new AccessDeniedException("Invalid view token");
+            }
+            // Valid token allows access without membership check
+            return expenseRepository.findAllByGroupIdOrderByDateDesc(groupId);
+        }
+
+        // If no viewToken, check if user is member of the group
+        if (principal == null || !groupService.isUserMemberOfGroup(principal.getName(), groupId)) {
             throw new AccessDeniedException("You are not a member of this group");
         }
+
         return expenseRepository.findAllByGroupIdOrderByDateDesc(groupId);
     }
 

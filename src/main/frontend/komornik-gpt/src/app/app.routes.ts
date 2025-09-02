@@ -1,4 +1,4 @@
-import {Routes} from '@angular/router';
+import {Router, Routes} from '@angular/router';
 import {LayoutComponent} from './layout/layout.component';
 import {AuthService} from './core/services/auth.service';
 import {inject} from '@angular/core';
@@ -6,10 +6,32 @@ import {AuthGuard} from './core/guards/auth.guard';
 
 const redirectToGroupsIfAuthenticated = () => {
   const authService = inject(AuthService);
+  // Don't redirect if URL contains token
+  if (window.location.href.includes('token=')) {
+    return true;
+  }
   if (authService.isAuthenticated()) {
     return ['/groups'];
   }
   return true;
+};
+
+const homeRedirectGuard = () => {
+  const authService = inject(AuthService);
+  const router = inject(Router);
+
+  // If URL contains token, don't redirect
+  if (window.location.href.includes('token=')) {
+    return true;
+  }
+
+  // If authenticated, go to groups
+  if (authService.isAuthenticated()) {
+    return router.createUrlTree(['/groups']);
+  }
+
+  // If not authenticated, go to login
+  return router.createUrlTree(['/login']);
 };
 
 export const routes: Routes = [

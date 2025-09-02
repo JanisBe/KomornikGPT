@@ -174,4 +174,10 @@ public class GroupService {
                 .orElseThrow(() -> new RuntimeException("User not found"));
         return groupRepository.findByUsers_Id(user.getId());
     }
+
+    public boolean checkViewToken(Long groupId, String viewToken) {
+        return groupRepository.findById(groupId)
+                .map(group -> group.getViewToken().equals(viewToken))
+                .orElse(false);
+    }
 }

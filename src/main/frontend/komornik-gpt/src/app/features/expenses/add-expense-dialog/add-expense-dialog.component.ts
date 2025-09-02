@@ -26,6 +26,8 @@ import {
   LIFE,
   NO_CATEGORY
 } from '../../../core/models/expense-category.model';
+import {ExpenseService} from '../../../core/services/expense.service';
+import {MatSnackBar} from '@angular/material/snack-bar';
 
 @Component({
   selector: 'app-add-expense-dialog',
@@ -236,21 +238,36 @@ import {
         </mat-dialog-content>
 
         <mat-dialog-actions>
-          <button mat-button mat-dialog-close type="button">
-            <mat-icon>close</mat-icon>
-            Anuluj
-          </button>
-          <button mat-raised-button
-                  color="primary"
-                  type="submit"
-                  [disabled]="!expenseForm.valid || !isSplitValid">
-            <mat-icon>add_circle</mat-icon>
-            @if (this.isEditMode) {
-              Zapisz wydatek
-            } @else {
-              Dodaj wydatek
-            }
-          </button>
+          <div class="dialog-actions-container">
+            <div class="left-actions">
+              @if (this.isEditMode && this.data.expense) {
+                <button mat-raised-button
+                        color="warn"
+                        type="button"
+                        (click)="deleteExpense()">
+                  <mat-icon>delete</mat-icon>
+                  Usuń wydatek
+                </button>
+              }
+            </div>
+            <div class="right-actions">
+              <button mat-button mat-dialog-close type="button">
+                <mat-icon>close</mat-icon>
+                Anuluj
+              </button>
+              <button mat-raised-button
+                      color="primary"
+                      type="submit"
+                      [disabled]="!expenseForm.valid || !isSplitValid">
+                <mat-icon>add_circle</mat-icon>
+                @if (this.isEditMode) {
+                  Zapisz wydatek
+                } @else {
+                  Dodaj wydatek
+                }
+              </button>
+            </div>
+          </div>
         </mat-dialog-actions>
       </form>
     </div>
@@ -298,12 +315,23 @@ import {
       margin: 0;
       min-height: 52px;
       border-top: 1px solid rgba(0, 0, 0, 0.12);
-      display: flex;
-      justify-content: center;
     }
 
-    mat-dialog-actions button {
-      margin-left: 8px;
+    .dialog-actions-container {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      width: 100%;
+    }
+
+    .left-actions {
+      display: flex;
+      gap: 8px;
+    }
+
+    .right-actions {
+      display: flex;
+      gap: 8px;
     }
 
     .dialog-header {
@@ -550,6 +578,16 @@ import {
       h2 {
         margin: 0 0 16px 0;
       }
+
+      .dialog-actions-container {
+        flex-direction: column;
+        gap: 12px;
+        align-items: stretch;
+      }
+
+      .left-actions, .right-actions {
+        justify-content: center;
+      }
     }
   `]
 })
@@ -610,6 +648,8 @@ export class AddExpenseDialogComponent {
     private dialogRef: MatDialogRef<AddExpenseDialogComponent>,
     private dateAdapter: DateAdapter<Date>,
     private authService: AuthService,
+    private expenseService: ExpenseService,
+    private snackBar: MatSnackBar,
     @Inject(MAT_DIALOG_DATA) public data: {
       group: Group;
       expense?: Expense;
@@ -706,6 +746,35 @@ export class AddExpenseDialogComponent {
   selectCategory(category: ExpenseCategory): void {
     this.selectedCategory = category;
     this.closeMenus();
+  }
+
+  deleteExpense(): void {
+    if (!this.data.expense) return;
+
+    const expense = this.data.expense;
+    const hasUnpaidSplits = expense.splits.some(split => !split.isPaid);
+
+    let confirmMessage = 'Czy na pewno chcesz usunąć ten wydatek?';
+    if (hasUnpaidSplits) {
+      confirmMessage = 'UWAGA: Ten wydatek ma nierozliczone części. Czy na pewno chcesz go usunąć?';
+    }
+
+    if (confirm(confirmMessage)) {
+      this.expenseService.deleteExpense(expense.id).subscribe({
+        next: () => {
+          this.snackBar.open('Wydatek został usunięty', 'Zamknij', {
+            duration: 3000
+          });
+          this.dialogRef.close({deleted: true});
+        },
+        error: (error) => {
+          console.error(error);
+          this.snackBar.open('Błąd podczas usuwania wydatku', 'Zamknij', {
+            duration: 3000
+          });
+        }
+      });
+    }
   }
 
   private populateForm(expense: Expense, defaultCurrency: Currency | undefined) {

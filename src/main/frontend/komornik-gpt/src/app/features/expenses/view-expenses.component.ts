@@ -12,6 +12,10 @@ import {CopyUrlButtonComponent} from './copy-url-button';
 import {ActivatedRoute, Router} from '@angular/router';
 import {GroupService} from '../../core/services/group.service';
 import {MatProgressSpinner} from '@angular/material/progress-spinner';
+import {MatDialog} from '@angular/material/dialog';
+import {AddExpenseDialogComponent} from './add-expense-dialog/add-expense-dialog.component';
+import {AuthService} from '../../core/services/auth.service';
+import {User} from '../../core/models/user.model';
 
 interface GroupedExpenses {
   date: Date;
@@ -64,7 +68,10 @@ interface GroupedExpenses {
                   @for (expense of group.expenses; track expense.id) {
                     <tr class="expense-row">
                       <td data-label="Opis">
-                        <span [matTooltip]="expense.date | date:'medium':'':'pl'" matTooltipPosition="above">
+                        <span class="expense-description" 
+                              (click)="editExpense(expense)"
+                              [matTooltip]="expense.date | date:'medium':'':'pl'" 
+                              matTooltipPosition="above">
                           {{ expense.description | slice:0:30 }}
                         </span>
                         @if (expense.isPaid) {
@@ -243,6 +250,16 @@ interface GroupedExpenses {
       background: rgba(0, 0, 0, 0.04);
     }
 
+    .expense-description {
+      cursor: pointer;
+      color: #1976d2;
+      text-decoration: underline;
+    }
+
+    .expense-description:hover {
+      color: #1565c0;
+    }
+
     @media (max-width: 768px) {
       .container{
         padding: 0;
@@ -319,6 +336,7 @@ export class ViewExpensesComponent implements OnInit {
   groupedExpenses: GroupedExpenses[] = [];
   group: Group | null = null;
   loading = true;
+  currentUser: User | null = null;
 
   constructor(
     private expenseService: ExpenseService,
@@ -326,6 +344,8 @@ export class ViewExpensesComponent implements OnInit {
     private route: ActivatedRoute,
     private groupService: GroupService,
     private router: Router,
+    private dialog: MatDialog,
+    private authService: AuthService
   ) {
   }
 
@@ -336,6 +356,10 @@ export class ViewExpensesComponent implements OnInit {
       this.router.navigate(['/groups']);
       return;
     }
+    this.authService.getCurrentUser().subscribe(user => {
+      this.currentUser = user;
+    });
+
     this.groupService.getGroup(+id, viewToken).subscribe({
         next: (group) => {
           this.group = group;
@@ -377,6 +401,47 @@ export class ViewExpensesComponent implements OnInit {
           duration: 3000
         });
         this.loading = false;
+      }
+    });
+  }
+
+  editExpense(expense: Expense): void {
+    if (!this.group) return;
+
+    const dialogRef = this.dialog.open(AddExpenseDialogComponent, {
+      width: '800px',
+      maxWidth: '90vw',
+      maxHeight: '90vh',
+      data: {
+        group: this.group,
+        expense: expense,
+        isEdit: true,
+        currentUser: this.currentUser
+      }
+    });
+
+    dialogRef.afterClosed().subscribe(result => {
+      if (result) {
+        if (result.deleted) {
+          // Expense was deleted, just reload the list
+          this.loadExpenses();
+        } else {
+          // Expense was updated
+          this.expenseService.updateExpense(expense.id, result).subscribe({
+            next: () => {
+              this.snackBar.open('Wydatek został zaktualizowany', 'Zamknij', {
+                duration: 3000
+              });
+              this.loadExpenses();
+            },
+            error: (error) => {
+              console.error(error);
+              this.snackBar.open('Błąd podczas aktualizacji wydatku', 'Zamknij', {
+                duration: 3000
+              });
+            }
+          });
+        }
       }
     });
   }

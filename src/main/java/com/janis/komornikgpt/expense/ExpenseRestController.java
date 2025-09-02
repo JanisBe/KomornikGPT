@@ -37,7 +37,8 @@ public class ExpenseRestController {
     }
 
     @GetMapping("/group/{groupId}")
-    public ResponseEntity<List<ExpenseDto>> getExpensesByGroupId(@PathVariable Long groupId, @RequestParam(required = false) String viewToken, Principal principal) {
+    public ResponseEntity<List<ExpenseDto>> getExpensesByGroupId(@PathVariable Long groupId,
+                                                                 @RequestParam(required = false) String viewToken, Principal principal) {
         List<Expense> expenses = expenseService.findAllByGroupId(groupId, principal, viewToken);
         return ResponseEntity.ok(expenses.stream().map(ExpenseDto::fromExpense).toList());
     }
@@ -55,8 +56,7 @@ public class ExpenseRestController {
     public ResponseEntity<List<GroupExpensesDto>> getExpensesByPayerId(@PathVariable Long userId) {
         Map<GroupDto, List<ExpenseDto>> allExpenses = expenseService.findAllByPayerId(userId);
         List<GroupExpensesDto> result = new ArrayList<>();
-        allExpenses.forEach((groupDto, expenses) ->
-                result.add(new GroupExpensesDto(groupDto, expenses)));
+        allExpenses.forEach((groupDto, expenses) -> result.add(new GroupExpensesDto(groupDto, expenses)));
         return ResponseEntity.ok(result);
     }
 

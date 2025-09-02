@@ -90,7 +90,6 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 || path.startsWith("/api/pwd/set-password")
                 || path.startsWith("/api/pwd/reset-password")
                 || path.startsWith("/.well-known/")
-                || (request.getParameterMap().containsKey("viewToken") || path.startsWith("/api/expenses/group/"))
                 || path.matches(".*\\.(png|gif|svg|jpg|html|css|js|json|ico)$");
     }
 }

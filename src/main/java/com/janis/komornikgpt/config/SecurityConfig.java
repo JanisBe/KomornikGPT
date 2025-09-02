@@ -75,6 +75,7 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, ALLOWED_GET_URLS).permitAll()
                         .requestMatchers(HttpMethod.POST, ALLOWED_POST_URLS).permitAll()
                         .requestMatchers(expensesWithViewTokenMatcher()).permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/expenses/group/*").authenticated()
                         .anyRequest().authenticated())
                 .oauth2Login(oauth2 -> oauth2
                         .successHandler(oAuth2AuthenticationSuccessHandler)

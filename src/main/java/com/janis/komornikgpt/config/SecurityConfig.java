@@ -60,8 +60,7 @@ public class SecurityConfig {
     private final OAuth2AuthenticationSuccessHandler oAuth2AuthenticationSuccessHandler;
     private final OAuth2AuthenticationFailureHandler oAuth2AuthenticationFailureHandler;
     private final JwtAuthenticationFilter jwtAuthFilter;
-    @Value("${url}")
-    private String url;
+
     @Value("${frontend.url}")
     private String frontendUrl;
 

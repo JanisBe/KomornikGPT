@@ -1,6 +1,7 @@
 import {Component, inject, OnInit, signal} from '@angular/core';
 import {CommonModule} from '@angular/common';
 import {MatTableModule} from '@angular/material/table';
+import {MatButtonModule, MatIconButton} from '@angular/material/button';
 import {ExpenseService} from '../../../core/services/expense.service';
 import {AuthService} from '../../../core/services/auth.service';
 import {Expense} from '../../../core/models/expense.model';
@@ -10,7 +11,6 @@ import {ConfirmDeleteDialogComponent} from '../view-expenses-dialog/confirm-dele
 import {AddExpenseDialogComponent} from '../add-expense-dialog/add-expense-dialog.component';
 import {MatSnackBar} from '@angular/material/snack-bar';
 import {MatDialog} from '@angular/material/dialog';
-import {MatIconButton} from '@angular/material/button';
 import {MatIconModule} from '@angular/material/icon';
 import {MatTooltipModule} from '@angular/material/tooltip';
 import {MatDividerModule} from '@angular/material/divider';
@@ -18,12 +18,33 @@ import {DEFAULT_CATEGORY, enumValueToCategory} from '../../../core/models/expens
 import {BreakpointObserver, Breakpoints} from '@angular/cdk/layout';
 import {map} from 'rxjs/operators';
 import {Observable} from 'rxjs';
+import * as XLSX from 'xlsx';
 
 @Component({
   selector: 'app-my-expenses',
   standalone: true,
-  imports: [CommonModule, MatTableModule, RouterLink, MatIconModule, MatIconButton, MatTooltipModule, MatDividerModule],
+  imports: [CommonModule, MatTableModule, RouterLink, MatIconModule, MatIconButton, MatTooltipModule, MatDividerModule, MatButtonModule],
   styles: [`
+    .export-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 24px;
+      padding: 16px 0;
+    }
+
+    .export-header h1 {
+      margin: 0;
+      font-size: 24px;
+      font-weight: 500;
+    }
+
+    .export-header button {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
     .green-icon {
       color: green;
     }
@@ -142,9 +163,29 @@ import {Observable} from 'rxjs';
       .expense-table .mat-column-amount {
         width: 84px;
       }
+
+      .export-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 16px;
+      }
+
+      .export-header button {
+        width: 100%;
+        justify-content: center;
+      }
     }`],
   template: `
     @if (expensesByGroupKeys().length > 0) {
+      <div class="export-header">
+        <h1>Moje wydatki</h1>
+        <button mat-raised-button color="accent" (click)="exportToExcel()"
+                [disabled]="expensesByGroupKeys().length === 0"
+                matTooltip="Eksportuj wszystkie wydatki do Excel (.xlsx)">
+          <mat-icon>table_chart</mat-icon>
+          Eksportuj do Excela
+        </button>
+      </div>
       @for (group of expensesByGroupKeys(); track group.id) {
         <h2 class="sticky-header"><a [routerLink]="['/groups', group.id]" class="group-link">
           {{ group.name }}
@@ -354,6 +395,104 @@ export class MyExpensesComponent implements OnInit {
         console.error("Error fetching expenses:", error);
       },
     });
+  }
+
+  exportToExcel(): void {
+    try {
+      // Przygotuj dane w formacie dla SheetJS
+      const worksheetData = this.prepareWorksheetData();
+
+      // Utwórz workbook i worksheet
+      const workbook = XLSX.utils.book_new();
+      const worksheet = XLSX.utils.aoa_to_sheet(worksheetData);
+
+      // Ustaw szerokości kolumn
+      const columnWidths = [
+        {wch: 25}, // Grupa
+        {wch: 12}, // Data
+        {wch: 30}, // Opis
+        {wch: 25}, // Kategoria
+        {wch: 10}, // Kwota
+        {wch: 8},  // Waluta
+        {wch: 12}  // Uregulowane
+      ];
+      worksheet['!cols'] = columnWidths;
+
+      // Dodaj formatowanie nagłówków
+      const headerRange = XLSX.utils.decode_range(worksheet['!ref'] || 'A1:G1');
+      for (let col = headerRange.s.c; col <= headerRange.e.c; col++) {
+        const cellAddress = XLSX.utils.encode_cell({r: 0, c: col});
+        if (!worksheet[cellAddress]) continue;
+
+        worksheet[cellAddress].s = {
+          font: {bold: true, color: {rgb: "FFFFFF"}},
+          fill: {fgColor: {rgb: "1976D2"}},
+          alignment: {horizontal: "center", vertical: "center"}
+        };
+      }
+
+      // Formatuj kolumnę z kwotami jako liczby
+      const dataRange = XLSX.utils.decode_range(worksheet['!ref'] || 'A1:G1');
+      for (let row = 1; row <= dataRange.e.r; row++) {
+        const amountCell = XLSX.utils.encode_cell({r: row, c: 4}); // Kolumna kwoty
+        if (worksheet[amountCell]) {
+          worksheet[amountCell].t = 'n'; // number type
+          worksheet[amountCell].z = '#,##0.00'; // format liczby
+        }
+      }
+
+      // Dodaj worksheet do workbook
+      const sheetName = 'Moje wydatki';
+      XLSX.utils.book_append_sheet(workbook, worksheet, sheetName);
+
+      // Generuj nazwę pliku
+      const fileName = `moje_wydatki_${new Date().toISOString().split('T')[0]}.xlsx`;
+
+      // Zapisz plik
+      XLSX.writeFile(workbook, fileName);
+
+      this.snackBar.open('Plik Excel został pobrany', 'Zamknij', {
+        duration: 3000
+      });
+    } catch (error) {
+      console.error('Błąd podczas eksportu do Excel:', error);
+      this.snackBar.open('Błąd podczas eksportu do Excel', 'Zamknij', {
+        duration: 5000
+      });
+    }
+  }
+
+  private prepareWorksheetData(): any[][] {
+    // Nagłówki
+    const headers = ['Grupa', 'Data', 'Opis', 'Kategoria', 'Kwota', 'Waluta', 'Uregulowane'];
+
+    // Zbierz wszystkie wydatki z wszystkich grup
+    const allExpenses: { group: Group, expense: Expense }[] = [];
+
+    this.expensesByGroupKeys().forEach(group => {
+      const expenses = this.expensesByGroup().get(group) || [];
+      expenses.forEach(expense => {
+        allExpenses.push({group, expense});
+      });
+    });
+
+    // Sortuj chronologicznie (najnowsze pierwsze)
+    allExpenses.sort((a, b) =>
+      new Date(b.expense.date).getTime() - new Date(a.expense.date).getTime()
+    );
+
+    // Przygotuj wiersze danych
+    const rows = allExpenses.map(({group, expense}) => [
+      group.name,
+      new Date(expense.date).toLocaleDateString('pl-PL'),
+      expense.description,
+      `${expense.category?.mainCategory || 'Bez Kategorii'} - ${expense.category?.subCategory || 'Ogólne'}`,
+      expense.amount,
+      expense.currency,
+      expense.isPaid ? 'Tak' : 'Nie'
+    ]);
+
+    return [headers, ...rows];
   }
 }
 

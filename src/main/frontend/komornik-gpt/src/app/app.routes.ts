@@ -62,7 +62,7 @@ export const routes: Routes = [
       },
       {
         path: 'groups/:id',
-        loadComponent: () => import('./features/groups/group-details.component').then(m => m.GroupDetailsComponent)
+        loadComponent: () => import('./features/groups/new-group-details.component').then(m => m.NewGroupDetailsComponent)
       },
       {
         path: 'profile',

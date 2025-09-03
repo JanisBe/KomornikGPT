@@ -16,6 +16,7 @@ import {MatDialog} from '@angular/material/dialog';
 import {AddExpenseDialogComponent} from './add-expense-dialog/add-expense-dialog.component';
 import {AuthService} from '../../core/services/auth.service';
 import {User} from '../../core/models/user.model';
+import * as XLSX from 'xlsx';
 
 interface GroupedExpenses {
   date: Date;
@@ -41,6 +42,14 @@ interface GroupedExpenses {
           <copy-url-button [groupId]="group.id" [viewToken]="group.viewToken"
                            [groupName]="group.name"></copy-url-button>
           <h2>Wydatki dla {{ group.name }}</h2>
+          <div class="export-buttons">
+            <button mat-raised-button color="accent" (click)="exportToExcel()"
+                    [disabled]="loading || expenses.length === 0"
+                    matTooltip="Eksportuj do Excel (.xlsx)">
+              <mat-icon>table_view</mat-icon>
+              Eksportuj do Excela
+            </button>
+          </div>
         </div>
       }
       <div class="expenses-content">
@@ -134,9 +143,23 @@ interface GroupedExpenses {
     .header {
       display: flex;
       align-items: baseline;
+      justify-content: space-between;
       margin-bottom: 24px;
       background: white;
       flex-shrink: 0;
+      gap: 16px;
+    }
+
+    .export-buttons {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+    }
+
+    .export-buttons button {
+      display: flex;
+      align-items: center;
+      gap: 4px;
     }
 
     .expenses-content {
@@ -272,6 +295,18 @@ interface GroupedExpenses {
     @media (max-width: 768px) {
       .container{
         padding: 0;
+      }
+
+      .header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 12px;
+        padding: 16px;
+      }
+
+      .export-buttons {
+        width: 100%;
+        justify-content: center;
       }
       .expenses-table, .expenses-table thead, .expenses-table tbody, .expenses-table th, .expenses-table td, .expenses-table tr {
         display: block;
@@ -474,5 +509,94 @@ export class ViewExpensesComponent implements OnInit {
         expenses: expenses.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
       }))
       .sort((a, b) => b.date.getTime() - a.date.getTime());
+  }
+
+  exportToExcel(): void {
+    try {
+      // Przygotuj dane w formacie dla SheetJS
+      const worksheetData = this.prepareWorksheetData();
+
+      // Utwórz workbook i worksheet
+      const workbook = XLSX.utils.book_new();
+      const worksheet = XLSX.utils.aoa_to_sheet(worksheetData);
+
+      // Ustaw szerokości kolumn
+      const columnWidths = [
+        {wch: 12}, // Data
+        {wch: 30}, // Opis
+        {wch: 25}, // Kategoria
+        {wch: 10}, // Kwota
+        {wch: 8},  // Waluta
+        {wch: 20}, // Płacił
+        {wch: 40}, // Uczestnicy
+        {wch: 12}  // Uregulowane
+      ];
+      worksheet['!cols'] = columnWidths;
+
+      // Dodaj formatowanie nagłówków
+      const headerRange = XLSX.utils.decode_range(worksheet['!ref'] || 'A1:H1');
+      for (let col = headerRange.s.c; col <= headerRange.e.c; col++) {
+        const cellAddress = XLSX.utils.encode_cell({r: 0, c: col});
+        if (!worksheet[cellAddress]) continue;
+
+        worksheet[cellAddress].s = {
+          font: {bold: true, color: {rgb: "FFFFFF"}},
+          fill: {fgColor: {rgb: "1976D2"}},
+          alignment: {horizontal: "center", vertical: "center"}
+        };
+      }
+
+      // Formatuj kolumnę z kwotami jako liczby
+      const dataRange = XLSX.utils.decode_range(worksheet['!ref'] || 'A1:H1');
+      for (let row = 1; row <= dataRange.e.r; row++) {
+        const amountCell = XLSX.utils.encode_cell({r: row, c: 3}); // Kolumna kwoty
+        if (worksheet[amountCell]) {
+          worksheet[amountCell].t = 'n'; // number type
+          worksheet[amountCell].z = '#,##0.00'; // format liczby
+        }
+      }
+
+      // Dodaj worksheet do workbook
+      const sheetName = `Wydatki ${this.group?.name || 'Grupa'}`;
+      XLSX.utils.book_append_sheet(workbook, worksheet, sheetName);
+
+      // Generuj nazwę pliku
+      const fileName = `wydatki_${this.group?.name?.replace(/[^a-zA-Z0-9]/g, '_') || 'grupa'}_${new Date().toISOString().split('T')[0]}.xlsx`;
+
+      // Zapisz plik
+      XLSX.writeFile(workbook, fileName);
+
+      this.snackBar.open('Plik Excel został pobrany', 'Zamknij', {
+        duration: 3000
+      });
+    } catch (error) {
+      console.error('Błąd podczas eksportu do Excel:', error);
+      this.snackBar.open('Błąd podczas eksportu do Excel', 'Zamknij', {
+        duration: 5000
+      });
+    }
+  }
+
+  private prepareWorksheetData(): any[][] {
+    // Nagłówki
+    const headers = ['Data', 'Opis', 'Kategoria', 'Kwota', 'Waluta', 'Płacił', 'Uczestnicy', 'Uregulowane'];
+
+    // Dane - sortowane chronologicznie (najnowsze pierwsze)
+    const sortedExpenses = [...this.expenses].sort((a, b) =>
+      new Date(b.date).getTime() - new Date(a.date).getTime()
+    );
+
+    const rows = sortedExpenses.map(expense => [
+      new Date(expense.date).toLocaleDateString('pl-PL'),
+      expense.description,
+      `${expense.category?.mainCategory || 'Bez Kategorii'} - ${expense.category?.subCategory || 'Ogólne'}`,
+      expense.amount,
+      expense.currency,
+      expense.payer.name,
+      expense.splits.map(split => `${split.user.name}: ${split.amountOwed.toFixed(2)} ${expense.currency}`).join('\n'),
+      expense.isPaid ? 'Tak' : 'Nie'
+    ]);
+
+    return [headers, ...rows];
   }
 }

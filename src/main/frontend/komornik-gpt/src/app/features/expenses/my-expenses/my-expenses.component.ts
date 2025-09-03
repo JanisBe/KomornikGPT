@@ -407,7 +407,7 @@ export class MyExpensesComponent implements OnInit {
       const worksheet = XLSX.utils.aoa_to_sheet(worksheetData);
 
       // Ustaw szerokości kolumn
-      const columnWidths = [
+      worksheet['!cols'] = [
         {wch: 25}, // Grupa
         {wch: 12}, // Data
         {wch: 30}, // Opis
@@ -416,7 +416,6 @@ export class MyExpensesComponent implements OnInit {
         {wch: 8},  // Waluta
         {wch: 12}  // Uregulowane
       ];
-      worksheet['!cols'] = columnWidths;
 
       // Dodaj formatowanie nagłówków
       const headerRange = XLSX.utils.decode_range(worksheet['!ref'] || 'A1:G1');

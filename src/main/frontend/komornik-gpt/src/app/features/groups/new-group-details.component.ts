@@ -914,7 +914,7 @@ export class NewGroupDetailsComponent implements OnInit {
       const worksheet = XLSX.utils.aoa_to_sheet(worksheetData);
 
       // Ustaw szerokości kolumn
-      const columnWidths = [
+      worksheet['!cols'] = [
         {wch: 12}, // Data
         {wch: 30}, // Opis
         {wch: 25}, // Kategoria
@@ -924,7 +924,6 @@ export class NewGroupDetailsComponent implements OnInit {
         {wch: 40}, // Uczestnicy
         {wch: 12}  // Uregulowane
       ];
-      worksheet['!cols'] = columnWidths;
 
       // Dodaj formatowanie nagłówków
       const headerRange = XLSX.utils.decode_range(worksheet['!ref'] || 'A1:H1');

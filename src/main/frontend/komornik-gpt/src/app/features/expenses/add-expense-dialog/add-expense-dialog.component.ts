@@ -120,14 +120,14 @@ import {MatSnackBar} from '@angular/material/snack-bar';
               <mat-form-field appearance="outline" class="full-width">
                 <mat-label>Kwota</mat-label>
                 <input
-                  (input)="splitEqually()"
+                  (input)="onAmountInput($event); splitEqually()"
                   matInput
-                  type="number"
+                  type="text"
                   formControlName="amount"
                   required
                   placeholder="0.00"
-                  step="0.01"
-                  min="0"
+                  inputmode="decimal"
+                  pattern="[0-9]*\\.?[0-9]*"
                 />
                 <mat-icon matSuffix>payments</mat-icon>
                 @if (expenseForm.get('amount')?.errors?.['required']) {
@@ -217,12 +217,12 @@ import {MatSnackBar} from '@angular/material/snack-bar';
                   <mat-label>{{ member.name }} - udział</mat-label>
                   <input
                     matInput
-                    type="number"
+                    type="text"
                     [formControlName]="member.id.toString()"
                     required
-                    step="0.01"
-                    min="0"
-                    (input)="updateTotalSplit()"
+                    inputmode="decimal"
+                    pattern="[0-9]*\\.?[0-9]*"
+                    (input)="onAmountInput($event, member.id.toString()); updateTotalSplit()"
                     (focus)="onSplitFocus(member.id.toString())"
                     (blur)="onSplitBlur()"
                   />
@@ -726,6 +726,30 @@ export class AddExpenseDialogComponent {
 
   onSplitFocus(memberId: string) {
     this.lastEditedField = memberId;
+  }
+
+  onAmountInput(event: Event, controlName?: string): void {
+    const input = event.target as HTMLInputElement;
+    let value = input.value;
+
+    if (value.includes(',')) {
+      value = value.replace(/,/g, '.');
+    }
+
+    value = value.replace(/[^0-9.]/g, '');
+
+    const parts = value.split('.');
+    if (parts.length > 2) {
+      value = parts[0] + '.' + parts.slice(1).join('');
+    }
+
+    input.value = value;
+
+    if (controlName) {
+      this.expenseForm.get('splits')?.get(controlName)?.setValue(value);
+    } else {
+      this.expenseForm.get('amount')?.setValue(value);
+    }
   }
 
   onSplitBlur() {

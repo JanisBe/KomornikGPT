@@ -12,7 +12,7 @@ import {CopyUrlButtonComponent} from './copy-url-button';
 import {ActivatedRoute, Router} from '@angular/router';
 import {GroupService} from '../../core/services/group.service';
 import {MatProgressSpinner} from '@angular/material/progress-spinner';
-import {MatDialog} from '@angular/material/dialog';
+import {MatDialog, MatDialogModule} from '@angular/material/dialog';
 import {AddExpenseDialogComponent} from './add-expense-dialog/add-expense-dialog.component';
 import {AuthService} from '../../core/services/auth.service';
 import {User} from '../../core/models/user.model';
@@ -32,6 +32,7 @@ interface GroupedExpenses {
     MatIconModule,
     MatTooltipModule,
     MatSnackBarModule,
+    MatDialogModule,
     CopyUrlButtonComponent,
     MatProgressSpinner
   ],
@@ -72,6 +73,9 @@ interface GroupedExpenses {
                     <th>Kwota</th>
                     <th>Płacił</th>
                     <th>Kto</th>
+                    @if (currentUser?.authenticated) {
+                      <th>Akcje</th>
+                    }
                   </tr>
                   </thead>
                   <tbody>
@@ -116,6 +120,17 @@ interface GroupedExpenses {
                             }
                           </div>
                         </td>
+                        @if (currentUser?.authenticated) {
+                          <td data-label="Akcje" class="actions-cell">
+                            <button mat-icon-button
+                                    class="delete-button"
+                                    (click)="deleteExpense(expense)"
+                                    matTooltip="Usuń wydatek"
+                                    color="warn">
+                              <mat-icon>delete</mat-icon>
+                            </button>
+                          </td>
+                        }
                       </tr>
                     }
                   </tbody>
@@ -276,6 +291,20 @@ interface GroupedExpenses {
       background: rgba(0, 0, 0, 0.04);
     }
 
+    .actions-cell {
+      width: 60px;
+      text-align: center;
+    }
+
+    .delete-button {
+      opacity: 0;
+      transition: opacity 0.2s ease-in-out;
+    }
+
+    .expense-row:hover .delete-button {
+      opacity: 1;
+    }
+
     .expense-description {
       cursor: pointer;
       color: #1976d2;
@@ -371,6 +400,24 @@ interface GroupedExpenses {
       td[data-label="Kto"] {
         text-align: left;
         padding-left: 8px !important;
+      }
+
+      td[data-label="Akcje"] {
+        text-align: right;
+        padding-left: 8px !important;
+        padding-right: 16px !important;
+        display: flex;
+        justify-content: flex-end;
+        align-items: center;
+      }
+
+      td[data-label="Akcje"]:before {
+        display: none; /* Hide the "Akcje" label on mobile */
+      }
+
+      .delete-button {
+        opacity: 1 !important; /* Always visible on mobile */
+        margin-left: auto;
       }
     }
   `]
@@ -488,6 +535,27 @@ export class ViewExpensesComponent implements OnInit {
         }
       }
     });
+  }
+
+  deleteExpense(expense: Expense): void {
+    const confirmed = confirm(`Czy na pewno chcesz usunąć wydatek "${expense.description}"?`);
+
+    if (confirmed) {
+      this.expenseService.deleteExpense(expense.id).subscribe({
+        next: () => {
+          this.snackBar.open('Wydatek został usunięty', 'Zamknij', {
+            duration: 3000
+          });
+          this.loadExpenses();
+        },
+        error: (error) => {
+          console.error(error);
+          this.snackBar.open('Błąd podczas usuwania wydatku', 'Zamknij', {
+            duration: 3000
+          });
+        }
+      });
+    }
   }
 
   private groupExpensesByDay(expenses: Expense[]): GroupedExpenses[] {

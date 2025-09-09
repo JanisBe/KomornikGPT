@@ -98,9 +98,6 @@ interface GroupedExpenses {
         <!-- Content Tabs -->
         <mat-card class="content-card">
           <mat-tab-group [(selectedIndex)]="selectedTabIndex" class="group-tabs">
-            <!-- Members Tab -->
-
-            <!-- Expenses Tab -->
             <mat-tab label="Wydatki">
               <div class="tab-content expenses-tab">
                 @if (expensesLoading) {
@@ -128,7 +125,7 @@ interface GroupedExpenses {
                         <div class="expenses-list">
                           @for (expense of expenseGroup.expenses; track expense.id) {
                             <div class="expense-item" (click)="currentUser ? editExpense(expense) : null"
-                                 [class.clickable]="currentUser">
+                                 [class.clickable]="currentUser?.authenticated">
                               <div class="expense-main">
                                 <div class="expense-header">
                                   <div class="expense-category">
@@ -246,6 +243,20 @@ interface GroupedExpenses {
       gap: 16px;
       margin-bottom: 8px;
       align-items: baseline;
+    }
+
+    /* Fix copy-url-button styling on colored background */
+    .title-with-copy copy-url-button button {
+      background-color: rgba(255, 255, 255, 0.1) !important;
+      color: white !important;
+    }
+
+    .title-with-copy copy-url-button button:hover {
+      background-color: rgba(255, 255, 255, 0.2) !important;
+    }
+
+    .title-with-copy copy-url-button button .mat-ripple-element {
+      background-color: rgba(255, 255, 255, 0.3) !important;
     }
 
     .title-section h1 {
@@ -585,6 +596,10 @@ interface GroupedExpenses {
         align-items: baseline;
       }
 
+      .title-with-copy copy-url-button {
+        flex-shrink: 0;
+      }
+
       .members-grid {
         grid-template-columns: 1fr;
       }
@@ -726,40 +741,45 @@ export class NewGroupDetailsComponent implements OnInit {
 
   editExpense(expense: Expense): void {
     if (!this.group || !this.currentUser) return;
+    this.isMobile$.subscribe(isMobile => {
+      const dialogConfig = {
+        data: {
+          group: this.group,
+          expense: expense,
+          isEdit: true,
+          currentUser: this.currentUser
+        },
+        width: isMobile ? '100vw' : '800px',
+        maxWidth: isMobile ? '100vw' : '90vw',
+        height: isMobile ? '100vh' : undefined,
+        maxHeight: isMobile ? '100vh' : '90vh',
+        panelClass: isMobile ? 'mobile-dialog-container' : undefined
+      };
 
-    const dialogRef = this.dialog.open(AddExpenseDialogComponent, {
-      width: '800px',
-      maxWidth: '90vw',
-      maxHeight: '90vh',
-      data: {
-        group: this.group,
-        expense: expense,
-        isEdit: true,
-        currentUser: this.currentUser
-      }
-    });
+      const dialogRef = this.dialog.open(AddExpenseDialogComponent, dialogConfig);
 
-    dialogRef.afterClosed().subscribe(result => {
-      if (result) {
-        if (result.deleted) {
-          this.loadExpenses();
-        } else {
-          this.expenseService.updateExpense(expense.id, result).subscribe({
-            next: () => {
-              this.snackBar.open('Wydatek został zaktualizowany', 'Zamknij', {
-                duration: 3000
-              });
-              this.loadExpenses();
-            },
-            error: (error) => {
-              console.error(error);
-              this.snackBar.open('Błąd podczas aktualizacji wydatku', 'Zamknij', {
-                duration: 3000
-              });
-            }
-          });
+      dialogRef.afterClosed().subscribe(result => {
+        if (result) {
+          if (result.deleted) {
+            this.loadExpenses();
+          } else {
+            this.expenseService.updateExpense(expense.id, result).subscribe({
+              next: () => {
+                this.snackBar.open('Wydatek został zaktualizowany', 'Zamknij', {
+                  duration: 3000
+                });
+                this.loadExpenses();
+              },
+              error: (error) => {
+                console.error(error);
+                this.snackBar.open('Błąd podczas aktualizacji wydatku', 'Zamknij', {
+                  duration: 3000
+                });
+              }
+            });
+          }
         }
-      }
+      });
     });
   }
 

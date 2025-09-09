@@ -173,7 +173,7 @@ import {MatSnackBar} from '@angular/material/snack-bar';
                 <mat-label>Kto zapłaci</mat-label>
                 <mat-select formControlName="payerId" required>
                   @for (member of data.group.members; track member.id) {
-                    <mat-option [value]="member.id">{{ member.username }}</mat-option>
+                    <mat-option [value]="member.id">{{ member.username }} ({{ member.name }})</mat-option>
                   }
                 </mat-select>
                 <mat-icon matSuffix>person</mat-icon>
@@ -223,6 +223,8 @@ import {MatSnackBar} from '@angular/material/snack-bar';
                     step="0.01"
                     min="0"
                     (input)="updateTotalSplit()"
+                    (focus)="onSplitFocus(member.id.toString())"
+                    (blur)="onSplitBlur()"
                   />
                   <mat-icon matSuffix
                             class="person-icon-clickable"
@@ -643,6 +645,7 @@ export class AddExpenseDialogComponent {
   showMainCategories = false;
   showSubcategoriesMenu = false;
   activeMainCategory: string | null = null;
+  lastEditedField: string | null = null;
   @ViewChild('categorySelector') categorySelector!: ElementRef;
 
   get selectedCategoryName(): string {
@@ -719,6 +722,61 @@ export class AddExpenseDialogComponent {
 
     const totalAmount = parseFloat(this.expenseForm.get('amount')?.value) || 0;
     this.isSplitValid = Math.abs(this.totalSplitAmount - totalAmount) < 0.01;
+  }
+
+  onSplitFocus(memberId: string) {
+    this.lastEditedField = memberId;
+  }
+
+  onSplitBlur() {
+    const totalAmount = parseFloat(this.expenseForm.get('amount')?.value) || 0;
+    if (totalAmount === 0 || !this.lastEditedField) return;
+
+    const difference = totalAmount - this.totalSplitAmount;
+
+    if (Math.abs(difference) > 0.01) {
+      const splitsGroup = this.expenseForm.get('splits') as FormGroup;
+      const editedUserAmount = parseFloat(splitsGroup.get(this.lastEditedField)?.value) || 0;
+      const remainingAmount = totalAmount - editedUserAmount;
+      const otherMembersCount = this.data.group.members.length - 1; // Wszyscy oprócz tego który edytował
+
+      const confirmed = confirm(
+        `Przypisana suma (${this.totalSplitAmount.toFixed(2)}) różni się od całkowitej kwoty (${totalAmount.toFixed(2)}).\n` +
+        `Pozostała kwota do rozdzielenia: ${remainingAmount.toFixed(2)}\n\n` +
+        `Czy przypisać resztę po równo pomiędzy pozostałych ${otherMembersCount} użytkowników?`
+      );
+
+      if (confirmed) {
+        this.distributeRemainder(remainingAmount);
+      }
+    }
+  }
+
+  private distributeRemainder(remainingAmount: number) {
+    const splitsGroup = this.expenseForm.get('splits') as FormGroup;
+
+    const membersToUpdate = this.data.group.members.filter(member => {
+      return member.id.toString() !== this.lastEditedField;
+    });
+
+    if (membersToUpdate.length === 0) {
+      return;
+    }
+
+    const sharePerMember = +(remainingAmount / membersToUpdate.length).toFixed(2);
+    const finalRemainder = +(remainingAmount - (sharePerMember * membersToUpdate.length)).toFixed(2);
+
+    membersToUpdate.forEach((member, index) => {
+      let newValue = sharePerMember;
+
+      if (index === 0) {
+        newValue += finalRemainder;
+      }
+
+      splitsGroup.get(member.id.toString())?.setValue(+newValue.toFixed(2));
+    });
+
+    this.updateTotalSplit();
   }
 
   onSubmit() {

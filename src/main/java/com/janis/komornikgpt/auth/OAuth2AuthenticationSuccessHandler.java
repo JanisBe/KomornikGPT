@@ -20,6 +20,9 @@ import org.springframework.web.util.UriComponentsBuilder;
 import java.io.IOException;
 import java.util.Map;
 
+import static org.apache.tomcat.util.descriptor.web.Constants.COOKIE_PARTITIONED_ATTR;
+import static org.apache.tomcat.util.descriptor.web.Constants.COOKIE_SAME_SITE_ATTR;
+
 @Component
 @RequiredArgsConstructor
 @Slf4j
@@ -61,6 +64,8 @@ public class OAuth2AuthenticationSuccessHandler extends SimpleUrlAuthenticationS
 
         Cookie cookie = new Cookie(cookieName, token);
         cookie.setHttpOnly(true);
+        cookie.setAttribute(COOKIE_PARTITIONED_ATTR, "true");
+        cookie.setAttribute(COOKIE_SAME_SITE_ATTR, "None");
         cookie.setSecure(cookieSecure);
         cookie.setPath("/");
         cookie.setMaxAge(cookieExpiration);

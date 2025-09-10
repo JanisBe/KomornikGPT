@@ -18,6 +18,9 @@ import org.springframework.web.bind.annotation.*;
 import java.util.HashMap;
 import java.util.Map;
 
+import static org.apache.tomcat.util.descriptor.web.Constants.COOKIE_PARTITIONED_ATTR;
+import static org.apache.tomcat.util.descriptor.web.Constants.COOKIE_SAME_SITE_ATTR;
+
 @RestController
 @RequestMapping("/api/auth")
 @RequiredArgsConstructor
@@ -48,6 +51,8 @@ public class AuthRestController {
         Cookie cookie = new Cookie(cookieName, jwt);
         cookie.setHttpOnly(true);
         cookie.setSecure(true);
+        cookie.setAttribute(COOKIE_PARTITIONED_ATTR, "true");
+        cookie.setAttribute(COOKIE_SAME_SITE_ATTR, "None");
         cookie.setPath("/");
         cookie.setMaxAge(24 * 60 * 60);
         response.addCookie(cookie);

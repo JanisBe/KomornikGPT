@@ -44,12 +44,16 @@ public class OAuth2AuthenticationSuccessHandler extends SimpleUrlAuthenticationS
     @Override
     public void onAuthenticationSuccess(HttpServletRequest request, HttpServletResponse response,
                                         Authentication authentication) throws IOException {
+        log.info("OAuth2 authentication success handler started");
+        log.info("User-Agent: {}", request.getHeader("User-Agent"));
+        
         OAuth2AuthenticationToken oauthToken = (OAuth2AuthenticationToken) authentication;
         OAuth2User oAuth2User = oauthToken.getPrincipal();
         Map<String, Object> attributes = oAuth2User.getAttributes();
 
         String email = (String) attributes.get("email");
         if (email == null) {
+            log.error("Email not found from OAuth2 provider. Available attributes: {}", attributes.keySet());
             throw new RuntimeException("Email not found from OAuth2 provider");
         }
 
@@ -64,12 +68,26 @@ public class OAuth2AuthenticationSuccessHandler extends SimpleUrlAuthenticationS
 
         Cookie cookie = new Cookie(cookieName, token);
         cookie.setHttpOnly(true);
-        cookie.setAttribute(COOKIE_PARTITIONED_ATTR, "true");
-        cookie.setAttribute(COOKIE_SAME_SITE_ATTR, "None");
-        cookie.setSecure(cookieSecure);
+
+        // For Chrome compatibility - SameSite=None requires Secure=true
+        if (cookieSecure) {
+            cookie.setAttribute(COOKIE_PARTITIONED_ATTR, "true");
+            cookie.setAttribute(COOKIE_SAME_SITE_ATTR, "Lax");
+            cookie.setSecure(true);
+            log.info("Setting secure cookie with SameSite=None for production");
+        } else {
+            // For local development without HTTPS
+            cookie.setAttribute(COOKIE_SAME_SITE_ATTR, "Lax");
+            cookie.setSecure(false);
+            log.info("Setting non-secure cookie with SameSite=Lax for local development");
+        }
+        
         cookie.setPath("/");
         cookie.setMaxAge(cookieExpiration);
         response.addCookie(cookie);
+
+        log.info("Cookie added: name={}, secure={}, path={}, maxAge={}",
+                cookieName, cookie.getSecure(), cookie.getPath(), cookie.getMaxAge());
 
         String url = this.frontendUrl + "/auth/callback";
         if (user.isRequiresPasswordSetup()) {

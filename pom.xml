@@ -14,15 +14,15 @@
         <version>3.5.5</version>
     </parent>
     <properties>
-        <java.version>21</java.version>
-        <jjwt.version>0.12.6</jjwt.version>
-        <lombok.version>1.18.38</lombok.version>
+        <java.version>24</java.version>
+        <jjwt.version>0.13.0</jjwt.version>
+        <lombok.version>1.18.42</lombok.version>
         <maven.compiler.source>${java.version}</maven.compiler.source>
         <maven.compiler.target>${java.version}</maven.compiler.target>
         <maven.version>3.9.9</maven.version>
-        <postgresql.version>42.7.7</postgresql.version>
+        <postgresql.version>42.7.8</postgresql.version>
         <skipFrontend>false</skipFrontend>
-        <spring.security.test.version>6.5.1</spring.security.test.version>
+        <spring.security.test.version>7.0.0-M3</spring.security.test.version>
         <frontend.build.script>run build</frontend.build.script>
     </properties>
     <version>0.0.1-SNAPSHOT</version>
@@ -235,12 +235,18 @@
                             <resources>
                                 <resource>
                                     <directory>src/main/frontend/komornik-gpt/dist/browser</directory>
+                                    <excludes>
+                                        <exclude>**/*.map</exclude>
+                                    </excludes>
                                 </resource>
                                 <resource>
                                     <directory>src/main/frontend/komornik-gpt/public</directory>
+                                    <excludes>
+                                        <exclude>**/*.map</exclude>
+                                    </excludes>
                                 </resource>
                             </resources>
-                            <outputDirectory>${project.basedir}/src/main/resources/static</outputDirectory>
+                            <outputDirectory>${project.build.outputDirectory}/static</outputDirectory>
                         </configuration>
                     </execution>
                 </executions>

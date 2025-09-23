@@ -16,10 +16,11 @@ public class SpaWebFilter extends OncePerRequestFilter {
                                     @NonNull FilterChain filterChain) throws ServletException, IOException {
         String path = request.getRequestURI();
         if (!path.startsWith("/api") &&
-                !path.startsWith("/oauth2") &&
-                !path.startsWith("/login/oauth2") &&
+//                !path.startsWith("/oauth2") &&
+//                !path.startsWith("/login/oauth2") &&
+                !path.startsWith("/actuator") &&
                 !path.contains(".") &&
-                !path.contains("/users") &&
+//                !path.contains("/users") &&
                 path.matches("/(.*)")) {
             request.getRequestDispatcher("/index.html").forward(request, response);
             return;

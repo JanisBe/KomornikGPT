@@ -70,26 +70,26 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         filterChain.doFilter(request, response);
     }
 
-    @Override
-    protected boolean shouldNotFilter(HttpServletRequest request) {
-        String path = request.getRequestURI();
-
-        return path.equals("/")
-                || path.equals("/index.html")
-                || path.equals("/manifest.webmanifest")
-                || path.startsWith("/assets/")
-                || path.startsWith("/icons/")
-                || path.startsWith("/oauth2")
-                || path.startsWith("/logout")
-                || path.startsWith("/favicon")
-                || path.startsWith("/css/")
-                || path.startsWith("/js/")
-                || path.startsWith("/images/")
-                || path.startsWith("/login")
-                || path.startsWith("/register")
-                || path.startsWith("/api/pwd/set-password")
-                || path.startsWith("/api/pwd/reset-password")
-                || path.startsWith("/.well-known/")
-                || path.matches(".*\\.(png|gif|svg|jpg|html|css|js|json|ico)$");
-    }
+//    @Override
+//    protected boolean shouldNotFilter(HttpServletRequest request) {
+//        String path = request.getRequestURI();
+//
+//        return path.equals("/")
+//                || path.equals("/index.html")
+//                || path.equals("/manifest.webmanifest")
+//                || path.startsWith("/assets/")
+//                || path.startsWith("/icons/")
+//                || path.startsWith("/oauth2")
+//                || path.startsWith("/logout")
+//                || path.startsWith("/favicon")
+//                || path.startsWith("/css/")
+//                || path.startsWith("/js/")
+//                || path.startsWith("/images/")
+//                || path.startsWith("/login")
+//                || path.startsWith("/register")
+//                || path.startsWith("/api/pwd/set-password")
+//                || path.startsWith("/api/pwd/reset-password")
+//                || path.startsWith("/.well-known/")
+//                || path.matches(".*\\.(png|gif|svg|jpg|html|css|js|json|ico)$");
+//    }
 }

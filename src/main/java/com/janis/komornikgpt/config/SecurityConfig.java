@@ -47,6 +47,7 @@ public class SecurityConfig {
             "/auth/callback",
             "/login",
             "/login/**",
+            "/oauth2/**",
             "/manifest.webmanifest",
             "/api/webauthn/**",
             "/icons/**",
@@ -54,12 +55,14 @@ public class SecurityConfig {
     };
 
     public static final String[] ALLOWED_POST_URLS = {
-            "/api/auth/**",
+            "/api/auth/login",
+            "/api/auth/logout",
             "/api/users/**",
             "/api/pwd/**",};
     private final OAuth2AuthenticationSuccessHandler oAuth2AuthenticationSuccessHandler;
     private final OAuth2AuthenticationFailureHandler oAuth2AuthenticationFailureHandler;
     private final JwtAuthenticationFilter jwtAuthFilter;
+    private final CustomOAuth2UserService customOAuth2UserService;
 
     @Value("${frontend.url}")
     private String frontendUrl;
@@ -69,19 +72,22 @@ public class SecurityConfig {
         http
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .csrf(AbstractHttpConfigurer::disable)
-                .sessionManagement(session -> session
-                        .sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(HttpMethod.GET, ALLOWED_GET_URLS).permitAll()
+                        .requestMatchers("/actuator/health", "/actuator/info").permitAll()
                         .requestMatchers(HttpMethod.POST, ALLOWED_POST_URLS).permitAll()
                         .requestMatchers(expensesWithViewTokenMatcher()).permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/expenses/group/*").authenticated()
                         .anyRequest().authenticated())
                 .oauth2Login(oauth2 -> oauth2
+//                        .userInfoEndpoint(userInfo -> userInfo
+//                                .userService(customOAuth2UserService))
                         .successHandler(oAuth2AuthenticationSuccessHandler)
                         .failureHandler(oAuth2AuthenticationFailureHandler))
                 .sessionManagement(session -> session
-                        .sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                        .sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED)
+                        .maximumSessions(1)
+                        .maxSessionsPreventsLogin(false))
                 .headers(headers -> headers
                         .xssProtection(xss -> xss.headerValue(
                                 XXssProtectionHeaderWriter.HeaderValue.ENABLED_MODE_BLOCK))
@@ -117,6 +123,8 @@ public class SecurityConfig {
         List<String> allowedOrigins = Arrays.asList(
                 "http://localhost:4200",
                 "http://localhost:80",
+                "https://localhost:80",
+                "https://127.0.0.1:80",
                 "http://localhost",
                 "http://127.0.0.1",
                 "http://127.0.0.1:80");

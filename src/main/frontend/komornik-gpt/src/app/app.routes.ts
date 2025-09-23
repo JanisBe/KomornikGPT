@@ -77,6 +77,10 @@ export const routes: Routes = [
       {
         path: 'groups/:id/expenses',
         loadComponent: () => import('./features/expenses/view-expenses.component').then(m => m.ViewExpensesComponent)
+      },
+      {
+        path: 'o',
+        loadComponent: () => import('./features/about/about.component').then(m => m.AboutComponent)
       }
     ]
   },

@@ -74,8 +74,7 @@
               "sourceMap": false,
               "namedChunks": false,
               "aot": true,
-              "extractLicenses": true,
-              "serviceWorker": "ngsw-config.json"
+              "extractLicenses": true
             },
             "local": {
               "budgets": [
@@ -108,8 +107,7 @@
               "sourceMap": true,
               "namedChunks": true,
               "aot": true,
-              "extractLicenses": true,
-              "serviceWorker": "ngsw-config.json"
+              "extractLicenses": true
             },
             "development": {
               "optimization": false,
@@ -127,6 +125,10 @@
             },
             "development": {
               "buildTarget": "komornik-gpt:build:development",
+              "proxyConfig": "proxy.conf.json"
+            },
+            "local": {
+              "buildTarget": "komornik-gpt:build:local",
               "proxyConfig": "proxy.conf.json"
             }
           },
@@ -165,9 +167,6 @@
               "src/**/*.html"
             ]
           }
-        },
-        "deploy": {
-          "builder": "angular-cli-ghpages:deploy"
         }
       }
     }

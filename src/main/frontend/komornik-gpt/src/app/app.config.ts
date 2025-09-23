@@ -1,4 +1,4 @@
-import {ApplicationConfig, isDevMode} from '@angular/core';
+import {ApplicationConfig} from '@angular/core';
 import {provideRouter} from '@angular/router';
 import {routes} from './app.routes';
 import {provideAnimations} from '@angular/platform-browser/animations';
@@ -7,7 +7,6 @@ import {authInterceptor} from './core/interceptors/auth.interceptor';
 import {registerLocaleData} from '@angular/common';
 import localePl from '@angular/common/locales/pl';
 import {MAT_DATE_LOCALE} from '@angular/material/core';
-import {provideServiceWorker} from '@angular/service-worker';
 
 // Register Polish locale
 registerLocaleData(localePl);
@@ -19,9 +18,6 @@ export const appConfig: ApplicationConfig = {
     provideHttpClient(
       withInterceptors([authInterceptor])
     ),
-    {provide: MAT_DATE_LOCALE, useValue: 'pl-PL'}, provideServiceWorker('ngsw-worker.js', {
-      enabled: !isDevMode(),
-      registrationStrategy: 'registerWhenStable:30000'
-    })
+    {provide: MAT_DATE_LOCALE, useValue: 'pl-PL'}
   ]
 };

@@ -1,49 +1,6 @@
 services:
-  app:
-    build: .
-    container_name: komornik-gpt
+  maildev:
+    image: maildev/maildev
     ports:
-      - "443:8443"
-      - "80:8080"
-    environment:
-      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres:5432/komornik
-      - SPRING_DATASOURCE_USERNAME=root
-      - SPRING_DATASOURCE_PASSWORD=password
-      - SPRING_CONFIG_IMPORT=file:/app/daneDoKont.properties
-      - SPRING_SQL_INIT_MODE=never
-      - SPRING_PROFILES_ACTIVE=local
-      - SERVER_SSL_KEY_STORE=/certs/komornik.local.p12
-      - SERVER_SSL_KEY_STORE_PASSWORD=changeit
-      - SERVER_SSL_KEY_STORE_TYPE=PKCS12
-      - SERVER_SSL_KEY_ALIAS=komornik
-      - SERVER_PORT=8443
-    networks:
-      - komornik-network
-    depends_on:
-      - postgres
-    volumes:
-      - ./daneDoKont.properties:/app/daneDoKont.properties
-      - ./certs:/certs:ro
-  postgres:
-    image: postgres:latest
-    container_name: komornik-postgres
-    environment:
-      - POSTGRES_USER=root
-      - POSTGRES_PASSWORD=password
-      - POSTGRES_DB=komornik
-    ports:
-      - "5432:5432"
-    networks:
-      - komornik-network
-    volumes:
-      - komornik-data:/var/lib/postgresql/data
-    healthcheck:
-      test: [ "CMD", "pg_isready", "-U", "root", "-d", "komornik" ]
-      interval: 5s
-      timeout: 5s
-networks:
-  komornik-network:
-    driver: bridge
-volumes:
-  komornik-data:
-    driver: local
+      - "1080:1080"  # Web UI
+      - "1025:1025"  # SMTP

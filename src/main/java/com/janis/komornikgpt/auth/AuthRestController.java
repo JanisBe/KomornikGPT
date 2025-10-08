@@ -93,10 +93,17 @@ public class AuthRestController {
 
     @PostMapping("/logout")
     public ResponseEntity<?> logout(HttpServletResponse response) {
-        // Clear the JWT cookie
+        // Clear the JWT cookie with the same attributes as when it was set
         Cookie cookie = new Cookie(cookieName, null);
         cookie.setHttpOnly(true);
         cookie.setSecure(cookieSecure);
+
+        // Set the same SameSite and Partitioned attributes as during login
+        if (cookieSecure) {
+            cookie.setAttribute(COOKIE_PARTITIONED_ATTR, "true");
+        }
+        cookie.setAttribute(COOKIE_SAME_SITE_ATTR, "Lax");
+        
         cookie.setPath("/");
         cookie.setMaxAge(0); // This deletes the cookie
         response.addCookie(cookie);

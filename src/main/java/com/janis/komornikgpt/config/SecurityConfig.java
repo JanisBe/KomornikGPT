@@ -93,6 +93,7 @@ public class SecurityConfig {
                                 XXssProtectionHeaderWriter.HeaderValue.ENABLED_MODE_BLOCK))
                 )
                 .logout(logout -> logout
+                        .logoutUrl("/logout") // Spring Security logout endpoint (różny od REST API)
                         .logoutSuccessUrl(frontendUrl)
                         .invalidateHttpSession(true)
                         .deleteCookies("JWT_TOKEN", "JSESSIONID"))

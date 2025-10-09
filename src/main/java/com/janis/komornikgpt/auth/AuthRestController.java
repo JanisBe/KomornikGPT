@@ -39,6 +39,9 @@ public class AuthRestController {
     @Value("${jwt.cookie.expiration:86400}")
     private int cookieExpiration;
 
+    @Value("${jwt.cookie.domain:}")
+    private String cookieDomain;
+
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody LoginRequest request, HttpServletResponse response) {
         Authentication authentication = authenticationManager.authenticate(
@@ -54,17 +57,7 @@ public class AuthRestController {
         User user = userService.getUserByUsername(username);
         String jwt = jwtTokenProvider.generateToken(user);
 
-        Cookie cookie = new Cookie(cookieName, jwt);
-        cookie.setHttpOnly(true);
-        cookie.setSecure(cookieSecure);
-        if (cookieSecure) {
-            cookie.setAttribute(COOKIE_PARTITIONED_ATTR, "true");
-        }
-        cookie.setAttribute(COOKIE_SAME_SITE_ATTR, "Lax");
-        cookie.setPath("/");
-        cookie.setMaxAge(cookieExpiration);
-        response.addCookie(cookie);
-
+        response.addCookie(createJwtCookie(jwt));
 
         return getMapResponseEntity(user);
     }
@@ -93,26 +86,44 @@ public class AuthRestController {
 
     @PostMapping("/logout")
     public ResponseEntity<?> logout(HttpServletResponse response) {
-        // Clear the JWT cookie with the same attributes as when it was set
-        Cookie cookie = new Cookie(cookieName, null);
-        cookie.setHttpOnly(true);
-        cookie.setSecure(cookieSecure);
-
-        // Set the same SameSite and Partitioned attributes as during login
-        if (cookieSecure) {
-            cookie.setAttribute(COOKIE_PARTITIONED_ATTR, "true");
-        }
-        cookie.setAttribute(COOKIE_SAME_SITE_ATTR, "Lax");
-        
-        cookie.setPath("/");
-        cookie.setMaxAge(0); // This deletes the cookie
-        response.addCookie(cookie);
+        // Clear both JWT and session cookies
+        response.addCookie(createClearCookie(cookieName));
+        response.addCookie(createClearCookie("JSESSIONID"));
 
         // Clear security context
         SecurityContextHolder.clearContext();
 
         log.info("User logged out successfully");
         return ResponseEntity.ok(Map.of("message", "Logged out successfully"));
+    }
+
+    private Cookie createJwtCookie(String value) {
+        Cookie cookie = new Cookie(cookieName, value);
+        configureCookie(cookie);
+        cookie.setMaxAge(cookieExpiration);
+        return cookie;
+    }
+
+    private Cookie createClearCookie(String name) {
+        Cookie cookie = new Cookie(name, "");
+        configureCookie(cookie);
+        cookie.setMaxAge(0); // Delete cookie
+        return cookie;
+    }
+
+    private void configureCookie(Cookie cookie) {
+        cookie.setHttpOnly(true);
+        cookie.setSecure(cookieSecure);
+        cookie.setPath("/");
+
+        if (!cookieDomain.isEmpty()) {
+            cookie.setDomain(cookieDomain);
+        }
+
+        cookie.setAttribute(COOKIE_SAME_SITE_ATTR, "Lax");
+        if (cookieSecure) {
+            cookie.setAttribute(COOKIE_PARTITIONED_ATTR, "true");
+        }
     }
 
     private static ResponseEntity<Map<String, Object>> getMapResponseEntity(User user) {

@@ -11,7 +11,6 @@ import {environment} from '../../../environments/environment';
 })
 export class AuthService {
   private readonly apiUrl = environment.apiUrl;
-  private readonly serverUrl = environment.serverUrl;
   private currentUserSubject = new BehaviorSubject<User | null>(null);
   public user$ = this.currentUserSubject.asObservable();
   private authCheckInProgress: Observable<User> | null = null;
@@ -33,7 +32,7 @@ export class AuthService {
   }
 
   logout(): void {
-    this.http.post(`${this.serverUrl}/logout`, {}, {
+    this.http.post(`${this.apiUrl}/auth/logout`, {}, {
       withCredentials: true
     })
       .subscribe({

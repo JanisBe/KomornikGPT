@@ -9,7 +9,7 @@ import {
   Validators
 } from '@angular/forms';
 import {Router, RouterModule} from '@angular/router';
-import {CommonModule} from "@angular/common";
+
 import {MatSnackBar, MatSnackBarModule} from '@angular/material/snack-bar';
 import {UserService} from '../../core/services/user.service';
 import {MatIconModule} from "@angular/material/icon";
@@ -25,7 +25,6 @@ import {map, Observable} from "rxjs";
   imports: [
     ReactiveFormsModule,
     RouterModule,
-    CommonModule,
     MatSnackBarModule,
     MatIconModule,
     MatButtonModule,

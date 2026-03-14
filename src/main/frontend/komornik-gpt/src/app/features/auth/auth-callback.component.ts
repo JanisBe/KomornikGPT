@@ -1,14 +1,13 @@
 import {Component, OnInit} from '@angular/core';
 import {ActivatedRoute, Router} from '@angular/router';
 import {AuthService} from '../../core/services/auth.service';
-import {CommonModule} from "@angular/common";
+
 import {MatProgressSpinnerModule} from "@angular/material/progress-spinner";
 
 @Component({
   selector: 'app-auth-callback',
   standalone: true,
   imports: [
-    CommonModule,
     MatProgressSpinnerModule
   ],
   template: `

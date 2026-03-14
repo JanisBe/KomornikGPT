@@ -104,12 +104,7 @@ public class SecurityConfig {
                         .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class)
                         .addFilterAfter(new SpaWebFilter(), BasicAuthenticationFilter.class)
                         .exceptionHandling(exceptionHandling -> exceptionHandling
-                                .authenticationEntryPoint(new JwtAuthenticationEntryPoint()))
-                        .webAuthn(configurer -> configurer
-                                .rpId("localhost")
-                                .rpName("KomornikGPT")
-                                .allowedOrigins(ALLOWED_ORIGINS)
-                                .disableDefaultRegistrationPage(true));
+                                .authenticationEntryPoint(new JwtAuthenticationEntryPoint()));
                 return http.build();
         }
 

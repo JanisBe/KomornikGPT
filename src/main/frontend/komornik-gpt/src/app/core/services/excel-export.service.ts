@@ -39,6 +39,25 @@ export class ExcelExportService {
   }
 
   private prepareWorksheetData(expenses: Expense[]): any[][] {
-    return [];
+    // Nagłówki
+    const headers = ['Data', 'Opis', 'Kategoria', 'Kwota', 'Waluta', 'Płacił', 'Uczestnicy', 'Uregulowane'];
+
+    // Dane - sortowane chronologicznie (najnowsze pierwsze)
+    const sortedExpenses = expenses.sort((a, b) =>
+      new Date(b.date).getTime() - new Date(a.date).getTime()
+    );
+
+    const rows = sortedExpenses.map(expense => [
+      new Date(expense.date).toLocaleDateString('pl-PL'),
+      expense.description,
+      `${expense.category?.mainCategory || 'Bez Kategorii'} - ${expense.category?.subCategory || 'Ogólne'}`,
+      expense.amount,
+      expense.currency,
+      expense.payer.name,
+      expense.splits.map(split => `${split.user.name}: ${split.amountOwed.toFixed(2)} ${expense.currency}`).join('\n'),
+      expense.isPaid ? 'Tak' : 'Nie'
+    ]);
+
+    return [headers, ...rows];
   }
 }

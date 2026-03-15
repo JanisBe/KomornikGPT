@@ -37,3 +37,4 @@ daneDoKont.properties
 /certs/
 docker-compose-local.yml
 local.Dockerfile
+/logs/*

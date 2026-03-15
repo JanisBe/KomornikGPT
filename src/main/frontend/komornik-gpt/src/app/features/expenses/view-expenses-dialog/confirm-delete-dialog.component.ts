@@ -1,4 +1,4 @@
-import {Component, Inject} from '@angular/core';
+import {Component, inject} from '@angular/core';
 
 import {MAT_DIALOG_DATA, MatDialogModule} from '@angular/material/dialog';
 import {MatButtonModule} from '@angular/material/button';
@@ -46,8 +46,5 @@ import {MatButtonModule} from '@angular/material/button';
   `]
 })
 export class ConfirmDeleteDialogComponent {
-  constructor(
-    @Inject(MAT_DIALOG_DATA) public data: any
-  ) {
-  }
+  public data = inject(MAT_DIALOG_DATA);
 }

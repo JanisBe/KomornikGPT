@@ -1,4 +1,4 @@
-import {Component, inject, OnInit} from '@angular/core';
+import {Component, inject, OnInit, signal} from '@angular/core';
 import {
   AbstractControl,
   AsyncValidatorFn,
@@ -17,7 +17,8 @@ import {MatButtonModule} from "@angular/material/button";
 import {MatCardModule} from "@angular/material/card";
 import {MatFormFieldModule} from "@angular/material/form-field";
 import {MatInputModule} from "@angular/material/input";
-import {map, Observable} from "rxjs";
+import {MatProgressBarModule} from "@angular/material/progress-bar";
+import {finalize, map, Observable} from "rxjs";
 
 @Component({
   selector: 'app-register',
@@ -30,7 +31,8 @@ import {map, Observable} from "rxjs";
     MatButtonModule,
     MatCardModule,
     MatFormFieldModule,
-    MatInputModule
+    MatInputModule,
+    MatProgressBarModule
   ],
   template: `
     <div class="register-container">
@@ -38,6 +40,11 @@ import {map, Observable} from "rxjs";
         <mat-card-header>
           <mat-card-title>Zarejestruj się</mat-card-title>
         </mat-card-header>
+
+        @if (isLoading()) {
+          <mat-progress-bar mode="indeterminate"></mat-progress-bar>
+        }
+
         <mat-card-content>
           <form [formGroup]="registerForm" (ngSubmit)="onSubmit()">
             <mat-form-field appearance="outline">
@@ -71,7 +78,7 @@ import {map, Observable} from "rxjs";
             <mat-form-field appearance="outline">
               <mat-label>Hasło</mat-label>
               <input matInput [type]="hide ? 'password' : 'text'" formControlName="password" required minlength="4">
-              <button mat-icon-button matSuffix (click)="hide = !hide" type="button">
+              <button mat-icon-button matSuffix (click)="hide = !hide" type="button" [disabled]="isLoading()">
                 <mat-icon>{{ hide ? 'visibility_off' : 'visibility' }}</mat-icon>
               </button>
               @if (registerForm.get('password')?.errors?.['required'] && registerForm.get('password')?.touched) {
@@ -83,11 +90,12 @@ import {map, Observable} from "rxjs";
             </mat-form-field>
 
             <button mat-raised-button color="primary" type="submit" class="w-100"
-                    [disabled]="registerForm.invalid">Zarejestruj się
+                    [disabled]="registerForm.invalid || isLoading()">
+              {{ isLoading() ? 'Rejestrowanie...' : 'Zarejestruj się' }}
             </button>
           </form>
           <div class="text-center mt-3">
-            <p>Masz już konto? <a mat-button color="primary" routerLink="/login">Login</a></p>
+            <p>Masz już konto? <a mat-button color="primary" routerLink="/login" class="login-link">Login</a></p>
           </div>
         </mat-card-content>
       </mat-card>
@@ -100,7 +108,6 @@ import {map, Observable} from "rxjs";
       align-items: start;
       min-height: 100vh;
       padding: 20px;
-      background-color: white;
     }
 
     .register-card {
@@ -118,11 +125,18 @@ import {map, Observable} from "rxjs";
       display: block;
       margin-bottom: 16px;
     }
+
+    .login-link {
+      font-weight: 500;
+      color: var(--mat-sys-primary);
+    }
   `]
 })
 export class RegisterComponent implements OnInit {
   registerForm!: FormGroup;
   hide = true;
+  isLoading = signal(false);
+
   private fb = inject(FormBuilder);
   private router = inject(Router);
   private snackBar = inject(MatSnackBar);
@@ -158,18 +172,25 @@ export class RegisterComponent implements OnInit {
     if (this.registerForm.invalid) {
       return;
     }
-    this.snackBar.open('Sprawdź podanego maila i kliknij w link aktywacyjny', 'Close', {
-      duration: 3000
-    });
-    this.userService.registerUser(this.registerForm.value).subscribe({
-      next: () => {
-        this.router.navigate(['/login']);
-      },
-      error: (error) => {
-        console.error(error);
-        alert('Registration failed. Please try again.');
-      }
-    });
+
+    this.isLoading.set(true);
+
+    this.userService.registerUser(this.registerForm.value)
+      .pipe(finalize(() => this.isLoading.set(false)))
+      .subscribe({
+        next: () => {
+          this.snackBar.open('Sprawdź podanego maila i kliknij w link aktywacyjny', 'Close', {
+            duration: 5000
+          });
+          this.router.navigate(['/login']);
+        },
+        error: (error) => {
+          console.error(error);
+          this.snackBar.open('Registration failed. Please try again.', 'Close', {
+            duration: 5000
+          });
+        }
+      });
   }
 }
 

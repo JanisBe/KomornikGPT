@@ -1,4 +1,4 @@
-import {Component, ElementRef, Inject, ViewChild} from '@angular/core';
+import {Component, ElementRef, inject, ViewChild} from '@angular/core';
 import {CommonModule} from '@angular/common';
 import {FormBuilder, FormGroup, ReactiveFormsModule, Validators} from '@angular/forms';
 import {MAT_DIALOG_DATA, MatDialogModule, MatDialogRef} from '@angular/material/dialog';
@@ -319,12 +319,11 @@ import {MatSnackBar} from '@angular/material/snack-bar';
     }
 
     mat-dialog-actions {
-      padding: 16px 0 0 0;
       margin: 0;
       min-height: 52px;
       border-top: 1px solid rgba(0, 0, 0, 0.12);
       /* Dodaj padding na dole dla urządzeń mobilnych */
-      padding-bottom: env(safe-area-inset-bottom, 16px);
+      padding: 16px 0 env(safe-area-inset-bottom, 16px);
     }
 
     .dialog-actions-container {
@@ -634,6 +633,16 @@ import {MatSnackBar} from '@angular/material/snack-bar';
   `]
 })
 export class AddExpenseDialogComponent {
+  data = inject(MAT_DIALOG_DATA) as {
+    group: Group;
+    expense?: Expense;
+    isEdit?: boolean;
+  };
+  private fb = inject(FormBuilder);
+  private dialogRef = inject(MatDialogRef<AddExpenseDialogComponent>);
+  private dateAdapter = inject(DateAdapter<Date>);
+  private authService = inject(AuthService);
+  private expenseService = inject(ExpenseService);
   expenseForm!: FormGroup;
   currencies = Object.values(Currency);
   totalSplitAmount = 0;
@@ -647,6 +656,7 @@ export class AddExpenseDialogComponent {
   activeMainCategory: string | null = null;
   lastEditedField: string | null = null;
   @ViewChild('categorySelector') categorySelector!: ElementRef;
+  private snackBar = inject(MatSnackBar);
 
   get selectedCategoryName(): string {
     return `${this.selectedCategory.mainCategory} - ${this.selectedCategory.subCategory}`;
@@ -686,25 +696,13 @@ export class AddExpenseDialogComponent {
     }, 300);
   }
 
-  constructor(
-    private fb: FormBuilder,
-    private dialogRef: MatDialogRef<AddExpenseDialogComponent>,
-    private dateAdapter: DateAdapter<Date>,
-    private authService: AuthService,
-    private expenseService: ExpenseService,
-    private snackBar: MatSnackBar,
-    @Inject(MAT_DIALOG_DATA) public data: {
-      group: Group;
-      expense?: Expense;
-      isEdit?: boolean;
-    }
-  ) {
-    this.isEditMode = !!data.isEdit;
+  constructor() {
+    this.isEditMode = !!this.data.isEdit;
     this.dateAdapter.setLocale('pl');
     this.initForm();
 
-    if (this.isEditMode && data.expense) {
-      this.populateForm(data.expense, data.group.defaultCurrency);
+    if (this.isEditMode && this.data.expense) {
+      this.populateForm(this.data.expense, this.data.group.defaultCurrency);
     }
 
     this.expenseForm.get('amount')?.valueChanges.subscribe(() => {

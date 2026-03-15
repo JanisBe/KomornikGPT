@@ -1,4 +1,4 @@
-import {Component, inject, OnInit} from '@angular/core';
+import {Component, inject, OnInit, signal} from '@angular/core';
 import {
   AbstractControl,
   FormBuilder,
@@ -39,7 +39,7 @@ import {PasswordService} from '../../core/services/password.service';
           <mat-card-title>Ustaw nowe hasło</mat-card-title>
         </mat-card-header>
 
-        @if (isLoading) {
+        @if (isLoading()) {
           <mat-progress-bar mode="indeterminate"></mat-progress-bar>
         }
 
@@ -82,7 +82,7 @@ import {PasswordService} from '../../core/services/password.service';
 
             <div class="form-actions">
               <button mat-raised-button color="primary" type="submit"
-                      [disabled]="resetPasswordForm.invalid || isLoading || !this.token">
+                      [disabled]="resetPasswordForm.invalid || isLoading() || !this.token">
                 Ustaw hasło
               </button>
             </div>
@@ -132,7 +132,7 @@ import {PasswordService} from '../../core/services/password.service';
 })
 export class ResetPasswordComponent implements OnInit {
   resetPasswordForm!: FormGroup;
-  isLoading = false;
+  isLoading = signal(false);
   errorMessage = '';
   hide = true;
   hideConfirm = true;
@@ -165,13 +165,13 @@ export class ResetPasswordComponent implements OnInit {
 
   onSubmit(): void {
     if (this.resetPasswordForm.valid && this.token) {
-      this.isLoading = true;
+      this.isLoading.set(true);
       this.errorMessage = '';
       const password = this.resetPasswordForm.get('password')?.value;
 
       this.passwordService.resetPassword(this.token, password).subscribe({
         next: () => {
-          this.isLoading = false;
+          this.isLoading.set(false);
           this.snackBar.open('Hasło zostało zresetowane pomyślnie.', 'Zamknij', {duration: 3000});
           this.router.navigate(['/login']);
         },
@@ -181,7 +181,7 @@ export class ResetPasswordComponent implements OnInit {
           } else {
             this.errorMessage = 'Wystąpił błąd podczas resetowania hasła. Spróbuj ponownie.';
           }
-          this.isLoading = false;
+          this.isLoading.set(false);
           console.error(err);
         }
       });

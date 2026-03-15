@@ -50,3 +50,8 @@ export interface SettlementDto {
   amount: number;
   currency: string;
 }
+
+export interface GroupedExpenses {
+  date: Date;
+  expenses: Expense[];
+}

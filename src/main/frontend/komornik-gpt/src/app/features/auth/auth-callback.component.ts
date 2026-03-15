@@ -1,4 +1,4 @@
-import {Component, OnInit} from '@angular/core';
+import {Component, inject, OnInit, signal} from '@angular/core';
 import {ActivatedRoute, Router} from '@angular/router';
 import {AuthService} from '../../core/services/auth.service';
 
@@ -12,7 +12,7 @@ import {MatProgressSpinnerModule} from "@angular/material/progress-spinner";
   ],
   template: `
     <div class="flex justify-content-center align-items-center min-h-screen">
-      @if (loading) {
+      @if (isLoading()) {
         <mat-spinner></mat-spinner>
       } @else {
         <div class="text-center">
@@ -24,14 +24,10 @@ import {MatProgressSpinnerModule} from "@angular/material/progress-spinner";
   styles: []
 })
 export class AuthCallbackComponent implements OnInit {
-  loading = true;
-
-  constructor(
-    private route: ActivatedRoute,
-    private router: Router,
-    private authService: AuthService
-  ) {
-  }
+  isLoading = signal(true);
+  private route = inject(ActivatedRoute);
+  private router = inject(Router);
+  private authService = inject(AuthService);
 
   ngOnInit(): void {
     this.route.queryParams.subscribe(params => {
@@ -47,11 +43,11 @@ export class AuthCallbackComponent implements OnInit {
           } else {
             this.router.navigate(['/login']);
           }
-          this.loading = false;
+          this.isLoading.set(false);
         },
         error: () => {
           this.router.navigate(['/login']);
-          this.loading = false;
+          this.isLoading.set(false);
         }
       });
     });

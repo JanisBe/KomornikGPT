@@ -1,4 +1,4 @@
-import {Component, Inject, OnInit} from '@angular/core';
+import {Component, inject, OnInit, signal} from '@angular/core';
 import {MAT_DIALOG_DATA, MatDialog, MatDialogModule, MatDialogRef} from '@angular/material/dialog';
 import {MatSnackBar} from '@angular/material/snack-bar';
 import {MatTableModule} from '@angular/material/table';
@@ -16,7 +16,7 @@ import {ExpenseService} from '../../../core/services/expense.service';
   imports: [MatDialogModule, MatTableModule, MatButtonModule, MatProgressSpinnerModule, DecimalPipe, NgTemplateOutlet, MatCheckbox],
   template: `
     <h1 mat-dialog-title>Rozliczenie grupy</h1>
-    @if (!loading) {
+    @if (!loading()) {
       <div mat-dialog-content>
         @if (hasMoreCurrencies()) {
           <span>
@@ -62,7 +62,8 @@ import {ExpenseService} from '../../../core/services/expense.service';
     </ng-template>
     <div mat-dialog-actions align="end">
       <button mat-button (click)="onCancel()">Anuluj</button>
-      <button mat-raised-button color="primary" (click)="onSettle()" [disabled]="settlements.length === 0 || settling">
+      <button mat-raised-button color="primary" (click)="onSettle()"
+              [disabled]="settlements.length === 0 || settling()">
         Rozlicz
       </button>
     </div>
@@ -82,30 +83,27 @@ export class SettleExpensesDialogComponent implements OnInit {
   originalSettlements: SettlementDto[] = [];
   recalculatedSettlements: SettlementDto[] = [];
   displayedColumns = ['from', 'to', 'amount'];
-  loading = true;
-  settling = false;
+  loading = signal(true);
+  settling = signal(false);
   checkboxState = false;
   recalculated = false;
 
-  constructor(
-    @Inject(MAT_DIALOG_DATA) public data: { group: Group; },
-    private dialogRef: MatDialogRef<SettleExpensesDialogComponent>,
-    private snackBar: MatSnackBar,
-    private dialog: MatDialog,
-    private expenseService: ExpenseService
-  ) {
-  }
+  data = inject<{ group: Group }>(MAT_DIALOG_DATA);
+  private dialogRef = inject(MatDialogRef<SettleExpensesDialogComponent>);
+  private snackBar = inject(MatSnackBar);
+  private dialog = inject(MatDialog);
+  private expenseService = inject(ExpenseService);
 
   ngOnInit(): void {
     this.expenseService.calculateExpense(this.data.group.id).subscribe({
       next: settlements => {
         this.originalSettlements = settlements;
         this.settlements = settlements;
-        this.loading = false;
+        this.loading.set(false);
       },
       error: () => {
         this.snackBar.open('Błąd ładowania rozliczeń', 'Zamknij', {duration: 3000});
-        this.loading = false;
+        this.loading.set(false);
       }
     });
   }
@@ -114,7 +112,7 @@ export class SettleExpensesDialogComponent implements OnInit {
     const confirmRef = this.dialog.open(ConfirmSettleDialog);
     confirmRef.afterClosed().subscribe(confirmed => {
       if (confirmed) {
-        this.settling = true;
+        this.settling.set(true);
         this.expenseService.settleExpense(this.data.group.id).subscribe({
           next: () => {
             this.snackBar.open('Rozliczono wszystkie wydatki!', 'Zamknij', {duration: 3000});
@@ -122,7 +120,7 @@ export class SettleExpensesDialogComponent implements OnInit {
           },
           error: () => {
             this.snackBar.open('Błąd podczas rozliczania', 'Zamknij', {duration: 3000});
-            this.settling = false;
+            this.settling.set(false);
           }
         });
       }
@@ -142,23 +140,23 @@ export class SettleExpensesDialogComponent implements OnInit {
     this.checkboxState = event.checked;
     if (event.checked) {
 
-      this.loading = true;
+      this.loading.set(true);
       if (this.recalculated) {
         this.snackBar.open('Rozliczenia zostały już przeliczone', 'Zamknij', {duration: 3000});
         this.settlements = this.recalculatedSettlements;
-        this.loading = false;
+        this.loading.set(false);
         return;
       }
       this.expenseService.recalculateExpense(this.data.group.id).subscribe({
         next: recalculatedSettlements => {
           this.settlements = recalculatedSettlements;
           this.recalculatedSettlements = recalculatedSettlements;
-          this.loading = false;
+          this.loading.set(false);
           this.recalculated = true;
         },
         error: () => {
           this.snackBar.open('Błąd podczas przeliczania rozliczeń', 'Zamknij', {duration: 3000});
-          this.loading = false;
+          this.loading.set(false);
           this.recalculated = false;
         }
       });

@@ -1,9 +1,10 @@
-import {Injectable} from '@angular/core';
+import {inject, Injectable} from '@angular/core';
 import {HttpClient} from '@angular/common/http';
 import {environment} from '../../../environments/environment';
 import {AuthService} from './auth.service';
 import {Router} from '@angular/router';
 import {map} from 'rxjs/operators';
+import {User} from '../models/user.model';
 
 
 @Injectable({
@@ -12,12 +13,11 @@ import {map} from 'rxjs/operators';
 export class SocialAuthService {
   private readonly apiUrl = `${environment.apiUrl}/auth`;
   private readonly oauth2ApiUrl = `${environment.oAuth}`;
+  private http = inject(HttpClient);
+  private authService = inject(AuthService);
+  private router = inject(Router);
 
-  constructor(
-    private http: HttpClient,
-    private authService: AuthService,
-    private router: Router
-  ) {
+  constructor() {
     if (window.location.pathname === '/auth/callback') {
       this.handleAuthCallback();
     }
@@ -38,9 +38,9 @@ export class SocialAuthService {
   private handleAuthCallback(): void {
     console.log("social auth callback");
     // Get user info from backend which will use the HTTP-only cookie
-    this.http.get<any>(`${this.apiUrl}/user`, {withCredentials: true}).pipe(
-      map(response => {
-        if (response.authenticated) {
+    this.http.get<User>(`${this.apiUrl}/user`, {withCredentials: true}).pipe(
+      map(user => {
+        if (user.authenticated) {
           // Update current user in the auth service
           this.authService.getCurrentUser().subscribe();
         } else {

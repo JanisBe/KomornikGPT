@@ -1,11 +1,11 @@
-import {Component, OnInit} from '@angular/core';
+import {Component, inject, OnInit, signal} from '@angular/core';
 import {CommonModule} from '@angular/common';
 import {MatButtonModule} from '@angular/material/button';
 import {MatIconModule} from '@angular/material/icon';
 import {MatTooltipModule} from '@angular/material/tooltip';
 import {MatSnackBar, MatSnackBarModule} from '@angular/material/snack-bar';
 import {Group} from '../../core/models/group.model';
-import {Expense} from '../../core/models/expense.model';
+import {Expense, GroupedExpenses} from '../../core/models/expense.model';
 import {ExpenseService} from '../../core/services/expense.service';
 import {DEFAULT_CATEGORY, enumValueToCategory} from '../../core/models/expense-category.model';
 import {CopyUrlButtonComponent} from './copy-url-button';
@@ -16,12 +16,8 @@ import {MatDialog, MatDialogModule} from '@angular/material/dialog';
 import {AddExpenseDialogComponent} from './add-expense-dialog/add-expense-dialog.component';
 import {AuthService} from '../../core/services/auth.service';
 import {User} from '../../core/models/user.model';
-import * as XLSX from 'xlsx';
+import {ExcelExportService} from '../../core/services/excel-export.service';
 
-interface GroupedExpenses {
-  date: Date;
-  expenses: Expense[];
-}
 
 @Component({
   selector: 'app-view-expenses',
@@ -45,7 +41,7 @@ interface GroupedExpenses {
           <h2>Wydatki dla {{ group.name }}</h2>
           <div class="export-buttons">
             <button mat-raised-button color="accent" (click)="exportToExcel()"
-                    [disabled]="loading || expenses.length === 0"
+                    [disabled]="loading() || expenses.length === 0"
                     matTooltip="Eksportuj do Excel (.xlsx)">
               <mat-icon>table_view</mat-icon>
               Eksportuj do Excela
@@ -54,7 +50,7 @@ interface GroupedExpenses {
         </div>
       }
       <div class="expenses-content">
-        @if (loading) {
+        @if (loading()) {
           <div class="text-center mt-4">
             <mat-spinner></mat-spinner>
           </div>
@@ -426,19 +422,18 @@ export class ViewExpensesComponent implements OnInit {
   expenses: Expense[] = [];
   groupedExpenses: GroupedExpenses[] = [];
   group: Group | null = null;
-  loading = true;
+  loading = signal(true);
   currentUser: User | null = null;
   viewToken: string | null = null;
-  constructor(
-    private expenseService: ExpenseService,
-    private snackBar: MatSnackBar,
-    private route: ActivatedRoute,
-    private groupService: GroupService,
-    private router: Router,
-    private dialog: MatDialog,
-    private authService: AuthService
-  ) {
-  }
+
+  private expenseService = inject(ExpenseService);
+  private snackBar = inject(MatSnackBar);
+  private route = inject(ActivatedRoute);
+  private groupService = inject(GroupService);
+  private router = inject(Router);
+  private dialog = inject(MatDialog);
+  private authService = inject(AuthService);
+  private excelExportService = inject(ExcelExportService);
 
   ngOnInit() {
     const id = this.route.snapshot.paramMap.get('id');
@@ -469,6 +464,7 @@ export class ViewExpensesComponent implements OnInit {
 
   loadExpenses() {
     if (!this.group) {
+      this.loading.set(false);
       return;
     }
     this.expenseService.getExpensesByGroup(this.group.id, this.viewToken).subscribe({
@@ -483,15 +479,15 @@ export class ViewExpensesComponent implements OnInit {
             category: category
           };
         });
-        this.groupedExpenses = this.groupExpensesByDay(this.expenses);
-        this.loading = false;
+        this.groupedExpenses = this.expenseService.groupExpensesByDay(this.expenses);
+        this.loading.set(false);
       },
       error: (error) => {
         console.error(error);
         this.snackBar.open('Error loading expenses', 'Close', {
           duration: 3000
         });
-        this.loading = false;
+        this.loading.set(false);
       }
     });
   }
@@ -558,112 +554,8 @@ export class ViewExpensesComponent implements OnInit {
     }
   }
 
-  private groupExpensesByDay(expenses: Expense[]): GroupedExpenses[] {
-    const groups = new Map<string, Expense[]>();
-
-    expenses.forEach(expense => {
-      const date = new Date(expense.date);
-      const dateKey = new Date(date.getFullYear(), date.getMonth(), date.getDate()).toISOString();
-
-      if (!groups.has(dateKey)) {
-        groups.set(dateKey, []);
-      }
-      groups.get(dateKey)?.push(expense);
-    });
-
-    return Array.from(groups.entries())
-      .map(([dateKey, expenses]) => ({
-        date: new Date(dateKey),
-        expenses: expenses.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
-      }))
-      .sort((a, b) => b.date.getTime() - a.date.getTime());
-  }
-
   exportToExcel(): void {
-    try {
-      // Przygotuj dane w formacie dla SheetJS
-      const worksheetData = this.prepareWorksheetData();
-
-      // Utwórz workbook i worksheet
-      const workbook = XLSX.utils.book_new();
-      const worksheet = XLSX.utils.aoa_to_sheet(worksheetData);
-
-      // Ustaw szerokości kolumn
-      worksheet['!cols'] = [
-        {wch: 12}, // Data
-        {wch: 30}, // Opis
-        {wch: 25}, // Kategoria
-        {wch: 10}, // Kwota
-        {wch: 8},  // Waluta
-        {wch: 20}, // Płacił
-        {wch: 40}, // Uczestnicy
-        {wch: 12}  // Uregulowane
-      ];
-
-      // Dodaj formatowanie nagłówków
-      const headerRange = XLSX.utils.decode_range(worksheet['!ref'] || 'A1:H1');
-      for (let col = headerRange.s.c; col <= headerRange.e.c; col++) {
-        const cellAddress = XLSX.utils.encode_cell({r: 0, c: col});
-        if (!worksheet[cellAddress]) continue;
-
-        worksheet[cellAddress].s = {
-          font: {bold: true, color: {rgb: "FFFFFF"}},
-          fill: {fgColor: {rgb: "1976D2"}},
-          alignment: {horizontal: "center", vertical: "center"}
-        };
-      }
-
-      // Formatuj kolumnę z kwotami jako liczby
-      const dataRange = XLSX.utils.decode_range(worksheet['!ref'] || 'A1:H1');
-      for (let row = 1; row <= dataRange.e.r; row++) {
-        const amountCell = XLSX.utils.encode_cell({r: row, c: 3}); // Kolumna kwoty
-        if (worksheet[amountCell]) {
-          worksheet[amountCell].t = 'n'; // number type
-          worksheet[amountCell].z = '#,##0.00'; // format liczby
-        }
-      }
-
-      // Dodaj worksheet do workbook
-      const sheetName = `Wydatki ${this.group?.name || 'Grupa'}`;
-      XLSX.utils.book_append_sheet(workbook, worksheet, sheetName);
-
-      // Generuj nazwę pliku
-      const fileName = `wydatki_${this.group?.name?.replace(/[^a-zA-Z0-9]/g, '_') || 'grupa'}_${new Date().toISOString().split('T')[0]}.xlsx`;
-
-      // Zapisz plik
-      XLSX.writeFile(workbook, fileName);
-
-      this.snackBar.open('Plik Excel został pobrany', 'Zamknij', {
-        duration: 3000
-      });
-    } catch (error) {
-      console.error('Błąd podczas eksportu do Excel:', error);
-      this.snackBar.open('Błąd podczas eksportu do Excel', 'Zamknij', {
-        duration: 5000
-      });
-    }
-  }
-
-  private prepareWorksheetData(): any[][] {
-    // Nagłówki
-    const headers = ['Data', 'Opis', 'Kategoria', 'Kwota', 'Waluta', 'Płacił', 'Uczestnicy', 'Uregulowane'];
-
-    // Dane - sortowane chronologicznie (najnowsze pierwsze)
-    const sortedExpenses = [...this.expenses].sort((a, b) =>
-      new Date(b.date).getTime() - new Date(a.date).getTime()
-    );
-
-    const rows = sortedExpenses.map(expense => [
-      new Date(expense.date).toLocaleDateString('pl-PL'),
-      expense.description,
-      `${expense.category?.mainCategory || 'Bez Kategorii'} - ${expense.category?.subCategory || 'Ogólne'}`,
-      expense.amount,
-      expense.currency,
-      expense.payer.name,
-      expense.splits.map(split => `${split.user.name}: ${split.amountOwed.toFixed(2)} ${expense.currency}`).join('\n'),
-      expense.isPaid ? 'Tak' : 'Nie'
-    ]);
-
-    return [headers, ...rows];
+    if (!this.group) return;
+    this.excelExportService.exportExpensesToExcel(this.expenses, this.group.name);
   }
 }

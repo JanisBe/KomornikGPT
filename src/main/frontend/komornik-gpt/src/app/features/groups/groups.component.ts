@@ -1,4 +1,4 @@
-import {Component, OnInit} from '@angular/core';
+import {Component, inject, OnInit, signal} from '@angular/core';
 
 import {MatCardModule} from '@angular/material/card';
 import {MatIconModule} from '@angular/material/icon';
@@ -14,8 +14,9 @@ import {EditGroupDialogComponent} from './edit-group-dialog/edit-group-dialog.co
 import {CreateGroupDialogComponent} from './create-group-dialog/create-group-dialog.component';
 import {AuthService} from '../../core/services/auth.service';
 import {MatSnackBar, MatSnackBarModule} from '@angular/material/snack-bar';
+import {MatProgressSpinnerModule} from '@angular/material/progress-spinner';
 import {User} from '../../core/models/user.model';
-import {forkJoin, Observable} from 'rxjs';
+import {catchError, filter, Observable, of, switchMap} from 'rxjs';
 import {AddExpenseDialogComponent} from '../expenses/add-expense-dialog/add-expense-dialog.component';
 import {ExpenseService} from '../../core/services/expense.service';
 import {HttpErrorResponse} from '@angular/common/http';
@@ -41,7 +42,8 @@ import {map} from 'rxjs/operators';
     MatDatepickerModule,
     MatNativeDateModule,
     CopyUrlButtonComponent,
-    MatMenuModule
+    MatMenuModule,
+    MatProgressSpinnerModule
   ],
   providers: [
     MatDatepickerModule,
@@ -59,7 +61,13 @@ import {map} from 'rxjs/operators';
         </div>
       </div>
       <div class="row">
-        @for (group of groups; track group.id) {
+        @if (isLoading()) {
+          <div class="col-12 text-center p-5">
+            <mat-spinner diameter="50" class="mx-auto"></mat-spinner>
+            <p class="mt-3">Ładowanie grup...</p>
+          </div>
+        } @else {
+          @for (group of groups(); track group.id) {
           <div class="col-md-6 mb-4">
             <mat-card class="group-card">
               <mat-card-header>
@@ -114,15 +122,17 @@ import {map} from 'rxjs/operators';
               </mat-card-actions>
             </mat-card>
           </div>
-        } @empty {
-          <div class="col-12">
-            <mat-card>
-              <mat-card-content>
-                <p class="text-center">Nie masz zarejestrowanych grup, <span
-                  (click)="openCreateGroupDialog()" class="link-primary cursor">stwórz je</span></p>
-              </mat-card-content>
-            </mat-card>
-          </div>
+          } @empty {
+            <div class="col-12">
+              <mat-card>
+                <mat-card-content>
+                  <p class="text-center">Nie masz zarejestrowanych grup,
+                    <span (click)="openCreateGroupDialog()" class="link-primary cursor">stwórz je</span>
+                  </p>
+                </mat-card-content>
+              </mat-card>
+            </div>
+          }
         }
       </div>
     </div>
@@ -196,10 +206,16 @@ import {map} from 'rxjs/operators';
       align-items: center;
     }
 
-    mat-card-title mat-icon {
+    .mat-card-title mat-icon {
       font-size: 18px;
       margin-left: 8px;
       vertical-align: middle;
+      color: var(--mat-sys-on-surface-variant);
+    }
+
+    .mx-auto {
+      margin-left: auto;
+      margin-right: auto;
     }
 
     mat-card-actions {
@@ -250,38 +266,50 @@ import {map} from 'rxjs/operators';
   `]
 })
 export class GroupsComponent implements OnInit {
-  groups: Group[] = [];
+  groups = signal<Group[]>([]);
   currentUser: User | null = null;
+  isLoading = signal(true);
   windowOrigin: string = window.location.origin;
   isMobile$: Observable<boolean>;
 
-  constructor(
-    private groupService: GroupService,
-    private dialog: MatDialog,
-    private authService: AuthService,
-    private snackBar: MatSnackBar,
-    private expenseService: ExpenseService,
-    private router: Router,
-    private breakpointObserver: BreakpointObserver
-  ) {
+  private groupService = inject(GroupService);
+  private dialog = inject(MatDialog);
+  private authService = inject(AuthService);
+  private snackBar = inject(MatSnackBar);
+  private expenseService = inject(ExpenseService);
+  private router = inject(Router);
+  private breakpointObserver = inject(BreakpointObserver);
+
+
+  constructor() {
     this.isMobile$ = this.breakpointObserver.observe(Breakpoints.Handset)
       .pipe(map(result => result.matches));
   }
 
   ngOnInit(): void {
-    forkJoin({
-      user: this.authService.getCurrentUser(),
-      groups: this.groupService.getMyGroups()
-    }).subscribe({
-      next: ({user, groups}) => {
+    this.authService.user$.pipe(
+      filter(user => !!user),
+      switchMap(user => {
         this.currentUser = user;
-        this.groups = groups;
+        this.isLoading.set(true);
+        return this.groupService.getMyGroups().pipe(
+          catchError(error => {
+            console.error('GroupsComponent: Error fetching groups', error);
+            this.snackBar.open('Błąd podczas ładowania grup', 'Zamknij', {
+              duration: 3000
+            });
+            return of([]);
+          })
+        );
+      })
+    ).subscribe({
+      next: (groups) => {
+        this.groups.set(groups);
+        this.isLoading.set(false);
       },
-      error: (error: HttpErrorResponse) => {
-        console.error(error);
-        this.snackBar.open('Błąd podczas ładowania danych', 'Zamknij', {
-          duration: 3000
-        });
+      error: (error) => {
+        console.error('GroupsComponent: Global error in subscription', error);
+        this.isLoading.set(false);
       }
     });
   }
@@ -313,7 +341,7 @@ export class GroupsComponent implements OnInit {
         if (result) {
           this.groupService.createGroup(result).subscribe({
             next: (newGroup) => {
-              this.groups = [...this.groups, newGroup];
+              this.groups.update(groups => [...groups, newGroup]);
               this.snackBar.open('Grupa została utworzona', 'Zamknij', {
                 duration: 3000
               });
@@ -369,12 +397,15 @@ export class GroupsComponent implements OnInit {
         if (result) {
           this.groupService.updateGroup(group.id, result).subscribe({
             next: (updatedGroup) => {
-              const index = this.groups.findIndex(g => g.id === updatedGroup.id);
-              if (index !== -1) {
-                this.groups[index] = updatedGroup;
-                this.groups = [...this.groups];
-                console.log(this.groups)// Trigger change detection
-              }
+              this.groups.update(groups => {
+                const index = groups.findIndex(g => g.id === updatedGroup.id);
+                if (index !== -1) {
+                  const newGroups = [...groups];
+                  newGroups[index] = updatedGroup;
+                  return newGroups;
+                }
+                return groups;
+              });
               this.snackBar.open('Grupa została zaktualizowana', 'Zamknij', {
                 duration: 3000
               });
@@ -408,7 +439,7 @@ export class GroupsComponent implements OnInit {
       if (result) {
         this.groupService.deleteGroup(group.id).subscribe({
           next: () => {
-            this.groups = this.groups.filter(g => g.id !== group.id);
+            this.groups.update(groups => groups.filter(g => g.id !== group.id));
             this.snackBar.open('Grupa została usunieta', 'Zamknij', {
               duration: 3000
             });

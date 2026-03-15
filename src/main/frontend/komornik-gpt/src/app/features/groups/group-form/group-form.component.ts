@@ -1,4 +1,4 @@
-import {Component, EventEmitter, Input, OnInit, Output} from '@angular/core';
+import {Component, EventEmitter, inject, Input, OnInit, Output} from '@angular/core';
 import {MatDialogModule} from '@angular/material/dialog';
 import {CommonModule} from '@angular/common';
 import {FormArray, FormBuilder, FormGroup, ReactiveFormsModule, Validators} from '@angular/forms';
@@ -130,10 +130,12 @@ import {MatSnackBar, MatSnackBarModule} from '@angular/material/snack-bar';
         }
 
         <div class="add-member-link">
-          <a mat-button color="primary" (click)="addMember()">
+          <button mat-button color="primary" (click)="addMember()"
+                  (keyup.enter)="addMember()" (keydown.enter)="addMember()"
+                  type="button" class="add-member-btn">
             <mat-icon>add</mat-icon>
             Dodaj kolejnego członka
-          </a>
+          </button>
         </div>
       </div>
     </form>
@@ -211,6 +213,11 @@ import {MatSnackBar, MatSnackBarModule} from '@angular/material/snack-bar';
       margin-top: 8px;
     }
 
+    .add-member-link a {
+      color: var(--mat-sys-primary);
+      font-weight: 500;
+    }
+
     h3 {
       margin: 0 0 16px 0;
       font-weight: 500;
@@ -227,18 +234,18 @@ export class GroupFormComponent implements OnInit {
   @Input() group: Group | undefined;
   @Output() formSubmitted = new EventEmitter<any>();
 
-  groupForm: FormGroup;
+  groupForm!: FormGroup;
   availableUsers: User[] = [];
   filteredUsers: Observable<User[]>[] = [];
   currencies = Object.values(Currency);
 
-  constructor(
-    private fb: FormBuilder,
-    private userService: UserService,
-    private authService: AuthService,
-    private expenseService: ExpenseService,
-    private snackBar: MatSnackBar
-  ) {
+  private fb = inject(FormBuilder);
+  private userService = inject(UserService);
+  private authService = inject(AuthService);
+  private expenseService = inject(ExpenseService);
+  private snackBar = inject(MatSnackBar);
+
+  ngOnInit(): void {
     this.groupForm = this.fb.group({
       name: ['', [Validators.required, Validators.minLength(2)]],
       description: [''],
@@ -247,9 +254,7 @@ export class GroupFormComponent implements OnInit {
       currency: [Currency.PLN, Validators.required],
       sendInvitationEmail: [true]
     });
-  }
 
-  ngOnInit(): void {
     this.authService.getCurrentUser().subscribe((user: User) => {
       this.userService.findUsersFriends(user.id!).subscribe({
         next: (users: User[]) => {

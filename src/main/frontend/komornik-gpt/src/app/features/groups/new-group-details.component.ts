@@ -1,4 +1,4 @@
-import {Component, OnInit} from '@angular/core';
+import {Component, inject, OnInit, signal} from '@angular/core';
 import {ActivatedRoute, Router, RouterModule} from '@angular/router';
 import {GroupService} from '../../core/services/group.service';
 import {Group} from '../../core/models/group.model';
@@ -22,17 +22,13 @@ import {DeleteGroupDialogComponent} from './delete-group-dialog/delete-group-dia
 import {BreakpointObserver, Breakpoints} from '@angular/cdk/layout';
 import {map} from 'rxjs/operators';
 import {Observable} from 'rxjs';
-import {Expense} from '../../core/models/expense.model';
+import {Expense, GroupedExpenses} from '../../core/models/expense.model';
 import {DEFAULT_CATEGORY, enumValueToCategory} from '../../core/models/expense-category.model';
 import {MatTabsModule} from '@angular/material/tabs';
 import {CommonModule} from '@angular/common';
 import {CopyUrlButtonComponent} from '../expenses/copy-url-button';
-import * as XLSX from 'xlsx';
+import {ExcelExportService} from '../../core/services/excel-export.service';
 
-interface GroupedExpenses {
-  date: Date;
-  expenses: Expense[];
-}
 
 @Component({
   selector: 'app-group-details',
@@ -67,7 +63,7 @@ interface GroupedExpenses {
                       Rozlicz
                     </button>
                     <button mat-raised-button (click)="exportToExcel()"
-                            [disabled]="expensesLoading || expenses.length === 0"
+                            [disabled]="expensesLoading() || expenses.length === 0"
                             matTooltip="Eksportuj wydatki do Excel (.xlsx)"
                             class="export-button">
                       <mat-icon>table_chart</mat-icon>
@@ -100,7 +96,7 @@ interface GroupedExpenses {
           <mat-tab-group [(selectedIndex)]="selectedTabIndex" class="group-tabs">
             <mat-tab label="Wydatki">
               <div class="tab-content expenses-tab">
-                @if (expensesLoading) {
+                @if (expensesLoading()) {
                   <div class="loading-container">
                     <mat-spinner></mat-spinner>
                     <p>Ładowanie wydatków...</p>
@@ -124,7 +120,12 @@ interface GroupedExpenses {
                         </div>
                         <div class="expenses-list">
                           @for (expense of expenseGroup.expenses; track expense.id) {
-                            <div class="expense-item" (click)="currentUser ? editExpense(expense) : null"
+                            <div class="expense-item"
+                                 (click)="currentUser ? editExpense(expense) : null"
+                                 (keyup.enter)="currentUser ? editExpense(expense) : null"
+                                 (keyup.space)="currentUser ? editExpense(expense) : null"
+                                 [attr.tabindex]="currentUser?.authenticated ? 0 : -1"
+                                 role="button"
                                  [class.clickable]="currentUser?.authenticated">
                               <div class="expense-main">
                                 <div class="expense-header">
@@ -197,7 +198,7 @@ interface GroupedExpenses {
       </div>
     }
 
-    @if (loading) {
+    @if (loading()) {
       <div class="loading-container">
         <mat-spinner></mat-spinner>
         <p>Ładowanie grupy...</p>
@@ -323,20 +324,20 @@ interface GroupedExpenses {
       align-items: center;
       gap: 12px;
       padding: 16px;
-      border: 1px solid #e0e0e0;
+      border: 1px solid var(--mat-sys-outline-variant, #e0e0e0);
       border-radius: 8px;
-      background: #fafafa;
+      background: var(--mat-sys-surface-container-low, #fafafa);
       transition: all 0.2s ease;
     }
 
     .member-card:hover {
-      background: #f5f5f5;
+      background: var(--mat-sys-surface-container, #f5f5f5);
       transform: translateY(-2px);
       box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
     }
 
     .member-icon {
-      color: #666;
+      color: var(--mat-sys-on-surface-variant, #666);
       font-size: 24px;
     }
 
@@ -346,7 +347,7 @@ interface GroupedExpenses {
     }
 
     .member-email {
-      color: #666;
+      color: var(--mat-sys-on-surface-variant, #666);
       font-size: 14px;
     }
 
@@ -355,10 +356,10 @@ interface GroupedExpenses {
       align-items: center;
       gap: 12px;
       padding: 16px;
-      background: #fff3cd;
-      border: 1px solid #ffeaa7;
+      background: var(--mat-sys-warning-container, #fff3cd);
+      border: 1px solid var(--mat-sys-warning, #ffeaa7);
       border-radius: 8px;
-      color: #856404;
+      color: var(--mat-sys-on-warning-container, #856404);
     }
 
     /* Expenses Tab Styles */
@@ -379,18 +380,18 @@ interface GroupedExpenses {
       font-size: 64px;
       height: 64px;
       width: 64px;
-      color: #ccc;
+      color: var(--mat-sys-on-surface-variant, #ccc);
       margin-bottom: 16px;
     }
 
     .empty-state h3 {
       margin: 0 0 8px 0;
-      color: #666;
+      color: var(--mat-sys-on-surface, #666);
     }
 
     .empty-state p {
       margin: 0 0 24px 0;
-      color: #999;
+      color: var(--mat-sys-on-surface-variant, #999);
     }
 
     .expenses-content {
@@ -411,26 +412,26 @@ interface GroupedExpenses {
     }
 
     .date-header {
-      background: #f5f5f5;
+      background: var(--mat-sys-surface-container-high, #f5f5f5);
       padding: 12px 16px;
       font-size: 16px;
       font-weight: 500;
       border-radius: 8px 8px 0 0;
-      border-bottom: 2px solid #e0e0e0;
+      border-bottom: 2px solid var(--mat-sys-outline-variant, #e0e0e0);
       position: sticky;
       top: 0;
       z-index: 1;
     }
 
     .expenses-list {
-      background: white;
+      background: var(--mat-sys-surface, white);
       border-radius: 0 0 8px 8px;
       overflow: hidden;
     }
 
     .expense-item {
       padding: 16px;
-      border-bottom: 1px solid #f0f0f0;
+      border-bottom: 1px solid var(--mat-sys-outline-variant, #f0f0f0);
       transition: all 0.2s ease;
     }
 
@@ -443,7 +444,7 @@ interface GroupedExpenses {
     }
 
     .expense-item.clickable:hover {
-      background: #f8f9fa;
+      background: var(--mat-sys-surface-container, #f8f9fa);
       transform: translateX(4px);
     }
 
@@ -463,7 +464,7 @@ interface GroupedExpenses {
       align-items: center;
       gap: 8px;
       font-size: 14px;
-      color: #666;
+      color: var(--mat-sys-on-surface-variant, #666);
     }
 
     .expense-category mat-icon {
@@ -479,7 +480,7 @@ interface GroupedExpenses {
     }
 
     .status-icon.paid {
-      color: #4caf50;
+      color: #72f276;
     }
 
     .status-icon.unpaid {
@@ -490,7 +491,7 @@ interface GroupedExpenses {
       font-size: 18px;
       font-weight: 500;
       margin-bottom: 8px;
-      color: #333;
+      color: var(--mat-sys-on-surface, #333);
     }
 
     .expense-details {
@@ -498,13 +499,13 @@ interface GroupedExpenses {
       justify-content: space-between;
       align-items: center;
       font-size: 14px;
-      color: #666;
+      color: var(--mat-sys-on-surface-variant, #666);
     }
 
     .expense-amount {
       font-weight: 600;
       font-size: 16px;
-      color: #333;
+      color: var(--mat-sys-on-surface, #333);
     }
 
     .expense-splits {
@@ -512,7 +513,7 @@ interface GroupedExpenses {
       flex-wrap: wrap;
       gap: 8px;
       padding-top: 12px;
-      border-top: 1px solid #f0f0f0;
+      border-top: 1px solid var(--mat-sys-outline-variant, #f0f0f0);
     }
 
     .split-item {
@@ -520,10 +521,10 @@ interface GroupedExpenses {
       align-items: center;
       gap: 4px;
       padding: 4px 8px;
-      background: #f8f9fa;
+      background: var(--mat-sys-surface-container-low, #f8f9fa);
       border-radius: 12px;
       font-size: 12px;
-      color: #666;
+      color: var(--mat-sys-on-surface-variant, #666);
     }
 
     .split-item.paid {
@@ -652,7 +653,7 @@ interface GroupedExpenses {
 })
 export class NewGroupDetailsComponent implements OnInit {
   group: Group | null = null;
-  loading = true;
+  loading = signal(true);
   error: string | null = null;
   isAuthenticated = false;
   currentUser: User | null = null;
@@ -661,20 +662,21 @@ export class NewGroupDetailsComponent implements OnInit {
   // New properties for expenses
   expenses: Expense[] = [];
   groupedExpenses: GroupedExpenses[] = [];
-  expensesLoading = false;
+  expensesLoading = signal(false);
   selectedTabIndex = 0;
   viewToken: string | null = null;
 
-  constructor(
-    private route: ActivatedRoute,
-    private groupService: GroupService,
-    private authService: AuthService,
-    private dialog: MatDialog,
-    private expenseService: ExpenseService,
-    private snackBar: MatSnackBar,
-    private router: Router,
-    private breakpointObserver: BreakpointObserver
-  ) {
+  private route = inject(ActivatedRoute);
+  private groupService = inject(GroupService);
+  private authService = inject(AuthService);
+  private dialog = inject(MatDialog);
+  private expenseService = inject(ExpenseService);
+  private snackBar = inject(MatSnackBar);
+  private router = inject(Router);
+  private breakpointObserver = inject(BreakpointObserver);
+  private excelExportService = inject(ExcelExportService);
+
+  constructor() {
     this.isMobile$ = this.breakpointObserver.observe(Breakpoints.Handset)
       .pipe(map(result => result.matches));
   }
@@ -685,7 +687,7 @@ export class NewGroupDetailsComponent implements OnInit {
 
     if (!id) {
       this.error = 'Nieprawidłowy identyfikator grupy';
-      this.loading = false;
+      this.loading.set(false);
       return;
     }
 
@@ -699,13 +701,13 @@ export class NewGroupDetailsComponent implements OnInit {
     this.groupService.getGroup(+id, this.viewToken).subscribe({
       next: (group) => {
         this.group = group;
-        this.loading = false;
+        this.loading.set(false);
         // Load expenses automatically
         this.loadExpenses();
       },
       error: () => {
         this.error = 'Nie znaleziono grupy lub nie masz dostępu do niej';
-        this.loading = false;
+        this.loading.set(false);
       }
     });
   }
@@ -713,7 +715,7 @@ export class NewGroupDetailsComponent implements OnInit {
   loadExpenses(): void {
     if (!this.group) return;
 
-    this.expensesLoading = true;
+    this.expensesLoading.set(true);
     this.expenseService.getExpensesByGroup(this.group.id, this.viewToken).subscribe({
       next: (expenses) => {
         this.expenses = expenses.map(expense => {
@@ -726,15 +728,15 @@ export class NewGroupDetailsComponent implements OnInit {
             category: category
           };
         });
-        this.groupedExpenses = this.groupExpensesByDay(this.expenses);
-        this.expensesLoading = false;
+        this.groupedExpenses = this.expenseService.groupExpensesByDay(this.expenses);
+        this.expensesLoading.set(false);
       },
       error: (error) => {
         console.error(error);
         this.snackBar.open('Błąd podczas ładowania wydatków', 'Zamknij', {
           duration: 3000
         });
-        this.expensesLoading = false;
+        this.expensesLoading.set(false);
       }
     });
   }
@@ -924,112 +926,6 @@ export class NewGroupDetailsComponent implements OnInit {
       });
       return;
     }
-
-    try {
-      // Przygotuj dane w formacie dla SheetJS
-      const worksheetData = this.prepareWorksheetData();
-
-      // Utwórz workbook i worksheet
-      const workbook = XLSX.utils.book_new();
-      const worksheet = XLSX.utils.aoa_to_sheet(worksheetData);
-
-      // Ustaw szerokości kolumn
-      worksheet['!cols'] = [
-        {wch: 12}, // Data
-        {wch: 30}, // Opis
-        {wch: 25}, // Kategoria
-        {wch: 10}, // Kwota
-        {wch: 8},  // Waluta
-        {wch: 20}, // Płacił
-        {wch: 40}, // Uczestnicy
-        {wch: 12}  // Uregulowane
-      ];
-
-      // Dodaj formatowanie nagłówków
-      const headerRange = XLSX.utils.decode_range(worksheet['!ref'] || 'A1:H1');
-      for (let col = headerRange.s.c; col <= headerRange.e.c; col++) {
-        const cellAddress = XLSX.utils.encode_cell({r: 0, c: col});
-        if (!worksheet[cellAddress]) continue;
-
-        worksheet[cellAddress].s = {
-          font: {bold: true, color: {rgb: "FFFFFF"}},
-          fill: {fgColor: {rgb: "1976D2"}},
-          alignment: {horizontal: "center", vertical: "center"}
-        };
-      }
-
-      // Formatuj kolumnę z kwotami jako liczby
-      const dataRange = XLSX.utils.decode_range(worksheet['!ref'] || 'A1:H1');
-      for (let row = 1; row <= dataRange.e.r; row++) {
-        const amountCell = XLSX.utils.encode_cell({r: row, c: 3}); // Kolumna kwoty
-        if (worksheet[amountCell]) {
-          worksheet[amountCell].t = 'n'; // number type
-          worksheet[amountCell].z = '#,##0.00'; // format liczby
-        }
-      }
-
-      // Dodaj worksheet do workbook
-      const sheetName = `Wydatki ${this.group.name}`;
-      XLSX.utils.book_append_sheet(workbook, worksheet, sheetName);
-
-      // Generuj nazwę pliku
-      const fileName = `wydatki_${this.group.name.replace(/[^a-zA-Z0-9]/g, '_')}_${new Date().toISOString().split('T')[0]}.xlsx`;
-
-      // Zapisz plik
-      XLSX.writeFile(workbook, fileName);
-
-      this.snackBar.open('Plik Excel został pobrany', 'Zamknij', {
-        duration: 3000
-      });
-    } catch (error) {
-      console.error('Błąd podczas eksportu do Excel:', error);
-      this.snackBar.open('Błąd podczas eksportu do Excel', 'Zamknij', {
-        duration: 5000
-      });
-    }
-  }
-
-  private groupExpensesByDay(expenses: Expense[]): GroupedExpenses[] {
-    const groups = new Map<string, Expense[]>();
-
-    expenses.forEach(expense => {
-      const date = new Date(expense.date);
-      const dateKey = new Date(date.getFullYear(), date.getMonth(), date.getDate()).toISOString();
-
-      if (!groups.has(dateKey)) {
-        groups.set(dateKey, []);
-      }
-      groups.get(dateKey)?.push(expense);
-    });
-
-    return Array.from(groups.entries())
-      .map(([dateKey, expenses]) => ({
-        date: new Date(dateKey),
-        expenses: expenses.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
-      }))
-      .sort((a, b) => b.date.getTime() - a.date.getTime());
-  }
-
-  private prepareWorksheetData(): any[][] {
-    // Nagłówki
-    const headers = ['Data', 'Opis', 'Kategoria', 'Kwota', 'Waluta', 'Płacił', 'Uczestnicy', 'Uregulowane'];
-
-    // Dane - sortowane chronologicznie (najnowsze pierwsze)
-    const sortedExpenses = [...this.expenses].sort((a, b) =>
-      new Date(b.date).getTime() - new Date(a.date).getTime()
-    );
-
-    const rows = sortedExpenses.map(expense => [
-      new Date(expense.date).toLocaleDateString('pl-PL'),
-      expense.description,
-      `${expense.category?.mainCategory || 'Bez Kategorii'} - ${expense.category?.subCategory || 'Ogólne'}`,
-      expense.amount,
-      expense.currency,
-      expense.payer.name,
-      expense.splits.map(split => `${split.user.name}: ${split.amountOwed.toFixed(2)} ${expense.currency}`).join('\n'),
-      expense.isPaid ? 'Tak' : 'Nie'
-    ]);
-
-    return [headers, ...rows];
+    this.excelExportService.exportExpensesToExcel(this.expenses, this.group.name);
   }
 }

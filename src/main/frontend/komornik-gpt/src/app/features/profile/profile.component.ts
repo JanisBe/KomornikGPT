@@ -1,4 +1,4 @@
-import {Component, OnInit} from '@angular/core';
+import {Component, inject, OnInit, signal} from '@angular/core';
 
 import {
   AbstractControl,
@@ -133,8 +133,8 @@ import {MatIconModule} from '@angular/material/icon';
 
             <div class="form-actions">
               <button mat-raised-button color="primary" type="submit"
-                      [disabled]="!profileForm.valid || isLoading">
-                {{ isLoading ? 'Zapisywanie...' : 'Zapisz zmiany' }}
+                      [disabled]="!profileForm.valid || isLoading()">
+                {{ isLoading() ? 'Zapisywanie...' : 'Zapisz zmiany' }}
               </button>
             </div>
           </form>
@@ -223,18 +223,18 @@ import {MatIconModule} from '@angular/material/icon';
 })
 export class ProfileComponent implements OnInit {
   profileForm: FormGroup;
-  isLoading = false;
+  isLoading = signal(false);
   userGroups: Group[] = [];
   hideCurrent = true;
   hideNew = true;
   hideConfirm = true;
 
-  constructor(
-    private fb: FormBuilder,
-    private authService: AuthService,
-    private groupService: GroupService,
-    private snackBar: MatSnackBar
-  ) {
+  private fb = inject(FormBuilder);
+  private authService = inject(AuthService);
+  private groupService = inject(GroupService);
+  private snackBar = inject(MatSnackBar);
+
+  constructor() {
     this.profileForm = this.fb.group({
       name: ['', Validators.required],
       surname: ['', Validators.required],
@@ -285,7 +285,7 @@ export class ProfileComponent implements OnInit {
 
   onSubmit(): void {
     if (this.profileForm.valid) {
-      this.isLoading = true;
+      this.isLoading.set(true);
 
       // Validate password fields
       const newPassword = this.profileForm.get('newPassword')?.value;
@@ -293,7 +293,7 @@ export class ProfileComponent implements OnInit {
         this.snackBar.open('Wpisz aktualne hasło', 'Close', {
           duration: 3000
         });
-        this.isLoading = false;
+        this.isLoading.set(false);
         return;
       }
 
@@ -310,7 +310,7 @@ export class ProfileComponent implements OnInit {
 
       this.authService.updateProfile(updateRequest).subscribe({
         next: () => {
-          this.isLoading = false;
+          this.isLoading.set(false);
           this.snackBar.open('Profil zaktualizowany poprawnie', 'Close', {
             duration: 3000
           });
@@ -325,7 +325,7 @@ export class ProfileComponent implements OnInit {
           if (error.status === 401) {
             message = 'Nie jesteś zalogowany. Zaloguj się ponownie.';
           }
-          this.isLoading = false;
+          this.isLoading.set(false);
           this.snackBar.open(message, 'Close', {
             duration: 3000,
             panelClass: ['error-snackbar']

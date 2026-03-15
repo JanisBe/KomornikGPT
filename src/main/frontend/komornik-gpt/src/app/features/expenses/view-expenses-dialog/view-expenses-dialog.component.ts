@@ -1,4 +1,4 @@
-import {Component, Inject, OnInit} from '@angular/core';
+import {Component, inject, OnInit} from '@angular/core';
 import {CommonModule} from '@angular/common';
 import {MAT_DIALOG_DATA, MatDialog, MatDialogModule} from '@angular/material/dialog';
 import {MatButtonModule} from '@angular/material/button';
@@ -6,7 +6,7 @@ import {MatIconModule} from '@angular/material/icon';
 import {MatTooltipModule} from '@angular/material/tooltip';
 import {MatSnackBar, MatSnackBarModule} from '@angular/material/snack-bar';
 import {Group} from '../../../core/models/group.model';
-import {Expense} from '../../../core/models/expense.model';
+import {Expense, GroupedExpenses} from '../../../core/models/expense.model';
 import {ExpenseService} from '../../../core/services/expense.service';
 import {AddExpenseDialogComponent} from '../add-expense-dialog/add-expense-dialog.component';
 import {ConfirmDeleteDialogComponent} from './confirm-delete-dialog.component';
@@ -17,10 +17,6 @@ import {BreakpointObserver, Breakpoints} from '@angular/cdk/layout';
 import {map} from 'rxjs/operators';
 import {Observable} from 'rxjs';
 
-interface GroupedExpenses {
-  date: Date;
-  expenses: Expense[];
-}
 
 @Component({
   selector: 'app-view-expenses-dialog',
@@ -268,13 +264,13 @@ export class ViewExpensesDialogComponent implements OnInit {
   groupedExpenses: GroupedExpenses[] = [];
   isMobile$: Observable<boolean>;
 
-  constructor(
-    @Inject(MAT_DIALOG_DATA) public data: { group: Group },
-    private expenseService: ExpenseService,
-    private snackBar: MatSnackBar,
-    private dialog: MatDialog,
-    private breakpointObserver: BreakpointObserver
-  ) {
+  public data = inject<{ group: Group }>(MAT_DIALOG_DATA);
+  private expenseService = inject(ExpenseService);
+  private snackBar = inject(MatSnackBar);
+  private dialog = inject(MatDialog);
+  private breakpointObserver = inject(BreakpointObserver);
+
+  constructor() {
     this.isMobile$ = this.breakpointObserver.observe(Breakpoints.Handset)
       .pipe(map(result => result.matches));
   }
@@ -297,7 +293,7 @@ export class ViewExpensesDialogComponent implements OnInit {
             category: category
           };
         });
-        this.groupedExpenses = this.groupExpensesByDay(this.expenses);
+        this.groupedExpenses = this.expenseService.groupExpensesByDay(this.expenses);
       },
       error: (error) => {
         console.error(error);
@@ -318,7 +314,7 @@ export class ViewExpensesDialogComponent implements OnInit {
         this.expenseService.deleteExpense(expense.id).subscribe({
           next: () => {
             this.expenses = this.expenses.filter(e => e.id !== expense.id);
-            this.groupedExpenses = this.groupExpensesByDay(this.expenses);
+            this.groupedExpenses = this.expenseService.groupExpensesByDay(this.expenses);
             this.snackBar.open('Expense deleted successfully', 'Close', {
               duration: 3000
             });
@@ -370,27 +366,6 @@ export class ViewExpensesDialogComponent implements OnInit {
         }
       });
     });
-  }
-
-  private groupExpensesByDay(expenses: Expense[]): GroupedExpenses[] {
-    const groups = new Map<string, Expense[]>();
-
-    expenses.forEach(expense => {
-      const date = new Date(expense.date);
-      const dateKey = new Date(date.getFullYear(), date.getMonth(), date.getDate()).toISOString();
-
-      if (!groups.has(dateKey)) {
-        groups.set(dateKey, []);
-      }
-      groups.get(dateKey)?.push(expense);
-    });
-
-    return Array.from(groups.entries())
-      .map(([dateKey, expenses]) => ({
-        date: new Date(dateKey),
-        expenses: expenses.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
-      }))
-      .sort((a, b) => b.date.getTime() - a.date.getTime());
   }
 
   settleExpenses(group: Group): void {

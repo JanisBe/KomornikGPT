@@ -1,4 +1,4 @@
-import {Component, Input, OnInit} from '@angular/core';
+import {Component, inject, Input, OnInit} from '@angular/core';
 import {Clipboard, ClipboardModule} from '@angular/cdk/clipboard';
 import {MatSnackBar, MatSnackBarModule} from '@angular/material/snack-bar';
 import {MatIconModule} from '@angular/material/icon';
@@ -47,11 +47,8 @@ import {MatTooltipModule} from '@angular/material/tooltip';
   `]
 })
 export class CopyUrlButtonComponent implements OnInit {
-  constructor(
-    private clipboard: Clipboard,
-    private snackBar: MatSnackBar
-  ) {
-  }
+  private clipboard = inject(Clipboard);
+  private snackBar = inject(MatSnackBar);
 
   @Input() groupId!: number;
 
@@ -80,6 +77,7 @@ export class CopyUrlButtonComponent implements OnInit {
         text: 'Rozliczenia grupy ' + this.groupName,
         url: this.url
       }).catch(() => {
+        //jak coś pójdzie nie tak
       });
     } else {
       alert('Twoja przeglądarka nie obsługuje Web Share API.');

@@ -1,6 +1,7 @@
-import {Component, HostListener, OnInit, ViewChild} from '@angular/core';
+import {Component, HostListener, inject, OnInit, ViewChild} from '@angular/core';
 import {RouterModule} from '@angular/router';
 import {AuthService} from '../core/services/auth.service';
+import {ThemeService} from '../core/services/theme.service';
 import {User} from '../core/models/user.model';
 import {MatButtonModule} from "@angular/material/button";
 import {MatIconModule} from "@angular/material/icon";
@@ -41,7 +42,7 @@ import {MatExpansionModule} from "@angular/material/expansion";
           </mat-menu>
           <a mat-button routerLink="/expenses" routerLinkActive="active">Moje wydatki</a>
           <a mat-button routerLink="/profile" routerLinkActive="active">Profil ({{ userName }})</a>
-          <a mat-button (click)="logout()">Logout</a>
+          <button mat-button (click)="logout()" (keyup.enter)="logout()">Logout</button>
         } @else {
           <a mat-button routerLink="/login" routerLinkActive="active">Zaloguj</a>
           <a mat-button routerLink="/register" routerLinkActive="active">Zarejestruj</a>
@@ -52,6 +53,10 @@ import {MatExpansionModule} from "@angular/material/expansion";
             Zainstaluj
           </button>
         }
+
+        <button mat-icon-button (click)="toggleTheme()" aria-label="Przełącz motyw">
+          <mat-icon>{{ themeService.isDarkMode() ? 'light_mode' : 'dark_mode' }}</mat-icon>
+        </button>
       </div>
     </mat-toolbar>
 
@@ -77,17 +82,23 @@ import {MatExpansionModule} from "@angular/material/expansion";
             <a mat-list-item routerLink="/expenses" routerLinkActive="active" (click)="sidenav.close()">Moje wydatki</a>
             <a mat-list-item routerLink="/profile" routerLinkActive="active" (click)="sidenav.close()">Profil
               ({{ userName }})</a>
-            <a mat-list-item (click)="logout(); sidenav.close()">Logout</a>
+            <button mat-list-item (click)="logout(); sidenav.close()" (keyup.enter)="logout(); sidenav.close()">Logout
+            </button>
           } @else {
             <a mat-list-item routerLink="/login" routerLinkActive="active" (click)="sidenav.close()">Zaloguj</a>
             <a mat-list-item routerLink="/register" routerLinkActive="active" (click)="sidenav.close()">Zarejestruj</a>
           }
           @if (showInstallButton) {
-            <a mat-list-item (click)="installPWA(); sidenav.close()">
+            <button mat-list-item (click)="installPWA(); sidenav.close()" (keyup.enter)="installPWA(); sidenav.close()">
               <mat-icon>cloud_download</mat-icon>
               Zainstaluj aplikację
-            </a>
+            </button>
           }
+          <button mat-list-item (click)="toggleTheme(); sidenav.close()" (keyup.enter)="toggleTheme(); sidenav.close()"
+                  aria-label="Przełącz motyw">
+            <mat-icon>{{ themeService.isDarkMode() ? 'light_mode' : 'dark_mode' }}</mat-icon>
+            {{ themeService.isDarkMode() ? 'Tryb jasny' : 'Tryb ciemny' }}
+          </button>
         </mat-nav-list>
       </mat-sidenav>
 
@@ -120,6 +131,7 @@ import {MatExpansionModule} from "@angular/material/expansion";
     .desktop-nav {
       display: flex;
       gap: 8px;
+      align-items: center;
     }
 
     .desktop-nav a {
@@ -173,10 +185,12 @@ export class LayoutComponent implements OnInit {
 
   @ViewChild('sidenav') sidenav!: MatSidenav;
 
-  constructor(public authService: AuthService, private groupService: GroupService) {
-  }
+  public authService = inject(AuthService);
+  public themeService = inject(ThemeService);
+  private groupService = inject(GroupService);
 
   ngOnInit(): void {
+    this.themeService.initTheme();
     this.authService.user$.subscribe({
       next: (user: User | null) => {
         this.userName = user?.name ?? '';
@@ -213,6 +227,11 @@ export class LayoutComponent implements OnInit {
 
   logout(): void {
     this.authService.logout();
+  }
+
+  toggleTheme(): void {
+    const nextTheme = this.themeService.isDarkMode() ? 'light-theme' : 'dark-theme';
+    this.themeService.updateTheme(nextTheme);
   }
 
   private isMobileDevice(): boolean {

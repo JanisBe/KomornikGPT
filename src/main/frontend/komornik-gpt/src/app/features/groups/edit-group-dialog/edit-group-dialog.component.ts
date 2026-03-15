@@ -1,4 +1,4 @@
-import {Component, Inject, ViewChild} from '@angular/core';
+import {Component, inject, ViewChild} from '@angular/core';
 import {MAT_DIALOG_DATA, MatDialogModule, MatDialogRef} from '@angular/material/dialog';
 import {MatButtonModule} from '@angular/material/button';
 import {GroupFormComponent} from '../group-form/group-form.component';
@@ -62,11 +62,6 @@ import {User} from '../../../core/models/user.model';
 export class EditGroupDialogComponent {
   @ViewChild('groupFormRef') groupFormRef!: GroupFormComponent;
 
-  constructor(
-    public dialogRef: MatDialogRef<EditGroupDialogComponent>,
-    @Inject(MAT_DIALOG_DATA) public data: { group: Group; currentUser: User }
-  ) {
-  }
-
-
+  dialogRef = inject(MatDialogRef<EditGroupDialogComponent>);
+  data = inject(MAT_DIALOG_DATA) as { group: Group; currentUser: User };
 }

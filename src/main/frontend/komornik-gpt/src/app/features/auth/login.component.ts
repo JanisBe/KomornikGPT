@@ -1,4 +1,4 @@
-import {Component, OnInit} from '@angular/core';
+import {Component, inject, OnInit, signal} from '@angular/core';
 
 import {FormBuilder, FormGroup, ReactiveFormsModule, Validators} from '@angular/forms';
 import {ActivatedRoute, Router, RouterModule} from '@angular/router';
@@ -35,7 +35,7 @@ import {LoginRequest} from '../../core/models/user.model';
           <mat-card-title>Zaloguj się</mat-card-title>
         </mat-card-header>
 
-        @if (isLoading) {
+        @if (isLoading()) {
           <mat-progress-bar mode="indeterminate"></mat-progress-bar>
         }
 
@@ -70,8 +70,8 @@ import {LoginRequest} from '../../core/models/user.model';
               <button mat-raised-button
                       color="primary"
                       type="submit"
-                      [disabled]="loginForm.invalid || isLoading">
-                {{ isLoading ? 'Logging in...' : 'Login' }}
+                      [disabled]="loginForm.invalid || isLoading()">
+                {{ isLoading() ? 'Logging in...' : 'Login' }}
               </button>
               <button mat-button
                       type="button"
@@ -97,21 +97,21 @@ import {LoginRequest} from '../../core/models/user.model';
               <button mat-raised-button
                       class="google-btn"
                       (click)="loginWithGoogle()"
-                      [disabled]="isLoading">
+                      [disabled]="isLoading()">
                 <img src="assets/google-logo.svg" alt="Google logo" class="social-icon">
                 Zaloguj Googlem
               </button>
               <button mat-raised-button
                       class="facebook-btn"
                       (click)="loginWithFacebook()"
-                      [disabled]="isLoading">
+                      [disabled]="isLoading()">
                 <img src="assets/facebook-logo.svg" alt="Facebook logo" class="social-icon">
                 Zaloguj Facebookiem
               </button>
               <button mat-raised-button
                       class="github-btn"
                       (click)="loginWithGithub()"
-                      [disabled]="isLoading">
+                      [disabled]="isLoading()">
                 <img src="assets/github-logo.svg" alt="GitHub logo" class="social-icon" style="background: white">
                 Zaloguj GitHubem
               </button>
@@ -122,7 +122,7 @@ import {LoginRequest} from '../../core/models/user.model';
         <mat-card-actions>
           <div class="register-link">
             Nie masz konta?
-            <a mat-button color="primary" routerLink="/register" style="padding-bottom: 2px;">
+            <a mat-button color="primary" routerLink="/register" class="register-action-link">
               Zarejestruj się
             </a>
           </div>
@@ -148,7 +148,6 @@ import {LoginRequest} from '../../core/models/user.model';
       align-items: start;
       min-height: 100vh;
       padding: 20px;
-      background-color: white;
     }
 
     .login-card {
@@ -187,6 +186,11 @@ import {LoginRequest} from '../../core/models/user.model';
       text-align: center;
       margin: 16px 0;
       width: 100%;
+    }
+
+    .register-action-link {
+      font-weight: 500;
+      color: var(--mat-sys-primary);
     }
 
     .error-message {
@@ -230,20 +234,20 @@ import {LoginRequest} from '../../core/models/user.model';
     }
 
     .google-btn {
-      background-color: white;
-      color: rgba(0, 0, 0, 0.87);
-      border: 1px solid #dadce0;
       height: 40px;
       font-family: 'Roboto', sans-serif;
       font-weight: 500;
     }
 
     .facebook-btn {
-      background-color: white;
-      color: #1877f2;
-      border: 1px solid #1877f2;
       height: 40px;
       font-weight: 500;
+    }
+
+    .google-btn, .facebook-btn {
+      background-color: var(--mat-sys-surface-container-low, white);
+      color: var(--mat-sys-on-surface, black);
+      border: 1px solid var(--mat-sys-outline, #dadce0);
     }
 
     .github-btn {
@@ -265,7 +269,7 @@ import {LoginRequest} from '../../core/models/user.model';
     }
 
     .divider-text {
-      color: rgba(0, 0, 0, 0.54);
+      color: var(--mat-sys-on-surface-variant, rgba(0, 0, 0, 0.54));
       font-size: 14px;
     }
 
@@ -283,20 +287,17 @@ import {LoginRequest} from '../../core/models/user.model';
 })
 export class LoginComponent implements OnInit {
   loginForm!: FormGroup;
-  isLoading = false;
+  isLoading = signal(false);
   errorMessage = '';
   message: string | null = null; // Message to display feedback to the user
   hide = true;
 
-  constructor(
-    private fb: FormBuilder,
-    private authService: AuthService,
-    private socialAuthService: SocialAuthService,
-    private router: Router,
-    private route: ActivatedRoute,
-    private snackBar: MatSnackBar
-  ) {
-  }
+  private fb = inject(FormBuilder);
+  private authService = inject(AuthService);
+  private socialAuthService = inject(SocialAuthService);
+  private router = inject(Router);
+  private route = inject(ActivatedRoute);
+  private snackBar = inject(MatSnackBar);
 
   ngOnInit(): void {
     this.loginForm = this.fb.group({
@@ -304,12 +305,15 @@ export class LoginComponent implements OnInit {
       password: ['', Validators.required]
     });
     this.route.queryParams.subscribe(params => {
-      const requiresPassword = params['requiresPassword'] === 'true';
-      if (requiresPassword) {
-        this.router.navigate(['/set-password']);
-      } else {
-        this.router.navigate(['/groups']);
+      if (params['requiresPassword']) {
+        const requiresPassword = params['requiresPassword'] === 'true';
+        if (requiresPassword) {
+          this.router.navigate(['/set-password']);
+        } else {
+          this.router.navigate(['/groups']);
+        }
       }
+
       const email = params['email'];
       if (email) {
         this.loginForm.get('email')?.setValue(email);
@@ -323,58 +327,61 @@ export class LoginComponent implements OnInit {
 
   async loginWithGoogle(): Promise<void> {
     try {
-      this.isLoading = true;
+      this.isLoading.set(true);
       this.errorMessage = '';
       this.socialAuthService.loginWithGoogle();
-    } catch (error) {
-      this.handleError(error);
+    } catch (error: any) {
+      this.isLoading.set(false);
+      this.errorMessage = error.message || 'Google login failed';
     }
   }
 
   async loginWithFacebook(): Promise<void> {
     try {
-      this.isLoading = true;
+      this.isLoading.set(true);
       this.errorMessage = '';
       this.socialAuthService.loginWithFacebook();
-    } catch (error) {
-      this.handleError(error);
+    } catch (error: any) {
+      this.isLoading.set(false);
+      this.errorMessage = error.message || 'Facebook login failed';
     }
   }
 
   async loginWithGithub(): Promise<void> {
     try {
-      this.isLoading = true;
+      this.isLoading.set(true);
       this.errorMessage = '';
       this.socialAuthService.loginWithGithub();
-    } catch (error) {
-      this.handleError(error);
+    } catch (error: any) {
+      this.isLoading.set(false);
+      this.errorMessage = error.message || 'GitHub login failed';
     }
   }
 
   onSubmit(): void {
     if (this.loginForm.valid) {
       const credentials: LoginRequest = this.loginForm.value;
-      this.isLoading = true;
+      this.isLoading.set(true);
       this.errorMessage = '';
 
-      this.authService.login(credentials).subscribe({
-        next: () => {
-          this.showSuccessAndRedirect();
-        },
-        error: (error) => {
-          this.handleError(error);
-        }
-      });
+      this.authService.login(credentials)
+        .subscribe({
+          next: () => {
+            this.isLoading.set(false);
+            this.router.navigate(['/groups']);
+          },
+          error: (error) => {
+            this.isLoading.set(false);
+            this.handleError(error);
+          }
+        });
     }
   }
 
-  private showSuccessAndRedirect(): void {
-    this.isLoading = false;
-    this.router.navigate(['/groups']);
-  }
 
   private handleError(error: any): void {
-    this.isLoading = false;
+    console.log("error", error);
+
     console.error(error);
 
     if (error.status === 401) {

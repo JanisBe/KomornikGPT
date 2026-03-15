@@ -70,7 +70,7 @@ import * as XLSX from 'xlsx';
     .sticky-header {
       position: sticky;
       top: 0;
-      background-color: white;
+      background-color: var(--mat-sys-surface, white);
       z-index: 1;
       padding: 5px;
       font-size: 20px;
@@ -269,12 +269,13 @@ export class MyExpensesComponent implements OnInit {
   msg = 'Ładowanie wydatków...';
   private expenseService = inject(ExpenseService);
   private authService = inject(AuthService);
+  private snackBar = inject(MatSnackBar);
+  private dialog = inject(MatDialog);
+  private breakpointObserver = inject(BreakpointObserver);
+
   isMobile$: Observable<boolean>;
 
   constructor(
-    private snackBar: MatSnackBar,
-    private dialog: MatDialog,
-    private breakpointObserver: BreakpointObserver
   ) {
     this.isMobile$ = this.breakpointObserver.observe(Breakpoints.Handset)
       .pipe(map(result => result.matches));

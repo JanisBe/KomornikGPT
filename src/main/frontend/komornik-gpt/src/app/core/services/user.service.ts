@@ -1,4 +1,4 @@
-import {Injectable} from '@angular/core';
+import {inject, Injectable} from '@angular/core';
 import {HttpClient} from '@angular/common/http';
 import {Observable} from 'rxjs';
 import {environment} from '../../../environments/environment';
@@ -11,9 +11,8 @@ import {map} from 'rxjs/operators';
 })
 export class UserService {
   private readonly apiUrl = `${environment.apiUrl}/users`;
-
-  constructor(private http: HttpClient, private authService: AuthService) {
-  }
+  private readonly http = inject(HttpClient);
+  private readonly authService = inject(AuthService);
 
   getUsers(): Observable<User[]> {
     return this.http.get<User[]>(this.apiUrl);

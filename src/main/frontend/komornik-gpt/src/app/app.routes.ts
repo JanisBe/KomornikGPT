@@ -23,7 +23,7 @@ export const routes: Routes = [
     children: [
       {
         path: '',
-        redirectTo: 'login',
+        redirectTo: 'groups',
         pathMatch: 'full'
       },
       {

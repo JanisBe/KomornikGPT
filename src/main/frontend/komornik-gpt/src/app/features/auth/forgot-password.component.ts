@@ -1,4 +1,4 @@
-import {Component} from '@angular/core';
+import {Component, inject, signal} from '@angular/core';
 
 import {FormBuilder, FormGroup, ReactiveFormsModule, Validators} from '@angular/forms';
 import {RouterModule} from '@angular/router';
@@ -31,7 +31,7 @@ import {PasswordService} from '../../core/services/password.service';
           <mat-card-title>Przypomnij hasło</mat-card-title>
         </mat-card-header>
 
-        @if (isLoading) {
+        @if (isLoading()) {
           <mat-progress-bar mode="indeterminate"></mat-progress-bar>
         }
 
@@ -57,7 +57,7 @@ import {PasswordService} from '../../core/services/password.service';
                 <button mat-raised-button
                         color="primary"
                         type="submit"
-                        [disabled]="forgotPasswordForm.invalid || isLoading">
+                        [disabled]="forgotPasswordForm.invalid || isLoading()">
                   Wyślij link resetujący
                 </button>
                 <button mat-button
@@ -88,7 +88,6 @@ import {PasswordService} from '../../core/services/password.service';
       justify-content: center;
       align-items: start;
       height: 100vh;
-      background-color: white;
     }
 
     .forgot-password-card {
@@ -137,15 +136,15 @@ import {PasswordService} from '../../core/services/password.service';
 })
 export class ForgotPasswordComponent {
   forgotPasswordForm: FormGroup;
-  isLoading = false;
+  isLoading = signal(false);
   errorMessage = '';
   emailSent = false;
 
-  constructor(
-    private fb: FormBuilder,
-    private snackBar: MatSnackBar,
-    private passwordService: PasswordService
-  ) {
+  private fb = inject(FormBuilder);
+  private snackBar = inject(MatSnackBar);
+  private passwordService = inject(PasswordService);
+
+  constructor() {
     this.forgotPasswordForm = this.fb.group({
       email: ['', [Validators.required, Validators.email]]
     });
@@ -154,17 +153,17 @@ export class ForgotPasswordComponent {
   onSubmit(): void {
     if (this.forgotPasswordForm.valid) {
       const email = this.forgotPasswordForm.get('email')?.value;
-      this.isLoading = true;
+      this.isLoading.set(true);
       this.errorMessage = '';
 
       this.passwordService.forgotPassword(email)
         .subscribe({
           next: () => {
-            this.isLoading = false;
+            this.isLoading.set(false);
             this.emailSent = true;
           },
           error: (error) => {
-            this.isLoading = false;
+            this.isLoading.set(false);
             console.error(error);
 
             if (error.status === 404) {

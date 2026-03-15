@@ -1,4 +1,4 @@
-import {Injectable} from '@angular/core';
+import {inject, Injectable} from '@angular/core';
 import {HttpClient} from '@angular/common/http';
 import {Observable} from 'rxjs';
 import {environment} from '../../../environments/environment';
@@ -8,9 +8,7 @@ import {environment} from '../../../environments/environment';
 })
 export class PasswordService {
   private readonly apiUrl = `${environment.apiUrl}/pwd`;
-
-  constructor(private http: HttpClient) {
-  }
+  private http = inject(HttpClient);
 
   forgotPassword(email: string): Observable<void> {
     return this.http.post<void>(`${this.apiUrl}/forgot-password`, {email});

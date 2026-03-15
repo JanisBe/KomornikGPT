@@ -1,4 +1,4 @@
-import {Injectable} from '@angular/core';
+import {inject, Injectable} from '@angular/core';
 import {HttpClient} from '@angular/common/http';
 import {BehaviorSubject, catchError, filter, Observable, of, shareReplay, take, tap} from 'rxjs';
 import {Router} from '@angular/router';
@@ -15,10 +15,10 @@ export class AuthService {
   public user$ = this.currentUserSubject.asObservable();
   private authCheckInProgress: Observable<User> | null = null;
 
-  constructor(
-    private http: HttpClient,
-    private router: Router
-  ) {
+  private http = inject(HttpClient);
+  private router = inject(Router);
+
+  constructor() {
     this.checkAuthStatus();
   }
 
@@ -63,7 +63,7 @@ export class AuthService {
     this.authCheckInProgress = this.http.get<User>(`${this.apiUrl}/auth/user`, {withCredentials: true})
       .pipe(
         tap({
-          next: (user: any) => {
+          next: (user: User) => {
             if (user && user.authenticated) {
               this.currentUserSubject.next(user);
             } else {
@@ -86,7 +86,7 @@ export class AuthService {
   getCurrentUserOrNull(): Observable<User | null> {
     return this.http.get<User>(`${this.apiUrl}/auth/user`, {withCredentials: true})
       .pipe(
-        tap((user: any) => {
+        tap((user: User) => {
           if (user && user.authenticated) {
             this.currentUserSubject.next(user);
           } else {
@@ -139,9 +139,9 @@ export class AuthService {
     }
 
     this.getCurrentUser().subscribe({
-      next: (response: any) => {
-        if (response.authenticated) {
-          this.currentUserSubject.next(response);
+      next: (user: User) => {
+        if (user.authenticated) {
+          this.currentUserSubject.next(user);
           // Only navigate if we're on the login page
           if (this.router.url === '/login') {
             this.router.navigate(['/groups']);

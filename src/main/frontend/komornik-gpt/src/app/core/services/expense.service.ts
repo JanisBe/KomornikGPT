@@ -1,8 +1,8 @@
-import {Injectable} from '@angular/core';
+import {inject, Injectable} from '@angular/core';
 import {HttpClient} from '@angular/common/http';
 import {Observable} from 'rxjs';
 import {environment} from '../../../environments/environment';
-import {CreateExpenseDto, Expense, SettlementDto} from '../models/expense.model';
+import {CreateExpenseDto, Expense, GroupedExpenses, SettlementDto} from '../models/expense.model';
 import {tap} from 'rxjs/operators';
 import {MatSnackBar} from '@angular/material/snack-bar';
 import {GroupExpenses} from '../models/group.model';
@@ -12,9 +12,8 @@ import {GroupExpenses} from '../models/group.model';
 })
 export class ExpenseService {
   private readonly apiUrl = `${environment.apiUrl}/expenses`;
-
-  constructor(private http: HttpClient, private snackBar: MatSnackBar) {
-  }
+  private http = inject(HttpClient);
+  private snackBar = inject(MatSnackBar);
 
   getExpensesByGroup(groupId: number, viewToken?: string | null): Observable<Expense[]> {
     let url = `${this.apiUrl}/group/${groupId}`;
@@ -85,5 +84,26 @@ export class ExpenseService {
 
   canUserBeDeletedFromGroup(groupId: number, userId: number): Observable<boolean> {
     return this.http.get<boolean>(`${this.apiUrl}/groups/${groupId}/user/${userId}/can-be-deleted`);
+  }
+
+  groupExpensesByDay(expenses: Expense[]): GroupedExpenses[] {
+    const groups = new Map<string, Expense[]>();
+
+    expenses.forEach(expense => {
+      const date = new Date(expense.date);
+      const dateKey = new Date(date.getFullYear(), date.getMonth(), date.getDate()).toISOString();
+
+      if (!groups.has(dateKey)) {
+        groups.set(dateKey, []);
+      }
+      groups.get(dateKey)?.push(expense);
+    });
+
+    return Array.from(groups.entries())
+      .map(([dateKey, expenses]) => ({
+        date: new Date(dateKey),
+        expenses: expenses.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+      }))
+      .sort((a, b) => b.date.getTime() - a.date.getTime());
   }
 }

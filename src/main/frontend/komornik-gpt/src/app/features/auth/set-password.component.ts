@@ -1,4 +1,4 @@
-import {Component, inject, OnInit} from '@angular/core';
+import {Component, inject, OnInit, signal} from '@angular/core';
 
 import {
   AbstractControl,
@@ -14,6 +14,7 @@ import {MatButtonModule} from '@angular/material/button';
 import {MatSnackBar} from '@angular/material/snack-bar';
 import {MatIconModule} from "@angular/material/icon";
 import {PasswordService} from '../../core/services/password.service';
+import {finalize} from "rxjs";
 
 @Component({
   selector: 'app-set-password',
@@ -30,7 +31,7 @@ import {PasswordService} from '../../core/services/password.service';
       <mat-form-field appearance="outline">
         <mat-label>Nowe hasło:</mat-label>
         <input matInput [type]="hide ? 'password' : 'text'" formControlName="newPassword" required minlength="4"/>
-        <button mat-icon-button matSuffix (click)="hide = !hide" type="button">
+        <button mat-icon-button matSuffix (click)="hide = !hide" type="button" [disabled]="isLoading()">
           <mat-icon>{{ hide ? 'visibility_off' : 'visibility' }}</mat-icon>
         </button>
         @if (form.get('newPassword')?.errors?.['required'] && (form.get('newPassword')?.dirty || form.get('newPassword')?.touched)) {
@@ -44,7 +45,7 @@ import {PasswordService} from '../../core/services/password.service';
         <mat-label>Powtórz hasło:</mat-label>
         <input matInput [type]="hideConfirm ? 'password' : 'text'" formControlName="confirmPassword"
                required/>
-        <button mat-icon-button matSuffix (click)="hideConfirm = !hideConfirm" type="button">
+        <button mat-icon-button matSuffix (click)="hideConfirm = !hideConfirm" type="button" [disabled]="isLoading()">
           <mat-icon>{{ hideConfirm ? 'visibility_off' : 'visibility' }}</mat-icon>
         </button>
         @if (form.get('confirmPassword')?.errors?.['incorrect']) {
@@ -53,8 +54,12 @@ import {PasswordService} from '../../core/services/password.service';
           <mat-error>Powtórz hasło</mat-error>
         }
       </mat-form-field>
-      <button mat-raised-button color="primary" type="submit" [disabled]="form.invalid">Zapisz hasło</button>
-      <button mat-raised-button color="primary" type="button" [routerLink]="['/groups']">Pomiń tym razem</button>
+      <button mat-raised-button color="primary" type="submit" [disabled]="form.invalid || isLoading()">
+        {{ isLoading() ? 'Zapisywanie...' : 'Zapisz hasło' }}
+      </button>
+      <button mat-raised-button color="primary" type="button" [routerLink]="['/groups']" [disabled]="isLoading()">
+        Pomiń tym razem
+      </button>
     </form>
   `,
   styles: [`
@@ -75,6 +80,8 @@ export class SetPasswordComponent implements OnInit {
   error: string | undefined;
   hide = true;
   hideConfirm = true;
+  isLoading = signal(false);
+
   private fb = inject(FormBuilder);
   form = this.fb.group({
     newPassword: ['', [Validators.required, Validators.minLength(4)]],
@@ -96,30 +103,32 @@ export class SetPasswordComponent implements OnInit {
   onSubmit(): void {
     if (this.form.invalid || !this.token) return;
     const {newPassword} = this.form.value;
-    let changePassword$;
+
     if (newPassword != null) {
-      if (!this.token) {
-        changePassword$ = this.passwordService.setPassword(newPassword);
-      } else {
-        changePassword$ = this.passwordService.setPasswordWithToken(newPassword, this.token);
-      }
-      changePassword$.subscribe({
-        next: () => {
-          this.snackBar.open('Hasło zostało zaktualizowane.', 'OK', {
-            duration: 3000,
-            horizontalPosition: 'center',
-            verticalPosition: 'top',
-          });
-          this.router.navigate(['/groups'])
-        },
-        error: (error) => {
-          if (error.status === 404) {
-            this.error = 'Token jest nieprawidłowy.'
-          } else {
-            this.error = 'Nie udało się ustawić hasła.'
+      this.isLoading.set(true);
+      const changePassword$ = !this.token
+        ? this.passwordService.setPassword(newPassword)
+        : this.passwordService.setPasswordWithToken(newPassword, this.token);
+
+      changePassword$
+        .pipe(finalize(() => this.isLoading.set(false)))
+        .subscribe({
+          next: () => {
+            this.snackBar.open('Hasło zostało zaktualizowane.', 'OK', {
+              duration: 3000,
+              horizontalPosition: 'center',
+              verticalPosition: 'top',
+            });
+            this.router.navigate(['/groups'])
+          },
+          error: (error) => {
+            if (error.status === 404) {
+              this.error = 'Token jest nieprawidłowy.'
+            } else {
+              this.error = 'Nie udało się ustawić hasła.'
+            }
           }
-        }
-      });
+        });
     }
   }
 

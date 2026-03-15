@@ -53,7 +53,7 @@ export class AuthService {
     if (this.authCheckInProgress) {
       return this.authCheckInProgress;
     }
-    if (!!this.currentUserSubject.value) {
+    if (this.currentUserSubject.value) {
       return this.currentUserSubject.asObservable().pipe(
         filter((user): user is User => user !== null),
         take(1)

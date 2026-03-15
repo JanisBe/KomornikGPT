@@ -53,7 +53,7 @@ export interface CreateGroupRequest {
 export interface GroupResponse {
   id: number;
   name: string;
-  users: {
+  members: {
     id: number;
     username: string;
     email: string;
@@ -62,8 +62,8 @@ export interface GroupResponse {
     role: string;
   }[];
   expenses?: Expense[];
-  createdAt?: string;
-  updatedAt?: string;
+  createdAt?: Date;
+  updatedAt?: Date;
   createdBy?: {
     id: number;
     username: string;

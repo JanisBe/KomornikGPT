@@ -17,7 +17,7 @@ export class ExpenseService {
 
   getExpensesByGroup(groupId: number, viewToken?: string | null): Observable<Expense[]> {
     let url = `${this.apiUrl}/group/${groupId}`;
-    if (!!viewToken) {
+    if (viewToken) {
       url += '?viewToken=' + viewToken;
     }
     return this.http.get<Expense[]>(url);

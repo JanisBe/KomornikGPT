@@ -58,7 +58,7 @@ export class CopyUrlButtonComponent implements OnInit {
 
   ngOnInit(): void {
     this.url = window.location.origin + '/groups/' + this.groupId + '/expenses';
-    if (!!this.viewToken) {
+    if (this.viewToken) {
       this.url += '?token=' + this.viewToken;
     }
   }

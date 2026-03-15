@@ -19,7 +19,7 @@ export class GroupService {
 
   getGroup(id: number, viewToken?: string | null): Observable<Group> {
     let url = `${this.apiUrl}/${id}`;
-    if (!!viewToken) {
+    if (viewToken) {
       url += '?viewToken=' + viewToken;
     }
     return this.http.get<GroupResponse>(url).pipe(
@@ -48,10 +48,10 @@ export class GroupService {
   private mapGroupResponse(group: Group): Group {
     return {
       ...group,
-      members: group.members ?? group.users ?? [],
+      members: group.members ?? group.members ?? [],
       createdAt: group.createdAt ? new Date(group.createdAt) : undefined,
       updatedAt: group.updatedAt ? new Date(group.updatedAt) : undefined,
-      isPublic: group.isPublic ?? group.is_public ?? false
+      isPublic: group.isPublic ?? group.isPublic ?? false
     };
   }
 

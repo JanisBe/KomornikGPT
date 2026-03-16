@@ -4,6 +4,7 @@ import com.janis.komornikgpt.exception.UserNotFoundException;
 import com.janis.komornikgpt.user.User;
 import com.janis.komornikgpt.user.UserService;
 import jakarta.servlet.http.Cookie;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -29,15 +30,23 @@ public class AuthRestController {
     private final AuthenticationManager authenticationManager;
     private final JwtTokenProvider jwtTokenProvider;
     private final UserService userService;
+    private final RefreshTokenService refreshTokenService;
 
     @Value("${jwt.cookie.name:JWT_TOKEN}")
     private String cookieName;
 
+    @Value("${jwt.refresh.cookie.name:REFRESH_TOKEN}")
+    private String refreshCookieName;
+
     @Value("${jwt.cookie.secure:true}")
     private boolean cookieSecure;
 
-    @Value("${jwt.cookie.expiration:86400}")
+    @Value("${jwt.cookie.expiration:900}") // Default 15 mins
     private int cookieExpiration;
+
+    @Value("${jwt.refresh.expirationMs:604800000}") // Default 7 days
+    private Long refreshTokenDurationMs;
+
 
     @Value("${jwt.cookie.domain:}")
     private String cookieDomain;
@@ -56,8 +65,10 @@ public class AuthRestController {
         String username = authentication.getName();
         User user = userService.getUserByUsername(username);
         String jwt = jwtTokenProvider.generateToken(user);
+        RefreshToken refreshToken = refreshTokenService.createRefreshToken(user.getId());
 
         response.addCookie(createJwtCookie(jwt));
+        response.addCookie(createRefreshCookie(refreshToken.getToken()));
 
         return getMapResponseEntity(user);
     }
@@ -84,10 +95,39 @@ public class AuthRestController {
         }
     }
 
+    @PostMapping("/refresh")
+    public ResponseEntity<?> refreshToken(HttpServletRequest request, HttpServletResponse response) {
+        String refreshTokenString = jwtTokenProvider.extractRefreshTokenFromCookies(request);
+
+        if (refreshTokenString != null && !refreshTokenString.isEmpty()) {
+            return refreshTokenService.findByToken(refreshTokenString)
+                    .map(refreshTokenService::verifyExpiration)
+                    .map(RefreshToken::getUser)
+                    .map(user -> {
+                        String token = jwtTokenProvider.generateToken(user);
+                        response.addCookie(createJwtCookie(token));
+                        return ResponseEntity.ok(Map.of("message", "Token refreshed successfully"));
+                    })
+                    .orElseGet(() -> ResponseEntity.status(403).body(Map.of("error", "Refresh token is not in database!")));
+        }
+
+        return ResponseEntity.status(403).body(Map.of("error", "Refresh Token is empty!"));
+    }
+
     @PostMapping("/logout")
-    public ResponseEntity<?> logout(HttpServletResponse response) {
-        // Clear both JWT and session cookies
+    public ResponseEntity<?> logout(HttpServletRequest request, HttpServletResponse response) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication != null && !"anonymousUser".equals(authentication.getPrincipal())) {
+            String identifier = authentication.getName();
+            User user = findUserByIdentifier(identifier);
+            if (user != null) {
+                refreshTokenService.deleteByUserId(user.getId());
+            }
+        }
+
+        // Clear JWT, Refresh, and session cookies
         response.addCookie(createClearCookie(cookieName));
+        response.addCookie(createClearCookie(refreshCookieName));
         response.addCookie(createClearCookie("JSESSIONID"));
 
         // Clear security context
@@ -101,6 +141,14 @@ public class AuthRestController {
         Cookie cookie = new Cookie(cookieName, value);
         configureCookie(cookie);
         cookie.setMaxAge(cookieExpiration);
+        return cookie;
+    }
+
+    private Cookie createRefreshCookie(String value) {
+        Cookie cookie = new Cookie(refreshCookieName, value);
+        configureCookie(cookie);
+        int maxAgeInSeconds = (int) (refreshTokenDurationMs / 1000);
+        cookie.setMaxAge(maxAgeInSeconds);
         return cookie;
     }
 

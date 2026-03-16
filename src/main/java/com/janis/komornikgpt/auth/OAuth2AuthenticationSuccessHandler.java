@@ -35,12 +35,19 @@ public class OAuth2AuthenticationSuccessHandler extends SimpleUrlAuthenticationS
     private final UserRepository userRepository;
     private final JwtTokenProvider jwtTokenProvider;
     private final PasswordEncoder passwordEncoder;
+    private final RefreshTokenService refreshTokenService;
 
     @Value("${jwt.cookie.name:JWT_TOKEN}")
     private String cookieName;
 
-    @Value("${jwt.cookie.expiration:86400}")
+    @Value("${jwt.refresh.cookie.name:REFRESH_TOKEN}")
+    private String refreshCookieName;
+
+    @Value("${jwt.cookie.expiration:900}") // Default 15 mins
     private int cookieExpiration;
+
+    @Value("${jwt.refresh.expirationMs:604800000}") // Default 7 days
+    private Long refreshTokenDurationMs;
 
     @Value("${jwt.cookie.secure:true}")
     private boolean cookieSecure;
@@ -83,20 +90,31 @@ public class OAuth2AuthenticationSuccessHandler extends SimpleUrlAuthenticationS
         SecurityContextHolder.getContext().setAuthentication(authToken);
         log.info("OAuth2 authentication success handler completed authentication");
         String token = jwtTokenProvider.generateToken(user);
+        RefreshToken refreshToken = refreshTokenService.createRefreshToken(user.getId());
 
         Cookie cookie = new Cookie(cookieName, token);
         cookie.setHttpOnly(true);
+
+        Cookie refreshCookie = new Cookie(refreshCookieName, refreshToken.getToken());
+        refreshCookie.setHttpOnly(true);
 
         // For Chrome compatibility - SameSite=None requires Secure=true
         if (cookieSecure) {
             cookie.setAttribute(COOKIE_PARTITIONED_ATTR, "true");
             cookie.setAttribute(COOKIE_SAME_SITE_ATTR, "Lax");
             cookie.setSecure(true);
+
+            refreshCookie.setAttribute(COOKIE_PARTITIONED_ATTR, "true");
+            refreshCookie.setAttribute(COOKIE_SAME_SITE_ATTR, "Lax");
+            refreshCookie.setSecure(true);
             log.info("Setting secure cookie with SameSite=None for production");
         } else {
             // For local development without HTTPS
             cookie.setAttribute(COOKIE_SAME_SITE_ATTR, "Lax");
             cookie.setSecure(false);
+
+            refreshCookie.setAttribute(COOKIE_SAME_SITE_ATTR, "Lax");
+            refreshCookie.setSecure(false);
             log.info("Setting non-secure cookie with SameSite=Lax for local development");
         }
         
@@ -104,8 +122,12 @@ public class OAuth2AuthenticationSuccessHandler extends SimpleUrlAuthenticationS
         cookie.setMaxAge(cookieExpiration);
         response.addCookie(cookie);
 
-        log.info("Cookie added: name={}, secure={}, path={}, maxAge={}",
-                cookieName, cookie.getSecure(), cookie.getPath(), cookie.getMaxAge());
+        refreshCookie.setPath("/");
+        refreshCookie.setMaxAge((int) (refreshTokenDurationMs / 1000));
+        response.addCookie(refreshCookie);
+
+        log.info("Cookies added: JWT secure={}, maxAge={} | Refresh secure={}, maxAge={}",
+                cookie.getSecure(), cookie.getMaxAge(), refreshCookie.getSecure(), refreshCookie.getMaxAge());
 
         String url = this.frontendUrl + "/auth/callback";
         if (user.isRequiresPasswordSetup()) {

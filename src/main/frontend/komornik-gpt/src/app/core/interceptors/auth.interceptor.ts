@@ -1,11 +1,14 @@
-import {HttpErrorResponse, HttpInterceptorFn} from '@angular/common/http';
+import {HttpErrorResponse, HttpInterceptorFn, HttpRequest, HttpHandlerFn} from '@angular/common/http';
 import {inject} from '@angular/core';
-import {catchError} from 'rxjs/operators';
+import {BehaviorSubject, Observable, throwError} from 'rxjs';
+import {catchError, filter, switchMap, take} from 'rxjs/operators';
 import {Router} from '@angular/router';
-import {throwError} from 'rxjs';
 import {AuthService} from '../services/auth.service';
 
-const PUBLIC_PATHS = ['/api/auth/login', '/api/users/register'];
+const PUBLIC_PATHS = ['/api/auth/login', '/api/users/register', '/api/auth/refresh'];
+
+let isRefreshing = false;
+const refreshTokenSubject = new BehaviorSubject<any>(null);
 
 export const authInterceptor: HttpInterceptorFn = (req, next) => {
   const router = inject(Router);
@@ -21,25 +24,58 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
 
   return next(req).pipe(
     catchError((error: HttpErrorResponse) => {
-      if ([401, 403].includes(error.status)) {
+      if (error.status === 401) {
         // Allow unauthenticated access to public group details and expenses with token
         if (req.method === 'GET' && (/\/groups\/[0-9]+$/.test(req.url) || /\/expenses\/group\/[0-9]+$/.test(req.url))) {
-          // Don't redirect, just propagate the error
           return throwError(() => error);
         }
 
-        // Don't redirect if user is accessing a page with token
         const currentUrl = router.url || window.location.href;
         if (currentUrl.includes('token=')) {
           return throwError(() => error);
         }
 
+        // Handle refresh logic
+        return handle401Error(req, next, authService, router);
+      } else if (error.status === 403) {
         authService.clearAuthState();
         if (!req.url.includes('/api/auth/user')) {
           router.navigate(['/login']);
         }
+        return throwError(() => error);
       }
       return throwError(() => error);
     })
   );
+};
+
+const handle401Error = (request: HttpRequest<any>, next: HttpHandlerFn, authService: AuthService, router: Router): Observable<any> => {
+  if (!isRefreshing) {
+    isRefreshing = true;
+    refreshTokenSubject.next(null);
+
+    return authService.refreshToken().pipe(
+      switchMap(() => {
+        isRefreshing = false;
+        refreshTokenSubject.next(true);
+        return next(request);
+      }),
+      catchError((refreshError) => {
+        isRefreshing = false;
+        authService.clearAuthState();
+        if (!request.url.includes('/api/auth/user')) {
+          router.navigate(['/login']);
+        }
+        return throwError(() => refreshError);
+      })
+    );
+  } else {
+    return refreshTokenSubject.pipe(
+      filter(tokenResult => tokenResult != null),
+      take(1),
+      switchMap(() => {
+        return next(request);
+      })
+    );
+  }
 };

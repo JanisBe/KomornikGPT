@@ -1,5 +1,6 @@
 package com.janis.komornikgpt.auth;
 
+import com.janis.komornikgpt.user.Role;
 import com.janis.komornikgpt.user.User;
 import com.janis.komornikgpt.user.UserRepository;
 import jakarta.servlet.http.Cookie;
@@ -7,10 +8,12 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.jspecify.annotations.NonNull;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.security.web.authentication.SimpleUrlAuthenticationSuccessHandler;
@@ -19,6 +22,7 @@ import org.springframework.web.util.UriComponentsBuilder;
 
 import java.io.IOException;
 import java.util.Map;
+import java.util.UUID;
 
 import static org.apache.tomcat.util.descriptor.web.Constants.COOKIE_PARTITIONED_ATTR;
 import static org.apache.tomcat.util.descriptor.web.Constants.COOKIE_SAME_SITE_ATTR;
@@ -30,6 +34,7 @@ public class OAuth2AuthenticationSuccessHandler extends SimpleUrlAuthenticationS
 
     private final UserRepository userRepository;
     private final JwtTokenProvider jwtTokenProvider;
+    private final PasswordEncoder passwordEncoder;
 
     @Value("${jwt.cookie.name:JWT_TOKEN}")
     private String cookieName;
@@ -42,8 +47,8 @@ public class OAuth2AuthenticationSuccessHandler extends SimpleUrlAuthenticationS
     @Value("${frontend.url:http://localhost:8080}")
     private String frontendUrl;
     @Override
-    public void onAuthenticationSuccess(HttpServletRequest request, HttpServletResponse response,
-                                        Authentication authentication) throws IOException {
+    public void onAuthenticationSuccess(HttpServletRequest request, @NonNull HttpServletResponse response,
+                                        @NonNull Authentication authentication) throws IOException {
         log.info("OAuth2 authentication success handler started");
         log.info("User-Agent: {}", request.getHeader("User-Agent"));
         
@@ -59,7 +64,20 @@ public class OAuth2AuthenticationSuccessHandler extends SimpleUrlAuthenticationS
 
         log.info("User authenticated: {}", email);
         User user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new RuntimeException("User not found after OAuth2 authentication"));
+                .orElseGet(() -> {
+                    log.info("User not found, creating new account for: {}", email);
+                    User newUser = User.builder()
+                            .email(email)
+                            .username(email)
+                            .name((String) attributes.get("given_name"))
+                            .surname((String) attributes.get("family_name"))
+                            .role(Role.USER)
+                            .enabled(true)
+                            .requiresPasswordSetup(true)
+                            .password(passwordEncoder.encode(UUID.randomUUID().toString()))
+                            .build();
+                    return userRepository.save(newUser);
+                });
         UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
                 user, null, user.getAuthorities());
         SecurityContextHolder.getContext().setAuthentication(authToken);

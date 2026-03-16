@@ -45,7 +45,8 @@ export class AuthCallbackComponent implements OnInit {
           }
           this.isLoading.set(false);
         },
-        error: () => {
+        error: (err) => {
+          console.log(err);
           this.router.navigate(['/login']);
           this.isLoading.set(false);
         }

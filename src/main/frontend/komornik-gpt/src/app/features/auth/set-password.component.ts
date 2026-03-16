@@ -14,6 +14,7 @@ import {MatButtonModule} from '@angular/material/button';
 import {MatSnackBar} from '@angular/material/snack-bar';
 import {MatIconModule} from "@angular/material/icon";
 import {PasswordService} from '../../core/services/password.service';
+import {AuthService} from '../../core/services/auth.service';
 import {finalize} from "rxjs";
 
 @Component({
@@ -87,6 +88,7 @@ export class SetPasswordComponent implements OnInit {
     newPassword: ['', [Validators.required, Validators.minLength(4)]],
     confirmPassword: ['', Validators.required]
   }, {validators: this.passwordsMatchValidator, updateOn: 'blur'});
+  private authService = inject(AuthService);
   private passwordService = inject(PasswordService);
   private router = inject(Router);
   private snackBar = inject(MatSnackBar);
@@ -95,7 +97,7 @@ export class SetPasswordComponent implements OnInit {
 
   ngOnInit(): void {
     this.token = this.route.snapshot.queryParamMap.get('token');
-    if (!this.token) {
+    if (!this.token && !this.authService.isAuthenticated()) {
       this.router.navigate(['/login']);
     }
   }
@@ -106,9 +108,9 @@ export class SetPasswordComponent implements OnInit {
 
     if (newPassword != null) {
       this.isLoading.set(true);
-      const changePassword$ = !this.token
-        ? this.passwordService.setPassword(newPassword)
-        : this.passwordService.setPasswordWithToken(newPassword, this.token);
+      const changePassword$ = this.token
+        ? this.passwordService.setPasswordWithToken(newPassword, this.token)
+        : this.passwordService.setPassword(newPassword);
 
       changePassword$
         .pipe(finalize(() => this.isLoading.set(false)))

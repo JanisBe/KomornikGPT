@@ -21,16 +21,16 @@ public class JwtTokenProvider {
     @Value("${jwt.secret}")
     private String jwtSecret;
 
-    @Value("${jwt.expiration:900000}") // Default 15 minutes (900000 ms) instead of old value
-    private long jwtExpirationMs;
-    @Value("${jwt.cookie.name:JWT_TOKEN}")
+    @Value("${jwt.cookie.expiration}")
+    private long jwtExpirationSeconds;
+    @Value("${jwt.cookie.name}")
     private String cookieName;
-    @Value("${jwt.refresh.cookie.name:REFRESH_TOKEN}")
+    @Value("${jwt.refresh.cookie.name}")
     private String refreshCookieName;
 
     public String generateToken(User user) {
         Date now = new Date();
-        Date expiryDate = new Date(now.getTime() + jwtExpirationMs);
+        Date expiryDate = new Date(now.getTime() + jwtExpirationSeconds * 1000);
 
         String role = user.getRole() != null ? user.getRole().name() : "USER";
         return Jwts.builder().subject(user.getEmail())
@@ -82,16 +82,6 @@ public class JwtTokenProvider {
             log.error("JWT claims string is empty");
         }
         return false;
-    }
-
-    public String extractTokenFromCookies(HttpServletRequest request) {
-        if (request.getCookies() == null) return null;
-        for (Cookie cookie : request.getCookies()) {
-            if (cookieName.equals(cookie.getName())) {
-                return cookie.getValue();
-            }
-        }
-        return null;
     }
 
     public String extractRefreshTokenFromCookies(HttpServletRequest request) {

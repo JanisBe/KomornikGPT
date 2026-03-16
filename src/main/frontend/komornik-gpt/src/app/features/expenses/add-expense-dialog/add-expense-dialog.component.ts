@@ -27,7 +27,7 @@ import {
   NO_CATEGORY
 } from '../../../core/models/expense-category.model';
 import {ExpenseService} from '../../../core/services/expense.service';
-import {MatSnackBar} from '@angular/material/snack-bar';
+import {NotificationService} from '../../../core/services/notification.service';
 
 @Component({
   selector: 'app-add-expense-dialog',
@@ -656,7 +656,7 @@ export class AddExpenseDialogComponent {
   activeMainCategory: string | null = null;
   lastEditedField: string | null = null;
   @ViewChild('categorySelector') categorySelector!: ElementRef;
-  private snackBar = inject(MatSnackBar);
+  private notificationService = inject(NotificationService);
 
   get selectedCategoryName(): string {
     return `${this.selectedCategory.mainCategory} - ${this.selectedCategory.subCategory}`;
@@ -901,16 +901,12 @@ export class AddExpenseDialogComponent {
     if (confirm(confirmMessage)) {
       this.expenseService.deleteExpense(expense.id).subscribe({
         next: () => {
-          this.snackBar.open('Wydatek został usunięty', 'Zamknij', {
-            duration: 3000
-          });
+          this.notificationService.showSuccess('Wydatek został usunięty');
           this.dialogRef.close({deleted: true});
         },
         error: (error) => {
           console.error(error);
-          this.snackBar.open('Błąd podczas usuwania wydatku', 'Zamknij', {
-            duration: 3000
-          });
+          this.notificationService.showError('Błąd podczas usuwania wydatku');
         }
       });
     }

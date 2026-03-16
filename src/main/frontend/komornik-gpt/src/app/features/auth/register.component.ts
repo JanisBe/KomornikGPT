@@ -10,7 +10,7 @@ import {
 } from '@angular/forms';
 import {Router, RouterModule} from '@angular/router';
 
-import {MatSnackBar, MatSnackBarModule} from '@angular/material/snack-bar';
+import {NotificationService} from '../../core/services/notification.service';
 import {UserService} from '../../core/services/user.service';
 import {MatIconModule} from "@angular/material/icon";
 import {MatButtonModule} from "@angular/material/button";
@@ -26,7 +26,6 @@ import {finalize, map, Observable} from "rxjs";
   imports: [
     ReactiveFormsModule,
     RouterModule,
-    MatSnackBarModule,
     MatIconModule,
     MatButtonModule,
     MatCardModule,
@@ -139,7 +138,7 @@ export class RegisterComponent implements OnInit {
 
   private fb = inject(FormBuilder);
   private router = inject(Router);
-  private snackBar = inject(MatSnackBar);
+  private notificationService = inject(NotificationService);
   private userService = inject(UserService);
 
   ngOnInit(): void {
@@ -179,16 +178,12 @@ export class RegisterComponent implements OnInit {
       .pipe(finalize(() => this.isLoading.set(false)))
       .subscribe({
         next: () => {
-          this.snackBar.open('Sprawdź podanego maila i kliknij w link aktywacyjny', 'Close', {
-            duration: 5000
-          });
+          this.notificationService.showInfo('Sprawdź podanego maila i kliknij w link aktywacyjny');
           this.router.navigate(['/login']);
         },
         error: (error) => {
           console.error(error);
-          this.snackBar.open('Registration failed. Please try again.', 'Close', {
-            duration: 5000
-          });
+          this.notificationService.showError('Registration failed. Please try again.');
         }
       });
   }

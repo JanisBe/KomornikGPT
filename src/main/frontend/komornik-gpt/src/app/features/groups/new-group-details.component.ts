@@ -16,7 +16,6 @@ import {AddExpenseDialogComponent} from '../expenses/add-expense-dialog/add-expe
 import {HttpErrorResponse} from '@angular/common/http';
 import {ExpenseService} from '../../core/services/expense.service';
 import {User} from '../../core/models/user.model';
-import {MatSnackBar} from '@angular/material/snack-bar';
 import {EditGroupDialogComponent} from './edit-group-dialog/edit-group-dialog.component';
 import {DeleteGroupDialogComponent} from './delete-group-dialog/delete-group-dialog.component';
 import {BreakpointObserver, Breakpoints} from '@angular/cdk/layout';
@@ -28,6 +27,7 @@ import {MatTabsModule} from '@angular/material/tabs';
 import {CommonModule} from '@angular/common';
 import {CopyUrlButtonComponent} from '../expenses/copy-url-button';
 import {ExcelExportService} from '../../core/services/excel-export.service';
+import {NotificationService} from '../../core/services/notification.service';
 
 
 @Component({
@@ -671,7 +671,7 @@ export class NewGroupDetailsComponent implements OnInit {
   private authService = inject(AuthService);
   private dialog = inject(MatDialog);
   private expenseService = inject(ExpenseService);
-  private snackBar = inject(MatSnackBar);
+  private notificationService = inject(NotificationService);
   private router = inject(Router);
   private breakpointObserver = inject(BreakpointObserver);
   private excelExportService = inject(ExcelExportService);
@@ -733,9 +733,7 @@ export class NewGroupDetailsComponent implements OnInit {
       },
       error: (error) => {
         console.error(error);
-        this.snackBar.open('Błąd podczas ładowania wydatków', 'Zamknij', {
-          duration: 3000
-        });
+        this.notificationService.showError('Błąd podczas ładowania wydatków');
         this.expensesLoading.set(false);
       }
     });
@@ -767,16 +765,12 @@ export class NewGroupDetailsComponent implements OnInit {
           } else {
             this.expenseService.updateExpense(expense.id, result).subscribe({
               next: () => {
-                this.snackBar.open('Wydatek został zaktualizowany', 'Zamknij', {
-                  duration: 3000
-                });
+                this.notificationService.showSuccess('Wydatek został zaktualizowany');
                 this.loadExpenses();
               },
               error: (error) => {
                 console.error(error);
-                this.snackBar.open('Błąd podczas aktualizacji wydatku', 'Zamknij', {
-                  duration: 3000
-                });
+                this.notificationService.showError('Błąd podczas aktualizacji wydatku');
               }
             });
           }
@@ -805,7 +799,7 @@ export class NewGroupDetailsComponent implements OnInit {
     });
     dialogRef.afterClosed().subscribe(result => {
       if (result) {
-        this.snackBar.open('Wydatki zostały rozliczone!', 'Zamknij', {duration: 3000});
+        this.notificationService.showSuccess('Wydatki zostały rozliczone!');
         this.loadExpenses(); // Refresh expenses after settlement
       }
     });
@@ -828,16 +822,12 @@ export class NewGroupDetailsComponent implements OnInit {
         if (result) {
           this.expenseService.createExpense(result).subscribe({
             next: () => {
-              this.snackBar.open('Wydatek został dodany', 'Zamknij', {
-                duration: 3000
-              });
+              this.notificationService.showSuccess('Wydatek został dodany');
               this.loadExpenses(); // Refresh expenses after adding
             },
             error: (error: HttpErrorResponse) => {
               console.error(error);
-              this.snackBar.open('Błąd podczas dodawania wydatku', 'Zamknij', {
-                duration: 3000
-              });
+              this.notificationService.showError('Błąd podczas dodawania wydatku');
             }
           });
         }
@@ -847,9 +837,7 @@ export class NewGroupDetailsComponent implements OnInit {
 
   editGroup(group: Group): void {
     if (!this.canEditGroup(group)) {
-      this.snackBar.open('Możesz tylko edytować swoje grupy', 'Zamknij', {
-        duration: 3000
-      });
+      this.notificationService.showError('Możesz tylko edytować swoje grupy');
       return;
     }
 
@@ -870,15 +858,11 @@ export class NewGroupDetailsComponent implements OnInit {
           this.groupService.updateGroup(group.id, result).subscribe({
             next: (updatedGroup) => {
               this.group = updatedGroup;
-              this.snackBar.open('Grupa została zaktualizowana', 'Zamknij', {
-                duration: 3000
-              });
+              this.notificationService.showSuccess('Grupa została zaktualizowana');
             },
             error: (error) => {
               console.error(error);
-              this.snackBar.open('Błąd podczas aktualizacji grupy', 'Zamknij', {
-                duration: 3000
-              });
+              this.notificationService.showError('Błąd podczas aktualizacji grupy');
             }
           });
         }
@@ -888,9 +872,7 @@ export class NewGroupDetailsComponent implements OnInit {
 
   deleteGroup(group: Group): void {
     if (!this.canDeleteGroup(group)) {
-      this.snackBar.open('Możesz tylko usuwać swoje grupy', 'Zamknij', {
-        duration: 3000
-      });
+      this.notificationService.showError('Możesz tylko usuwać swoje grupy');
       return;
     }
 
@@ -904,15 +886,11 @@ export class NewGroupDetailsComponent implements OnInit {
         this.groupService.deleteGroup(group.id).subscribe({
           next: () => {
             this.router.navigate(['/groups']);
-            this.snackBar.open('Grupa została usunięta', 'Zamknij', {
-              duration: 3000
-            });
+            this.notificationService.showSuccess('Grupa została usunięta');
           },
           error: (error: HttpErrorResponse) => {
             console.error(error);
-            this.snackBar.open('Błąd podczas usuwania grupy', 'Zamknij', {
-              duration: 3000
-            });
+            this.notificationService.showError('Błąd podczas usuwania grupy');
           }
         });
       }
@@ -921,9 +899,7 @@ export class NewGroupDetailsComponent implements OnInit {
 
   exportToExcel(): void {
     if (!this.group || this.expenses.length === 0) {
-      this.snackBar.open('Brak wydatków do eksportu', 'Zamknij', {
-        duration: 3000
-      });
+      this.notificationService.showInfo('Brak wydatków do eksportu');
       return;
     }
     this.excelExportService.exportExpensesToExcel(this.expenses, this.group.name);

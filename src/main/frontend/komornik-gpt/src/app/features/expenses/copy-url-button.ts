@@ -1,6 +1,6 @@
 import {Component, inject, Input, OnInit} from '@angular/core';
 import {Clipboard, ClipboardModule} from '@angular/cdk/clipboard';
-import {MatSnackBar, MatSnackBarModule} from '@angular/material/snack-bar';
+import {NotificationService} from '../../core/services/notification.service';
 import {MatIconModule} from '@angular/material/icon';
 import {MatButtonModule} from '@angular/material/button';
 
@@ -13,7 +13,6 @@ import {MatTooltipModule} from '@angular/material/tooltip';
     ClipboardModule,
     MatIconModule,
     MatButtonModule,
-    MatSnackBarModule,
     MatTooltipModule
   ],
   template: `
@@ -48,7 +47,7 @@ import {MatTooltipModule} from '@angular/material/tooltip';
 })
 export class CopyUrlButtonComponent implements OnInit {
   private clipboard = inject(Clipboard);
-  private snackBar = inject(MatSnackBar);
+  private notificationService = inject(NotificationService);
 
   @Input() groupId!: number;
 
@@ -65,9 +64,7 @@ export class CopyUrlButtonComponent implements OnInit {
 
   copyUrl(): void {
     this.clipboard.copy(this.url);
-    this.snackBar.open('Skopiowano URL rozliczenia do schowka!', 'Zamknij', {
-      duration: 3000
-    });
+    this.notificationService.showInfo('Skopiowano URL rozliczenia do schowka!');
   }
 
   share() {

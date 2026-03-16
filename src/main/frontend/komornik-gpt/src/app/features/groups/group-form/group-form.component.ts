@@ -19,7 +19,7 @@ import {Currency} from '../../../core/models/currency.model';
 import {Group} from '../../../core/models/group.model';
 import {AuthService} from '../../../core/services/auth.service';
 import {ExpenseService} from '../../../core/services/expense.service';
-import {MatSnackBar, MatSnackBarModule} from '@angular/material/snack-bar';
+import {NotificationService} from '../../../core/services/notification.service';
 
 @Component({
   selector: 'app-group-form',
@@ -36,8 +36,7 @@ import {MatSnackBar, MatSnackBarModule} from '@angular/material/snack-bar';
     MatAutocompleteModule,
     MatCheckboxModule,
     MatSelectModule,
-    MatDialogModule,
-    MatSnackBarModule
+    MatDialogModule
   ],
   template: `
     <form [formGroup]="groupForm" (ngSubmit)="onSubmit()" class="group-form-content">
@@ -243,7 +242,7 @@ export class GroupFormComponent implements OnInit {
   private userService = inject(UserService);
   private authService = inject(AuthService);
   private expenseService = inject(ExpenseService);
-  private snackBar = inject(MatSnackBar);
+  private notificationService = inject(NotificationService);
 
   ngOnInit(): void {
     this.groupForm = this.fb.group({
@@ -311,16 +310,12 @@ export class GroupFormComponent implements OnInit {
       try {
         const canDelete = await firstValueFrom(this.expenseService.canUserBeDeletedFromGroup(this.group.id, userId));
         if (!canDelete) {
-          this.snackBar.open('Nie można usunąć użytkownika, ponieważ ma już wydatki w tej grupie.', 'Zamknij', {
-            duration: 5000
-          });
+          this.notificationService.showError('Nie można usunąć użytkownika, ponieważ ma już wydatki w tej grupie.');
           return;
         }
       } catch (error) {
         console.error('Błąd podczas sprawdzania możliwości usunięcia użytkownika:', error);
-        this.snackBar.open('Wystąpił błąd podczas sprawdzania wydatków użytkownika.', 'Zamknij', {
-          duration: 5000
-        });
+        this.notificationService.showError('Wystąpił błąd podczas sprawdzania wydatków użytkownika.');
         return;
       }
     }

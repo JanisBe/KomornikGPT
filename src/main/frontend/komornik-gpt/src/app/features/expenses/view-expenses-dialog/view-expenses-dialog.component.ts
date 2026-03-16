@@ -4,7 +4,6 @@ import {MAT_DIALOG_DATA, MatDialog, MatDialogModule} from '@angular/material/dia
 import {MatButtonModule} from '@angular/material/button';
 import {MatIconModule} from '@angular/material/icon';
 import {MatTooltipModule} from '@angular/material/tooltip';
-import {MatSnackBar, MatSnackBarModule} from '@angular/material/snack-bar';
 import {Group} from '../../../core/models/group.model';
 import {Expense, GroupedExpenses} from '../../../core/models/expense.model';
 import {ExpenseService} from '../../../core/services/expense.service';
@@ -16,6 +15,7 @@ import {CopyUrlButtonComponent} from '../copy-url-button';
 import {BreakpointObserver, Breakpoints} from '@angular/cdk/layout';
 import {map} from 'rxjs/operators';
 import {Observable} from 'rxjs';
+import {NotificationService} from '../../../core/services/notification.service';
 
 
 @Component({
@@ -27,7 +27,6 @@ import {Observable} from 'rxjs';
     MatButtonModule,
     MatIconModule,
     MatTooltipModule,
-    MatSnackBarModule,
     CopyUrlButtonComponent
   ],
   template: `
@@ -266,7 +265,7 @@ export class ViewExpensesDialogComponent implements OnInit {
 
   public data = inject<{ group: Group }>(MAT_DIALOG_DATA);
   private expenseService = inject(ExpenseService);
-  private snackBar = inject(MatSnackBar);
+  private notificationService = inject(NotificationService);
   private dialog = inject(MatDialog);
   private breakpointObserver = inject(BreakpointObserver);
 
@@ -297,9 +296,7 @@ export class ViewExpensesDialogComponent implements OnInit {
       },
       error: (error) => {
         console.error(error);
-        this.snackBar.open('Error loading expenses', 'Close', {
-          duration: 3000
-        });
+        this.notificationService.showError('Error loading expenses');
       }
     });
   }
@@ -315,15 +312,11 @@ export class ViewExpensesDialogComponent implements OnInit {
           next: () => {
             this.expenses = this.expenses.filter(e => e.id !== expense.id);
             this.groupedExpenses = this.expenseService.groupExpensesByDay(this.expenses);
-            this.snackBar.open('Expense deleted successfully', 'Close', {
-              duration: 3000
-            });
+            this.notificationService.showSuccess('Expense deleted successfully');
           },
           error: (error) => {
             console.error(error);
-            this.snackBar.open('Error deleting expense', 'Close', {
-              duration: 3000
-            });
+            this.notificationService.showError('Error deleting expense');
           }
         });
       }
@@ -351,16 +344,12 @@ export class ViewExpensesDialogComponent implements OnInit {
         if (result) {
           this.expenseService.updateExpense(expense.id, result).subscribe({
             next: () => {
-              this.snackBar.open('Expense updated successfully', 'Close', {
-                duration: 3000
-              });
+              this.notificationService.showSuccess('Expense updated successfully');
               this.loadExpenses();
             },
             error: (error) => {
               console.error(error);
-              this.snackBar.open('Error updating expense', 'Close', {
-                duration: 3000
-              });
+              this.notificationService.showError('Error updating expense');
             }
           });
         }
@@ -375,7 +364,7 @@ export class ViewExpensesDialogComponent implements OnInit {
     });
     dialogRef.afterClosed().subscribe(result => {
       if (result) {
-        this.snackBar.open('Wydatki zostały rozliczone!', 'Zamknij', {duration: 3000});
+        this.notificationService.showSuccess('Wydatki zostały rozliczone!');
       }
     });
   }

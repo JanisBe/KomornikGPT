@@ -12,7 +12,6 @@ import {MatCardModule} from '@angular/material/card';
 import {MatFormFieldModule} from '@angular/material/form-field';
 import {MatInputModule} from '@angular/material/input';
 import {MatButtonModule} from '@angular/material/button';
-import {MatSnackBar} from '@angular/material/snack-bar';
 import {MatExpansionModule} from '@angular/material/expansion';
 import {MatDividerModule} from '@angular/material/divider';
 import {MatListModule} from '@angular/material/list';
@@ -21,6 +20,7 @@ import {Group} from '../../core/models/group.model';
 import {UpdateUserRequest, User} from '../../core/models/user.model';
 import {AuthService} from '../../core/services/auth.service';
 import {GroupService} from '../../core/services/group.service';
+import {NotificationService} from '../../core/services/notification.service';
 import {HttpErrorResponse} from '@angular/common/http';
 import {MatIconModule} from '@angular/material/icon';
 
@@ -232,7 +232,7 @@ export class ProfileComponent implements OnInit {
   private fb = inject(FormBuilder);
   private authService = inject(AuthService);
   private groupService = inject(GroupService);
-  private snackBar = inject(MatSnackBar);
+  private notificationService = inject(NotificationService);
 
   constructor() {
     this.profileForm = this.fb.group({
@@ -263,9 +263,7 @@ export class ProfileComponent implements OnInit {
       },
       error: (error) => {
         console.error(error);
-        this.snackBar.open('Nie załadowano danych', 'Close', {
-          duration: 3000
-        });
+        this.notificationService.showError('Nie załadowano danych');
       }
     });
 
@@ -276,9 +274,7 @@ export class ProfileComponent implements OnInit {
       },
       error: (error) => {
         console.error(error);
-        this.snackBar.open('Nie załadowano grup', 'Close', {
-          duration: 3000
-        });
+        this.notificationService.showError('Nie załadowano grup');
       }
     });
   }
@@ -290,9 +286,7 @@ export class ProfileComponent implements OnInit {
       // Validate password fields
       const newPassword = this.profileForm.get('newPassword')?.value;
       if (newPassword && !this.profileForm.get('currentPassword')?.value) {
-        this.snackBar.open('Wpisz aktualne hasło', 'Close', {
-          duration: 3000
-        });
+        this.notificationService.showError('Wpisz aktualne hasło');
         this.isLoading.set(false);
         return;
       }
@@ -311,9 +305,7 @@ export class ProfileComponent implements OnInit {
       this.authService.updateProfile(updateRequest).subscribe({
         next: () => {
           this.isLoading.set(false);
-          this.snackBar.open('Profil zaktualizowany poprawnie', 'Close', {
-            duration: 3000
-          });
+          this.notificationService.showSuccess('Profil zaktualizowany poprawnie');
           this.profileForm.patchValue({
             currentPassword: '',
             newPassword: '',
@@ -326,10 +318,7 @@ export class ProfileComponent implements OnInit {
             message = 'Nie jesteś zalogowany. Zaloguj się ponownie.';
           }
           this.isLoading.set(false);
-          this.snackBar.open(message, 'Close', {
-            duration: 3000,
-            panelClass: ['error-snackbar']
-          });
+          this.notificationService.showError(message);
           console.error(error);
         }
       });

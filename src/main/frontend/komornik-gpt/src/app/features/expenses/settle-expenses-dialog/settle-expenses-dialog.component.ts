@@ -1,6 +1,6 @@
 import {Component, inject, OnInit, signal} from '@angular/core';
 import {MAT_DIALOG_DATA, MatDialog, MatDialogModule, MatDialogRef} from '@angular/material/dialog';
-import {MatSnackBar} from '@angular/material/snack-bar';
+import {NotificationService} from '../../../core/services/notification.service';
 import {MatTableModule} from '@angular/material/table';
 import {MatButtonModule} from '@angular/material/button';
 import {MatProgressSpinnerModule} from '@angular/material/progress-spinner';
@@ -90,7 +90,7 @@ export class SettleExpensesDialogComponent implements OnInit {
 
   data = inject<{ group: Group }>(MAT_DIALOG_DATA);
   private dialogRef = inject(MatDialogRef<SettleExpensesDialogComponent>);
-  private snackBar = inject(MatSnackBar);
+  private notificationService = inject(NotificationService);
   private dialog = inject(MatDialog);
   private expenseService = inject(ExpenseService);
 
@@ -102,7 +102,7 @@ export class SettleExpensesDialogComponent implements OnInit {
         this.loading.set(false);
       },
       error: () => {
-        this.snackBar.open('Błąd ładowania rozliczeń', 'Zamknij', {duration: 3000});
+        this.notificationService.showError('Błąd ładowania rozliczeń');
         this.loading.set(false);
       }
     });
@@ -115,11 +115,11 @@ export class SettleExpensesDialogComponent implements OnInit {
         this.settling.set(true);
         this.expenseService.settleExpense(this.data.group.id).subscribe({
           next: () => {
-            this.snackBar.open('Rozliczono wszystkie wydatki!', 'Zamknij', {duration: 3000});
+            this.notificationService.showSuccess('Rozliczono wszystkie wydatki!');
             this.dialogRef.close(true);
           },
           error: () => {
-            this.snackBar.open('Błąd podczas rozliczania', 'Zamknij', {duration: 3000});
+            this.notificationService.showError('Błąd podczas rozliczania');
             this.settling.set(false);
           }
         });
@@ -142,7 +142,7 @@ export class SettleExpensesDialogComponent implements OnInit {
 
       this.loading.set(true);
       if (this.recalculated) {
-        this.snackBar.open('Rozliczenia zostały już przeliczone', 'Zamknij', {duration: 3000});
+        this.notificationService.showInfo('Rozliczenia zostały już przeliczone');
         this.settlements = this.recalculatedSettlements;
         this.loading.set(false);
         return;
@@ -155,7 +155,7 @@ export class SettleExpensesDialogComponent implements OnInit {
           this.recalculated = true;
         },
         error: () => {
-          this.snackBar.open('Błąd podczas przeliczania rozliczeń', 'Zamknij', {duration: 3000});
+          this.notificationService.showError('Błąd podczas przeliczania rozliczeń');
           this.loading.set(false);
           this.recalculated = false;
         }

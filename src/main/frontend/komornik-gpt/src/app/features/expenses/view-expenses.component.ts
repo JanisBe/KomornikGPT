@@ -3,7 +3,6 @@ import {CommonModule} from '@angular/common';
 import {MatButtonModule} from '@angular/material/button';
 import {MatIconModule} from '@angular/material/icon';
 import {MatTooltipModule} from '@angular/material/tooltip';
-import {MatSnackBar, MatSnackBarModule} from '@angular/material/snack-bar';
 import {Group} from '../../core/models/group.model';
 import {Expense, GroupedExpenses} from '../../core/models/expense.model';
 import {ExpenseService} from '../../core/services/expense.service';
@@ -17,6 +16,7 @@ import {AddExpenseDialogComponent} from './add-expense-dialog/add-expense-dialog
 import {AuthService} from '../../core/services/auth.service';
 import {User} from '../../core/models/user.model';
 import {ExcelExportService} from '../../core/services/excel-export.service';
+import {NotificationService} from '../../core/services/notification.service';
 
 
 @Component({
@@ -27,7 +27,6 @@ import {ExcelExportService} from '../../core/services/excel-export.service';
     MatButtonModule,
     MatIconModule,
     MatTooltipModule,
-    MatSnackBarModule,
     MatDialogModule,
     CopyUrlButtonComponent,
     MatProgressSpinner
@@ -318,7 +317,7 @@ import {ExcelExportService} from '../../core/services/excel-export.service';
     }
 
     @media (max-width: 768px) {
-      .container{
+      .container {
         padding: 0;
       }
 
@@ -333,6 +332,7 @@ import {ExcelExportService} from '../../core/services/excel-export.service';
         width: 100%;
         justify-content: center;
       }
+
       .expenses-table, .expenses-table thead, .expenses-table tbody, .expenses-table th, .expenses-table td, .expenses-table tr {
         display: block;
       }
@@ -427,7 +427,7 @@ export class ViewExpensesComponent implements OnInit {
   viewToken: string | null = null;
 
   private expenseService = inject(ExpenseService);
-  private snackBar = inject(MatSnackBar);
+  private notificationService = inject(NotificationService);
   private route = inject(ActivatedRoute);
   private groupService = inject(GroupService);
   private router = inject(Router);
@@ -453,9 +453,7 @@ export class ViewExpensesComponent implements OnInit {
         },
         error: (error) => {
           console.error(error);
-          this.snackBar.open('Error loading group', 'Close', {
-            duration: 3000
-          });
+          this.notificationService.showError('Error loading group');
           this.router.navigate(['/groups']);
         }
       }
@@ -484,9 +482,7 @@ export class ViewExpensesComponent implements OnInit {
       },
       error: (error) => {
         console.error(error);
-        this.snackBar.open('Error loading expenses', 'Close', {
-          duration: 3000
-        });
+        this.notificationService.showError('Error loading expenses');
         this.loading.set(false);
       }
     });
@@ -516,16 +512,12 @@ export class ViewExpensesComponent implements OnInit {
           // Expense was updated
           this.expenseService.updateExpense(expense.id, result).subscribe({
             next: () => {
-              this.snackBar.open('Wydatek został zaktualizowany', 'Zamknij', {
-                duration: 3000
-              });
+              this.notificationService.showSuccess('Wydatek został zaktualizowany');
               this.loadExpenses();
             },
             error: (error) => {
               console.error(error);
-              this.snackBar.open('Błąd podczas aktualizacji wydatku', 'Zamknij', {
-                duration: 3000
-              });
+              this.notificationService.showError('Błąd podczas aktualizacji wydatku');
             }
           });
         }
@@ -539,16 +531,12 @@ export class ViewExpensesComponent implements OnInit {
     if (confirmed) {
       this.expenseService.deleteExpense(expense.id).subscribe({
         next: () => {
-          this.snackBar.open('Wydatek został usunięty', 'Zamknij', {
-            duration: 3000
-          });
+          this.notificationService.showSuccess('Wydatek został usunięty');
           this.loadExpenses();
         },
         error: (error) => {
           console.error(error);
-          this.snackBar.open('Błąd podczas usuwania wydatku', 'Zamknij', {
-            duration: 3000
-          });
+          this.notificationService.showError('Błąd podczas usuwania wydatku');
         }
       });
     }

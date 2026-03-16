@@ -32,12 +32,3 @@ build/
 ### VS Code ###
 .vscode/
 /src/main/frontend/komornik-gpt/node_modules
-/certs/
-src/main/resources/daneDoKont.properties
-src/main/resources/daneDoKontLocal.properties
-src/main/resources/daneDoKontProd.properties
-src/main/resources/mail.properties
-docker-compose-local.yml
-local.Dockerfile
-/logs/*
-prod-data

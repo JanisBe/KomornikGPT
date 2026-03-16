@@ -24,9 +24,6 @@ import java.io.IOException;
 import java.util.Map;
 import java.util.UUID;
 
-import static org.apache.tomcat.util.descriptor.web.Constants.COOKIE_PARTITIONED_ATTR;
-import static org.apache.tomcat.util.descriptor.web.Constants.COOKIE_SAME_SITE_ATTR;
-
 @Component
 @RequiredArgsConstructor
 @Slf4j
@@ -36,14 +33,15 @@ public class OAuth2AuthenticationSuccessHandler extends SimpleUrlAuthenticationS
     private final JwtTokenProvider jwtTokenProvider;
     private final PasswordEncoder passwordEncoder;
     private final RefreshTokenService refreshTokenService;
+    private final HttpCookieOAuth2AuthorizationRequestRepository httpCookieOAuth2AuthorizationRequestRepository;
 
-    @Value("${jwt.cookie.name:JWT_TOKEN}")
+    @Value("${jwt.cookie.name}")
     private String cookieName;
 
-    @Value("${jwt.refresh.cookie.name:REFRESH_TOKEN}")
+    @Value("${jwt.refresh.cookie.name}")
     private String refreshCookieName;
 
-    @Value("${jwt.cookie.expiration:900}") // Default 15 mins
+    @Value("${jwt.cookie.expiration}") // Default 15 mins
     private int cookieExpiration;
 
     @Value("${jwt.refresh.expirationMs:604800000}") // Default 7 days
@@ -89,41 +87,18 @@ public class OAuth2AuthenticationSuccessHandler extends SimpleUrlAuthenticationS
                 user, null, user.getAuthorities());
         SecurityContextHolder.getContext().setAuthentication(authToken);
         log.info("OAuth2 authentication success handler completed authentication");
+
+        httpCookieOAuth2AuthorizationRequestRepository.removeAuthorizationRequestCookies(request, response);
+
         String token = jwtTokenProvider.generateToken(user);
         RefreshToken refreshToken = refreshTokenService.createRefreshToken(user.getId());
 
-        Cookie cookie = new Cookie(cookieName, token);
-        cookie.setHttpOnly(true);
+        Cookie cookie = CookieUtils.createCookie(cookieName, token, cookieExpiration, cookieSecure, null, "Lax", cookieSecure);
+        Cookie refreshCookie = CookieUtils.createCookie(refreshCookieName, refreshToken.getToken(), (int) (refreshTokenDurationMs / 1000), cookieSecure, null, "Lax", cookieSecure);
 
-        Cookie refreshCookie = new Cookie(refreshCookieName, refreshToken.getToken());
-        refreshCookie.setHttpOnly(true);
-
-        // For Chrome compatibility - SameSite=None requires Secure=true
-        if (cookieSecure) {
-            cookie.setAttribute(COOKIE_PARTITIONED_ATTR, "true");
-            cookie.setAttribute(COOKIE_SAME_SITE_ATTR, "Lax");
-            cookie.setSecure(true);
-
-            refreshCookie.setAttribute(COOKIE_PARTITIONED_ATTR, "true");
-            refreshCookie.setAttribute(COOKIE_SAME_SITE_ATTR, "Lax");
-            refreshCookie.setSecure(true);
-            log.info("Setting secure cookie with SameSite=None for production");
-        } else {
-            // For local development without HTTPS
-            cookie.setAttribute(COOKIE_SAME_SITE_ATTR, "Lax");
-            cookie.setSecure(false);
-
-            refreshCookie.setAttribute(COOKIE_SAME_SITE_ATTR, "Lax");
-            refreshCookie.setSecure(false);
-            log.info("Setting non-secure cookie with SameSite=Lax for local development");
-        }
+        log.info("Cookies created using CookieUtils: JWT secure={} | Refresh secure={}", cookie.getSecure(), refreshCookie.getSecure());
         
-        cookie.setPath("/");
-        cookie.setMaxAge(cookieExpiration);
         response.addCookie(cookie);
-
-        refreshCookie.setPath("/");
-        refreshCookie.setMaxAge((int) (refreshTokenDurationMs / 1000));
         response.addCookie(refreshCookie);
 
         log.info("Cookies added: JWT secure={}, maxAge={} | Refresh secure={}, maxAge={}",

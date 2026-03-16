@@ -1,12 +1,12 @@
 import {inject, Injectable} from '@angular/core';
 import {Expense} from '../models/expense.model';
-import {MatSnackBar} from '@angular/material/snack-bar';
+import {NotificationService} from './notification.service';
 
 @Injectable({
   providedIn: 'root'
 })
 export class ExcelExportService {
-  private snackBar = inject(MatSnackBar);
+  private notificationService = inject(NotificationService);
 
   // Dodajemy async przed nazwą metody
   async exportExpensesToExcel(expenses: Expense[], groupName: string): Promise<void> {
@@ -30,11 +30,11 @@ export class ExcelExportService {
 
       XLSX.writeFile(workbook, fileName);
 
-      this.snackBar.open('Plik Excel został pobrany', 'Zamknij', {duration: 3000});
+      this.notificationService.showSuccess('Plik Excel został pobrany');
 
     } catch (error) {
       console.error('Błąd podczas eksportu do Excel:', error);
-      this.snackBar.open('Błąd podczas eksportu do Excel', 'Zamknij', {duration: 5000});
+      this.notificationService.showError('Błąd podczas eksportu do Excel');
     }
   }
 

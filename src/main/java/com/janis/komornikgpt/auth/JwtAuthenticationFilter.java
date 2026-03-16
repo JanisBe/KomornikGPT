@@ -26,7 +26,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     private final JwtTokenProvider jwtTokenProvider;
     private final UserDetailsService userDetailsService;
 
-    @Value("${jwt.cookie.name:JWT_TOKEN}")
+    @Value("${jwt.cookie.name}")
     private String cookieName;
 
     @Override

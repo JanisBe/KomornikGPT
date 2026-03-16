@@ -4,7 +4,7 @@ import {Observable} from 'rxjs';
 import {environment} from '../../../environments/environment';
 import {CreateExpenseDto, Expense, GroupedExpenses, SettlementDto} from '../models/expense.model';
 import {tap} from 'rxjs/operators';
-import {MatSnackBar} from '@angular/material/snack-bar';
+import {NotificationService} from './notification.service';
 import {GroupExpenses} from '../models/group.model';
 
 @Injectable({
@@ -13,7 +13,7 @@ import {GroupExpenses} from '../models/group.model';
 export class ExpenseService {
   private readonly apiUrl = `${environment.apiUrl}/expenses`;
   private http = inject(HttpClient);
-  private snackBar = inject(MatSnackBar);
+  private notificationService = inject(NotificationService);
 
   getExpensesByGroup(groupId: number, viewToken?: string | null): Observable<Expense[]> {
     let url = `${this.apiUrl}/group/${groupId}`;
@@ -31,11 +31,7 @@ export class ExpenseService {
     return this.http.post<Expense & { message: string }>(`${this.apiUrl}`, expense).pipe(
       tap((response) => {
         if (response.message) {
-          this.snackBar.open(response.message, 'Zamknij', {
-            duration: 3000,
-            horizontalPosition: 'center',
-            verticalPosition: 'bottom',
-          });
+          this.notificationService.showInfo(response.message);
         }
       })
     );
@@ -65,11 +61,7 @@ export class ExpenseService {
   updateExpense(id: number, expense: CreateExpenseDto): Observable<Expense> {
     return this.http.put<Expense>(`${this.apiUrl}/${id}`, expense).pipe(
       tap(() => {
-        this.snackBar.open('Wydatek został zaktualizowany', 'Zamknij', {
-          duration: 3000,
-          horizontalPosition: 'center',
-          verticalPosition: 'bottom',
-        });
+        this.notificationService.showInfo('Wydatek został zaktualizowany');
       })
     );
   }

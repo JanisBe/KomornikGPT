@@ -8,7 +8,7 @@ import {
   Validators
 } from '@angular/forms';
 import {ActivatedRoute, Router, RouterModule} from '@angular/router';
-import {MatSnackBar, MatSnackBarModule} from '@angular/material/snack-bar';
+import {NotificationService} from '../../core/services/notification.service';
 
 import {MatCardModule} from '@angular/material/card';
 import {MatFormFieldModule} from '@angular/material/form-field';
@@ -29,7 +29,6 @@ import {PasswordService} from '../../core/services/password.service';
     MatInputModule,
     MatButtonModule,
     MatProgressBarModule,
-    MatSnackBarModule,
     MatIconModule
   ],
   template: `
@@ -141,7 +140,7 @@ export class ResetPasswordComponent implements OnInit {
   private passwordService = inject(PasswordService);
   private router = inject(Router);
   private route = inject(ActivatedRoute);
-  private snackBar = inject(MatSnackBar);
+  private notificationService = inject(NotificationService);
 
   ngOnInit(): void {
     this.resetPasswordForm = this.fb.group({
@@ -172,7 +171,7 @@ export class ResetPasswordComponent implements OnInit {
       this.passwordService.resetPassword(this.token, password).subscribe({
         next: () => {
           this.isLoading.set(false);
-          this.snackBar.open('Hasło zostało zresetowane pomyślnie.', 'Zamknij', {duration: 3000});
+          this.notificationService.showSuccess('Hasło zostało zresetowane pomyślnie.');
           this.router.navigate(['/login']);
         },
         error: (err) => {

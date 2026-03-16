@@ -4,7 +4,7 @@ import {FormBuilder, FormGroup, ReactiveFormsModule, Validators} from '@angular/
 import {ActivatedRoute, Router, RouterModule} from '@angular/router';
 import {AuthService} from '../../core/services/auth.service';
 import {SocialAuthService} from '../../core/services/social-auth.service';
-import {MatSnackBar} from '@angular/material/snack-bar';
+import {NotificationService} from '../../core/services/notification.service';
 import {MatInputModule} from '@angular/material/input';
 import {MatFormFieldModule} from '@angular/material/form-field';
 import {MatButtonModule} from '@angular/material/button';
@@ -297,7 +297,7 @@ export class LoginComponent implements OnInit {
   private socialAuthService = inject(SocialAuthService);
   private router = inject(Router);
   private route = inject(ActivatedRoute);
-  private snackBar = inject(MatSnackBar);
+  private notificationService = inject(NotificationService);
 
   ngOnInit(): void {
     this.loginForm = this.fb.group({
@@ -392,11 +392,6 @@ export class LoginComponent implements OnInit {
       this.errorMessage = 'Nastąpił bład podczas logowania. Spróbuj ponownie.';
     }
 
-    this.snackBar.open(this.errorMessage, 'Close', {
-      duration: 5000,
-      horizontalPosition: 'end',
-      verticalPosition: 'top',
-      panelClass: ['error-snackbar']
-    });
+    this.notificationService.showError(this.errorMessage);
   }
 }

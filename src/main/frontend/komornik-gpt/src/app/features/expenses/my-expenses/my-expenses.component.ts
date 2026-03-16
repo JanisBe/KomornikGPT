@@ -9,8 +9,8 @@ import {Group, GroupExpenses} from '../../../core/models/group.model';
 import {RouterLink} from '@angular/router';
 import {ConfirmDeleteDialogComponent} from '../view-expenses-dialog/confirm-delete-dialog.component';
 import {AddExpenseDialogComponent} from '../add-expense-dialog/add-expense-dialog.component';
-import {MatSnackBar} from '@angular/material/snack-bar';
 import {MatDialog} from '@angular/material/dialog';
+import {NotificationService} from '../../../core/services/notification.service';
 import {MatIconModule} from '@angular/material/icon';
 import {MatTooltipModule} from '@angular/material/tooltip';
 import {MatDividerModule} from '@angular/material/divider';
@@ -269,7 +269,7 @@ export class MyExpensesComponent implements OnInit {
   msg = 'Ładowanie wydatków...';
   private expenseService = inject(ExpenseService);
   private authService = inject(AuthService);
-  private snackBar = inject(MatSnackBar);
+  private notificationService = inject(NotificationService);
   private dialog = inject(MatDialog);
   private breakpointObserver = inject(BreakpointObserver);
 
@@ -300,15 +300,11 @@ export class MyExpensesComponent implements OnInit {
         this.expenseService.deleteExpense(expense.id).subscribe({
           next: () => {
             this.loadExpenses();
-            this.snackBar.open('Expense deleted successfully', 'Close', {
-              duration: 3000
-            });
+            this.notificationService.showSuccess('Expense deleted successfully');
           },
           error: (error) => {
             console.error(error);
-            this.snackBar.open('Error deleting expense', 'Close', {
-              duration: 3000
-            });
+            this.notificationService.showError('Error deleting expense');
           }
         });
       }
@@ -336,16 +332,12 @@ export class MyExpensesComponent implements OnInit {
         if (result) {
           this.expenseService.updateExpense(expense.id, result).subscribe({
             next: () => {
-              this.snackBar.open('Expense updated successfully', 'Close', {
-                duration: 3000
-              });
+              this.notificationService.showSuccess('Expense updated successfully');
               this.loadExpenses();
             },
             error: (error) => {
               console.error(error);
-              this.snackBar.open('Error updating expense', 'Close', {
-                duration: 3000
-              });
+              this.notificationService.showError('Error updating expense');
             }
           });
         }
@@ -451,14 +443,10 @@ export class MyExpensesComponent implements OnInit {
       // Zapisz plik
       XLSX.writeFile(workbook, fileName);
 
-      this.snackBar.open('Plik Excel został pobrany', 'Zamknij', {
-        duration: 3000
-      });
+      this.notificationService.showSuccess('Plik Excel został pobrany');
     } catch (error) {
       console.error('Błąd podczas eksportu do Excel:', error);
-      this.snackBar.open('Błąd podczas eksportu do Excel', 'Zamknij', {
-        duration: 5000
-      });
+      this.notificationService.showError('Błąd podczas eksportu do Excel');
     }
   }
 

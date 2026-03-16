@@ -153,3 +153,22 @@ mat-icon-button {
   border-radius: 0;
   padding: 16px;
 }
+
+/* Snackbar styles */
+.success-snackbar {
+  --mdc-snackbar-container-color: #43a047;
+  --mdc-snackbar-supporting-text-color: white;
+  --mat-snack-bar-button-color: white;
+}
+
+.error-snackbar {
+  --mdc-snackbar-container-color: #d32f2f;
+  --mdc-snackbar-supporting-text-color: white;
+  --mat-snack-bar-button-color: white;
+}
+
+.info-snackbar {
+  --mdc-snackbar-container-color: #1976d2;
+  --mdc-snackbar-supporting-text-color: white;
+  --mat-snack-bar-button-color: white;
+}

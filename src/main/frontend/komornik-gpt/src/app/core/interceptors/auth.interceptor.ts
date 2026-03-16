@@ -1,9 +1,10 @@
-import {HttpErrorResponse, HttpInterceptorFn, HttpRequest, HttpHandlerFn} from '@angular/common/http';
+import {HttpErrorResponse, HttpHandlerFn, HttpInterceptorFn, HttpRequest} from '@angular/common/http';
 import {inject} from '@angular/core';
 import {BehaviorSubject, Observable, throwError} from 'rxjs';
 import {catchError, filter, switchMap, take} from 'rxjs/operators';
 import {Router} from '@angular/router';
 import {AuthService} from '../services/auth.service';
+import {NotificationService} from '../services/notification.service';
 
 const PUBLIC_PATHS = ['/api/auth/login', '/api/users/register', '/api/auth/refresh'];
 
@@ -13,6 +14,7 @@ const refreshTokenSubject = new BehaviorSubject<any>(null);
 export const authInterceptor: HttpInterceptorFn = (req, next) => {
   const router = inject(Router);
   const authService = inject(AuthService);
+  const notificationService = inject(NotificationService);
 
   req = req.clone({
     withCredentials: true
@@ -36,10 +38,11 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
         }
 
         // Handle refresh logic
-        return handle401Error(req, next, authService, router);
+        return handle401Error(req, next, authService, router, notificationService);
       } else if (error.status === 403) {
         authService.clearAuthState();
         if (!req.url.includes('/api/auth/user')) {
+          notificationService.showError('Brak uprawnień lub sesja wygasła.');
           router.navigate(['/login']);
         }
         return throwError(() => error);
@@ -49,7 +52,7 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
   );
 };
 
-const handle401Error = (request: HttpRequest<any>, next: HttpHandlerFn, authService: AuthService, router: Router): Observable<any> => {
+const handle401Error = (request: HttpRequest<any>, next: HttpHandlerFn, authService: AuthService, router: Router, notificationService: NotificationService): Observable<any> => {
   if (!isRefreshing) {
     isRefreshing = true;
     refreshTokenSubject.next(null);
@@ -64,6 +67,7 @@ const handle401Error = (request: HttpRequest<any>, next: HttpHandlerFn, authServ
         isRefreshing = false;
         authService.clearAuthState();
         if (!request.url.includes('/api/auth/user')) {
+          notificationService.showError('Twoja sesja wygasła. Zaloguj się ponownie.');
           router.navigate(['/login']);
         }
         return throwError(() => refreshError);

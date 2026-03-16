@@ -2,7 +2,7 @@ import {Component, inject, signal} from '@angular/core';
 
 import {FormBuilder, FormGroup, ReactiveFormsModule, Validators} from '@angular/forms';
 import {RouterModule} from '@angular/router';
-import {MatSnackBar} from '@angular/material/snack-bar';
+import {NotificationService} from '../../core/services/notification.service';
 import {MatInputModule} from '@angular/material/input';
 import {MatFormFieldModule} from '@angular/material/form-field';
 import {MatButtonModule} from '@angular/material/button';
@@ -141,7 +141,7 @@ export class ForgotPasswordComponent {
   emailSent = false;
 
   private fb = inject(FormBuilder);
-  private snackBar = inject(MatSnackBar);
+  private notificationService = inject(NotificationService);
   private passwordService = inject(PasswordService);
 
   constructor() {
@@ -174,12 +174,7 @@ export class ForgotPasswordComponent {
               this.errorMessage = 'Wystąpił błąd podczas wysyłania linku resetującego. Spróbuj ponownie.';
             }
 
-            this.snackBar.open(this.errorMessage, 'Zamknij', {
-              duration: 5000,
-              horizontalPosition: 'end',
-              verticalPosition: 'top',
-              panelClass: ['error-snackbar']
-            });
+            this.notificationService.showError(this.errorMessage);
           }
         });
     }

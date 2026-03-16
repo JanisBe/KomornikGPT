@@ -11,7 +11,7 @@ import {
 import {ActivatedRoute, Router, RouterLink} from '@angular/router';
 import {MatInputModule} from '@angular/material/input';
 import {MatButtonModule} from '@angular/material/button';
-import {MatSnackBar} from '@angular/material/snack-bar';
+import {NotificationService} from '../../core/services/notification.service';
 import {MatIconModule} from "@angular/material/icon";
 import {PasswordService} from '../../core/services/password.service';
 import {AuthService} from '../../core/services/auth.service';
@@ -91,7 +91,7 @@ export class SetPasswordComponent implements OnInit {
   private authService = inject(AuthService);
   private passwordService = inject(PasswordService);
   private router = inject(Router);
-  private snackBar = inject(MatSnackBar);
+  private notificationService = inject(NotificationService);
   private route = inject(ActivatedRoute);
   private token: string | null = null;
 
@@ -116,11 +116,7 @@ export class SetPasswordComponent implements OnInit {
         .pipe(finalize(() => this.isLoading.set(false)))
         .subscribe({
           next: () => {
-            this.snackBar.open('Hasło zostało zaktualizowane.', 'OK', {
-              duration: 3000,
-              horizontalPosition: 'center',
-              verticalPosition: 'top',
-            });
+            this.notificationService.showSuccess('Hasło zostało zaktualizowane.');
             this.router.navigate(['/groups'])
           },
           error: (error) => {

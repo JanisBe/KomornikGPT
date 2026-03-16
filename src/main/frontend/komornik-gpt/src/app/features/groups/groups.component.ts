@@ -13,7 +13,6 @@ import {DeleteGroupDialogComponent} from './delete-group-dialog/delete-group-dia
 import {EditGroupDialogComponent} from './edit-group-dialog/edit-group-dialog.component';
 import {CreateGroupDialogComponent} from './create-group-dialog/create-group-dialog.component';
 import {AuthService} from '../../core/services/auth.service';
-import {MatSnackBar, MatSnackBarModule} from '@angular/material/snack-bar';
 import {MatProgressSpinnerModule} from '@angular/material/progress-spinner';
 import {User} from '../../core/models/user.model';
 import {catchError, filter, Observable, of, switchMap} from 'rxjs';
@@ -27,6 +26,7 @@ import {SettleExpensesDialogComponent} from '../expenses/settle-expenses-dialog'
 import {CopyUrlButtonComponent} from '../expenses/copy-url-button';
 import {BreakpointObserver, Breakpoints} from '@angular/cdk/layout';
 import {map} from 'rxjs/operators';
+import {NotificationService} from '../../core/services/notification.service';
 
 @Component({
   selector: 'app-groups',
@@ -37,7 +37,6 @@ import {map} from 'rxjs/operators';
     MatButtonModule,
     MatDialogModule,
     MatTooltipModule,
-    MatSnackBarModule,
     RouterModule,
     MatDatepickerModule,
     MatNativeDateModule,
@@ -275,7 +274,7 @@ export class GroupsComponent implements OnInit {
   private groupService = inject(GroupService);
   private dialog = inject(MatDialog);
   private authService = inject(AuthService);
-  private snackBar = inject(MatSnackBar);
+  private notificationService = inject(NotificationService);
   private expenseService = inject(ExpenseService);
   private router = inject(Router);
   private breakpointObserver = inject(BreakpointObserver);
@@ -295,9 +294,7 @@ export class GroupsComponent implements OnInit {
         return this.groupService.getMyGroups().pipe(
           catchError(error => {
             console.error('GroupsComponent: Error fetching groups', error);
-            this.snackBar.open('Błąd podczas ładowania grup', 'Zamknij', {
-              duration: 3000
-            });
+            this.notificationService.showError('Błąd podczas ładowania grup');
             return of([]);
           })
         );
@@ -342,15 +339,11 @@ export class GroupsComponent implements OnInit {
           this.groupService.createGroup(result).subscribe({
             next: (newGroup) => {
               this.groups.update(groups => [...groups, newGroup]);
-              this.snackBar.open('Grupa została utworzona', 'Zamknij', {
-                duration: 3000
-              });
+              this.notificationService.showSuccess('Grupa została utworzona');
             },
             error: (error) => {
               console.error(error);
-              this.snackBar.open('Nie udało się utworzyć grupy', 'Zamknij', {
-                duration: 3000
-              });
+              this.notificationService.showError('Nie udało się utworzyć grupy');
             }
           });
         }
@@ -375,9 +368,7 @@ export class GroupsComponent implements OnInit {
 
   editGroup(group: Group): void {
     if (!this.canEditGroup(group)) {
-      this.snackBar.open('Możesz tylko edytować swoje grupy', 'Zamknij', {
-        duration: 3000
-      });
+      this.notificationService.showError('Możesz tylko edytować swoje grupy');
       return;
     }
 
@@ -406,15 +397,11 @@ export class GroupsComponent implements OnInit {
                 }
                 return groups;
               });
-              this.snackBar.open('Grupa została zaktualizowana', 'Zamknij', {
-                duration: 3000
-              });
+              this.notificationService.showSuccess('Grupa została zaktualizowana');
             },
             error: (error) => {
               console.error(error);
-              this.snackBar.open('Bład podczas aktualizacji grupy', 'Zamknij', {
-                duration: 3000
-              });
+              this.notificationService.showError('Bład podczas aktualizacji grupy');
             }
           });
         }
@@ -424,9 +411,7 @@ export class GroupsComponent implements OnInit {
 
   deleteGroup(group: Group): void {
     if (!this.canDeleteGroup(group)) {
-      this.snackBar.open('Możesz tylko usuwać swoje grupy', 'Zamknij', {
-        duration: 3000
-      });
+      this.notificationService.showError('Możesz tylko usuwać swoje grupy');
       return;
     }
 
@@ -440,15 +425,11 @@ export class GroupsComponent implements OnInit {
         this.groupService.deleteGroup(group.id).subscribe({
           next: () => {
             this.groups.update(groups => groups.filter(g => g.id !== group.id));
-            this.snackBar.open('Grupa została usunieta', 'Zamknij', {
-              duration: 3000
-            });
+            this.notificationService.showSuccess('Grupa została usunieta');
           },
           error: (error: HttpErrorResponse) => {
             console.error(error);
-            this.snackBar.open('Bład podczas usuwania grupy', 'Zamknij', {
-              duration: 3000
-            });
+            this.notificationService.showError('Bład podczas usuwania grupy');
           }
         });
       }
@@ -466,7 +447,7 @@ export class GroupsComponent implements OnInit {
     });
     dialogRef.afterClosed().subscribe(result => {
       if (result) {
-        this.snackBar.open('Wydatki zostały rozliczone!', 'Zamknij', {duration: 3000});
+        this.notificationService.showSuccess('Wydatki zostały rozliczone!');
       }
     });
   }
@@ -488,15 +469,11 @@ export class GroupsComponent implements OnInit {
         if (result) {
           this.expenseService.createExpense(result).subscribe({
             next: () => {
-              this.snackBar.open('Wydatek został dodany', 'Zamknij', {
-                duration: 3000
-              });
+              this.notificationService.showSuccess('Wydatek został dodany');
             },
             error: (error: HttpErrorResponse) => {
               console.error(error);
-              this.snackBar.open('Bład podczas dodawania wydatku', 'Zamknij', {
-                duration: 3000
-              });
+              this.notificationService.showError('Bład podczas dodawania wydatku');
             }
           });
         }

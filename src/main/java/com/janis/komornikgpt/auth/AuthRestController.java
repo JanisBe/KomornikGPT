@@ -19,9 +19,6 @@ import org.springframework.web.bind.annotation.*;
 import java.util.HashMap;
 import java.util.Map;
 
-import static org.apache.tomcat.util.descriptor.web.Constants.COOKIE_PARTITIONED_ATTR;
-import static org.apache.tomcat.util.descriptor.web.Constants.COOKIE_SAME_SITE_ATTR;
-
 @RestController
 @RequestMapping("/api/auth")
 @RequiredArgsConstructor
@@ -32,19 +29,19 @@ public class AuthRestController {
     private final UserService userService;
     private final RefreshTokenService refreshTokenService;
 
-    @Value("${jwt.cookie.name:JWT_TOKEN}")
+    @Value("${jwt.cookie.name}")
     private String cookieName;
 
-    @Value("${jwt.refresh.cookie.name:REFRESH_TOKEN}")
+    @Value("${jwt.refresh.cookie.name}")
     private String refreshCookieName;
 
     @Value("${jwt.cookie.secure:true}")
     private boolean cookieSecure;
 
-    @Value("${jwt.cookie.expiration:900}") // Default 15 mins
+    @Value("${jwt.cookie.expiration}") // Default 15 mins
     private int cookieExpiration;
 
-    @Value("${jwt.refresh.expirationMs:604800000}") // Default 7 days
+    @Value("${jwt.refresh.expirationMs}") // Default 7 days
     private Long refreshTokenDurationMs;
 
 
@@ -138,40 +135,16 @@ public class AuthRestController {
     }
 
     private Cookie createJwtCookie(String value) {
-        Cookie cookie = new Cookie(cookieName, value);
-        configureCookie(cookie);
-        cookie.setMaxAge(cookieExpiration);
-        return cookie;
+        return CookieUtils.createCookie(cookieName, value, cookieExpiration, cookieSecure, cookieDomain, "Lax", cookieSecure);
     }
 
     private Cookie createRefreshCookie(String value) {
-        Cookie cookie = new Cookie(refreshCookieName, value);
-        configureCookie(cookie);
         int maxAgeInSeconds = (int) (refreshTokenDurationMs / 1000);
-        cookie.setMaxAge(maxAgeInSeconds);
-        return cookie;
+        return CookieUtils.createCookie(refreshCookieName, value, maxAgeInSeconds, cookieSecure, cookieDomain, "Lax", cookieSecure);
     }
 
     private Cookie createClearCookie(String name) {
-        Cookie cookie = new Cookie(name, "");
-        configureCookie(cookie);
-        cookie.setMaxAge(0); // Delete cookie
-        return cookie;
-    }
-
-    private void configureCookie(Cookie cookie) {
-        cookie.setHttpOnly(true);
-        cookie.setSecure(cookieSecure);
-        cookie.setPath("/");
-
-        if (!cookieDomain.isEmpty()) {
-            cookie.setDomain(cookieDomain);
-        }
-
-        cookie.setAttribute(COOKIE_SAME_SITE_ATTR, "Lax");
-        if (cookieSecure) {
-            cookie.setAttribute(COOKIE_PARTITIONED_ATTR, "true");
-        }
+        return CookieUtils.createCookie(name, "", 0, cookieSecure, cookieDomain, "Lax", cookieSecure);
     }
 
     private static ResponseEntity<Map<String, Object>> getMapResponseEntity(User user) {

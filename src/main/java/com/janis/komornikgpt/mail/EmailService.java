@@ -142,4 +142,20 @@ public class EmailService {
             log.error("Failed to send group invitation and set password email: {}", ex.getMessage());
         }
     }
+
+    @Async
+    public void sendSimpleEmail(String to, String subject, String content) {
+        try {
+            MimeMessage message = mailSender.createMimeMessage();
+            MimeMessageHelper helper = new MimeMessageHelper(message, false);
+
+            helper.setTo(to);
+            helper.setSubject(subject);
+            helper.setText(content, false);
+
+            mailSender.send(message);
+        } catch (MessagingException ex) {
+            log.error("Failed to send simple email: {}", ex.getMessage());
+        }
+    }
 }

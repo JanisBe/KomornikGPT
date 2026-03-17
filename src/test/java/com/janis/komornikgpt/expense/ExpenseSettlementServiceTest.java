@@ -1,6 +1,5 @@
 package com.janis.komornikgpt.expense;
 
-import com.janis.komornikgpt.SettlementDto;
 import com.janis.komornikgpt.user.User;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;

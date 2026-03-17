@@ -1,6 +1,5 @@
-package com.janis.komornikgpt;
+package com.janis.komornikgpt.expense;
 
-import com.janis.komornikgpt.expense.Currency;
 import lombok.Data;
 
 import java.math.BigDecimal;

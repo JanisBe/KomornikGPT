@@ -1,6 +1,5 @@
 package com.janis.komornikgpt.expense;
 
-import com.janis.komornikgpt.SettlementDto;
 import com.janis.komornikgpt.group.GroupDto;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;

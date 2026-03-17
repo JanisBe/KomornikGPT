@@ -11,6 +11,7 @@ public record UpdateGroupRequest(
         String description,
         boolean isPublic,
         @NotNull(message = "Default currency is required") Currency defaultCurrency,
+        @NotNull(message = "Currencies are required") List<Currency> currencies,
         @NotNull(message = "Members are required") List<MemberRequest> members) {
 
         public record MemberRequest(

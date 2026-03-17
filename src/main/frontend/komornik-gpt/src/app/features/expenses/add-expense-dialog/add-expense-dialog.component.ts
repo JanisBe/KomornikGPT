@@ -699,6 +699,23 @@ export class AddExpenseDialogComponent {
   constructor() {
     this.isEditMode = !!this.data.isEdit;
     this.dateAdapter.setLocale('pl');
+
+    // Load currencies from group if available, else load default currency
+    if (this.data.group && this.data.group.currencies && this.data.group.currencies.length > 0) {
+      this.currencies = [...this.data.group.currencies];
+      // Sort so default currency is first
+      const defaultCur = this.data.group.defaultCurrency;
+      if (defaultCur && this.currencies.includes(defaultCur)) {
+        this.currencies.sort((x, y) => {
+          return x === defaultCur ? -1 : y === defaultCur ? 1 : 0;
+        });
+      }
+    } else if (this.data.group && this.data.group.defaultCurrency) {
+      this.currencies = [this.data.group.defaultCurrency];
+    } else {
+      this.currencies = Object.values(Currency);
+    }
+
     this.initForm();
 
     if (this.isEditMode && this.data.expense) {

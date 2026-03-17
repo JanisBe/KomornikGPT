@@ -6,7 +6,6 @@ import {MatTooltipModule} from '@angular/material/tooltip';
 import {Group} from '../../core/models/group.model';
 import {Expense, GroupedExpenses} from '../../core/models/expense.model';
 import {ExpenseService} from '../../core/services/expense.service';
-import {DEFAULT_CATEGORY, enumValueToCategory} from '../../core/models/expense-category.model';
 import {CopyUrlButtonComponent} from './copy-url-button';
 import {ActivatedRoute, Router} from '@angular/router';
 import {GroupService} from '../../core/services/group.service';
@@ -17,6 +16,7 @@ import {AuthService} from '../../core/services/auth.service';
 import {User} from '../../core/models/user.model';
 import {ExcelExportService} from '../../core/services/excel-export.service';
 import {NotificationService} from '../../core/services/notification.service';
+import {Currency, CurrencyDetails} from '../../core/models/currency.model';
 
 
 @Component({
@@ -54,85 +54,85 @@ import {NotificationService} from '../../core/services/notification.service';
             <mat-spinner></mat-spinner>
           </div>
         } @else {
-          @for (group of groupedExpenses; track group.date) {
-            <div class="date-group">
-              <div class="date-header">
-                {{ group.date | date:'shortDate':'':'pl' }}
-              </div>
-              <div class="table-wrapper">
-                <table class="expenses-table">
-                  <thead>
-                  <tr>
-                    <th>Opis</th>
-                    <th>Kategoria</th>
-                    <th>Kwota</th>
-                    <th>Płacił</th>
-                    <th>Kto</th>
+          <div class="table-wrapper">
+            <table class="expenses-table">
+              <thead>
+              <tr>
+                <th>Opis</th>
+                <th>Kategoria</th>
+                <th>Kwota</th>
+                <th>Płacił</th>
+                <th>Kto</th>
+                @if (currentUser?.authenticated) {
+                  <th>Akcje</th>
+                }
+              </tr>
+              </thead>
+              <tbody>
+              @for (group of groupedExpenses; track group.date) {
+                <tr class="date-header-row">
+                  <td [attr.colspan]="currentUser?.authenticated ? 6 : 5">
+                    {{ group.date | date:'shortDate':'':'pl' }}
+                  </td>
+                </tr>
+                @for (expense of group.expenses; track expense.id) {
+                  <tr class="expense-row">
+                    <td data-label="Opis">
+                    <span [class.expense-description]="currentUser"
+                          [class.expense-description-readonly]="!currentUser"
+                          (click)="currentUser?.authenticated ? editExpense(expense) : null"
+                          [matTooltip]="expense.date | date:'medium':'':'pl'"
+                          matTooltipPosition="above">
+                      {{ expense.description | slice:0:30 }}
+                    </span>
+                      @if (expense.isPaid) {
+                        <mat-icon matTooltip="Uregulowane" class="paid-icon green-icon">check_circle</mat-icon>
+                      } @else {
+                        <mat-icon matTooltip="Nieuregulowane" color="warn" class="paid-icon">cancel</mat-icon>
+                      }
+                    </td>
+                    <td data-label="Kategoria">
+                      <div class="category-cell">
+                        <mat-icon
+                          [matTooltip]="(expense.category?.mainCategory || 'Bez Kategorii') + ' - ' + (expense.category?.subCategory || 'Ogólne')">
+                          {{ expense.category?.icon || 'category' }}
+                        </mat-icon>
+                        <span class="category-name">{{ expense.category?.subCategory || 'Ogólne' }}</span>
+                      </div>
+                    </td>
+                    <td data-label="Kwota">{{ expense.amount | number:'1.2-2' }} {{ getCurrencySymbol(expense.currency) }}</td>
+                    <td data-label="Płacił"><span
+                      matTooltip="{{expense.payer.email}}">{{ expense.payer.name }}</span>
+                    </td>
+                    <td data-label="Kto">
+                      <div class="splits-container">
+                        @for (split of expense.splits; track split.id) {
+                          <div class="split-item" [class.paid]="split.isPaid"
+                               [class.owner]="split.user.id === expense.payer.id">
+                          <span
+                            matTooltip="{{split.user.email}}">{{ split.user.name }}</span>:
+                            <span>{{ split.amountOwed | number:'1.2-2' }}</span>
+                          </div>
+                        }
+                      </div>
+                    </td>
                     @if (currentUser?.authenticated) {
-                      <th>Akcje</th>
+                      <td data-label="Akcje" class="actions-cell">
+                        <button mat-icon-button
+                                class="delete-button"
+                                (click)="deleteExpense(expense)"
+                                matTooltip="Usuń wydatek"
+                                color="warn">
+                          <mat-icon>delete</mat-icon>
+                        </button>
+                      </td>
                     }
                   </tr>
-                  </thead>
-                  <tbody>
-                    @for (expense of group.expenses; track expense.id) {
-                      <tr class="expense-row">
-                        <td data-label="Opis">
-                        <span [class.expense-description]="currentUser"
-                              [class.expense-description-readonly]="!currentUser"
-                              (click)="currentUser?.authenticated ? editExpense(expense) : null"
-                              [matTooltip]="expense.date | date:'medium':'':'pl'"
-                              matTooltipPosition="above">
-                          {{ expense.description | slice:0:30 }}
-                        </span>
-                          @if (expense.isPaid) {
-                            <mat-icon matTooltip="Uregulowane" class="paid-icon green-icon">check_circle</mat-icon>
-                          } @else {
-                            <mat-icon matTooltip="Nieuregulowane" color="warn" class="paid-icon">cancel</mat-icon>
-                          }
-                        </td>
-                        <td data-label="Kategoria">
-                          <div class="category-cell">
-                            <mat-icon
-                              [matTooltip]="(expense.category?.mainCategory || 'Bez Kategorii') + ' - ' + (expense.category?.subCategory || 'Ogólne')">
-                              {{ expense.category?.icon || 'category' }}
-                            </mat-icon>
-                            <span class="category-name">{{ expense.category?.subCategory || 'Ogólne' }}</span>
-                          </div>
-                        </td>
-                        <td data-label="Kwota">{{ expense.amount | number:'1.2-2' }} {{ expense.currency }}</td>
-                        <td data-label="Płacił"><span
-                          matTooltip="{{expense.payer.email}}">{{ expense.payer.name }}</span>
-                        </td>
-                        <td data-label="Kto"><br>
-                          <div class="splits-container">
-                            @for (split of expense.splits; track split.id) {
-                              <div class="split-item" [class.paid]="split.isPaid"
-                                   [class.owner]="split.user.id === expense.payer.id">
-                              <span
-                                matTooltip="{{split.user.email}}">{{ split.user.name }}</span>:
-                                <span>{{ split.amountOwed | number:'1.2-2' }}</span>
-                              </div>
-                            }
-                          </div>
-                        </td>
-                        @if (currentUser?.authenticated) {
-                          <td data-label="Akcje" class="actions-cell">
-                            <button mat-icon-button
-                                    class="delete-button"
-                                    (click)="deleteExpense(expense)"
-                                    matTooltip="Usuń wydatek"
-                                    color="warn">
-                              <mat-icon>delete</mat-icon>
-                            </button>
-                          </td>
-                        }
-                      </tr>
-                    }
-                  </tbody>
-                </table>
-              </div>
-            </div>
-          }
+                }
+              }
+              </tbody>
+            </table>
+          </div>
         }
       </div>
     </div>
@@ -155,9 +155,10 @@ import {NotificationService} from '../../core/services/notification.service';
       align-items: baseline;
       justify-content: space-between;
       margin-bottom: 24px;
-      background: white;
+      background: var(--mat-sys-surface);
       flex-shrink: 0;
       gap: 16px;
+      color: var(--mat-sys-on-surface);
     }
 
     .export-buttons {
@@ -191,49 +192,63 @@ import {NotificationService} from '../../core/services/notification.service';
 
     .expenses-table {
       width: 100%;
-      border-collapse: collapse;
+      border-collapse: separate; /* Required for sticky headers in some browsers */
+      border-spacing: 0;
       margin-bottom: 24px;
+      table-layout: fixed;
     }
 
     .expenses-table thead {
       position: sticky;
-      top: 48px; /* Height of date header */
-      z-index: 2;
+      top: 0;
+      z-index: 3;
     }
 
     .expenses-table th {
-      background: white;
-      padding: 12px;
+      background: var(--mat-sys-surface-container-low);
+      padding: 12px 8px;
       text-align: left;
       font-weight: 500;
-      color: rgba(0, 0, 0, 0.87);
-      border-bottom: 1px solid rgba(0, 0, 0, 0.12);
+      color: var(--mat-sys-on-surface);
+      border-bottom: 2px solid var(--mat-sys-outline, rgba(128,128,128,0.8));
       white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      height: 48px;
+      box-sizing: border-box;
     }
 
+    /* Column widths for desktop */
+    .expenses-table th:nth-child(1), .expenses-table td:nth-child(1) { width: 30%; } /* Opis */
+    .expenses-table th:nth-child(2), .expenses-table td:nth-child(2) { width: 15%; } /* Kategoria */
+    .expenses-table th:nth-child(3), .expenses-table td:nth-child(3) { width: 15%; } /* Kwota */
+    .expenses-table th:nth-child(4), .expenses-table td:nth-child(4) { width: 15%; } /* Płacił */
+    .expenses-table th:nth-child(5), .expenses-table td:nth-child(5) { width: 20%; } /* Kto */
+    .expenses-table th:nth-child(6), .expenses-table td:nth-child(6) { width: 5%; }  /* Akcje */
+
     .expenses-table td {
-      padding: 12px;
-      border-bottom: 1px solid rgba(0, 0, 0, 0.12);
-      color: rgba(0, 0, 0, 0.87);
+      padding: 12px 8px;
+      border-bottom: 1px solid var(--mat-sys-outline-variant);
+      color: var(--mat-sys-on-surface);
+      vertical-align: middle;
+      word-wrap: break-word;
     }
 
     .date-group {
       margin-bottom: 32px;
     }
 
-    .date-header {
-      background: #f5f5f5;
+    .date-header-row td {
+      background: var(--mat-sys-surface-container-high);
+      color: var(--mat-sys-on-surface);
       padding: 12px 16px;
       font-size: 16px;
       font-weight: 500;
-      border-radius: 4px 4px 0 0;
-      position: sticky;
-      top: 0;
-      z-index: 2;
+      position: sticky !important;
+      top: 47px; /* Slight overlap to prevent gaps */
+      z-index: 10;
       height: 48px;
-      box-sizing: border-box;
-      display: flex;
-      align-items: center;
+      border-bottom: 2px solid var(--mat-sys-outline, rgba(128,128,128,0.5)) !important;
     }
 
     .splits-container {
@@ -246,12 +261,13 @@ import {NotificationService} from '../../core/services/notification.service';
       display: flex;
       align-items: center;
       gap: 4px;
-      font-size: 0.9em;
-      color: rgba(0, 0, 0, 0.7);
+      font-size: 0.85em;
+      color: var(--mat-sys-on-surface-variant);
+      line-height: 1.2;
     }
 
     .split-item.paid {
-      color: #4caf50;
+      color: var(--mat-sys-secondary, #4caf50);
     }
 
     .split-item.owner {
@@ -259,9 +275,11 @@ import {NotificationService} from '../../core/services/notification.service';
     }
 
     .paid-icon {
-      font-size: 16px;
-      height: 16px;
-      width: 16px;
+      font-size: 18px;
+      height: 18px;
+      width: 18px;
+      vertical-align: middle;
+      margin-left: 4px;
     }
 
     .green-icon {
@@ -278,12 +296,19 @@ import {NotificationService} from '../../core/services/notification.service';
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
-      max-width: 80px;
       font-size: 0.9em;
     }
 
+    .expenses-table td {
+      padding: 12px 8px;
+      border-bottom: 1px solid var(--mat-sys-outline-variant, rgba(128,128,128,0.3)) !important;
+      color: var(--mat-sys-on-surface);
+      vertical-align: middle;
+      word-wrap: break-word;
+    }
+
     .expenses-table tr:hover {
-      background: rgba(0, 0, 0, 0.04);
+      background: var(--mat-sys-surface-container-low);
     }
 
     .actions-cell {
@@ -292,22 +317,22 @@ import {NotificationService} from '../../core/services/notification.service';
     }
 
     .delete-button {
-      opacity: 0;
-      transition: opacity 0.2s ease-in-out;
+      /* Removed opacity 0 to ensure icons are always visible and easier to find */
+      transition: transform 0.2s ease-in-out;
     }
 
     .expense-row:hover .delete-button {
-      opacity: 1;
+      transform: scale(1.1);
     }
 
     .expense-description {
       cursor: pointer;
-      color: #1976d2;
+      color: var(--mat-sys-primary);
       text-decoration: underline;
     }
 
     .expense-description:hover {
-      color: #1565c0;
+      opacity: 0.8;
     }
 
     .expense-description-readonly {
@@ -342,17 +367,19 @@ import {NotificationService} from '../../core/services/notification.service';
       }
 
       .expenses-table tr {
-        margin-bottom: 15px;
-        border: 1px solid #ddd;
-        border-radius: 4px;
+        margin-bottom: 16px;
+        border: 1px solid var(--mat-sys-outline-variant);
+        border-radius: 8px;
+        background: var(--mat-sys-surface-container-lowest);
       }
 
       .expenses-table td {
         border: none;
-        border-bottom: 1px solid #eee;
+        border-bottom: 1px solid var(--mat-sys-outline-variant);
         position: relative;
-        padding-left: 120px; /* Adjusted padding to accommodate label */
+        padding-left: 120px;
         text-align: right;
+        color: var(--mat-sys-on-surface);
       }
 
       .expenses-table td:last-child {
@@ -361,12 +388,12 @@ import {NotificationService} from '../../core/services/notification.service';
 
       .expenses-table td:before {
         position: absolute;
-        left: 6px;
-        width: 110px; /* Fixed width for the label */
+        left: 12px;
+        width: 100px;
         content: attr(data-label);
-        font-weight: bold;
+        font-weight: 500;
         text-align: left;
-        white-space: nowrap;
+        color: var(--mat-sys-on-surface-variant);
       }
 
       .category-cell {
@@ -467,16 +494,7 @@ export class ViewExpensesComponent implements OnInit {
     }
     this.expenseService.getExpensesByGroup(this.group.id, this.viewToken).subscribe({
       next: (expenses) => {
-        this.expenses = expenses.map(expense => {
-          const category = typeof expense.category === 'string'
-            ? enumValueToCategory(expense.category as string)
-            : expense.category || DEFAULT_CATEGORY;
-
-          return {
-            ...expense,
-            category: category
-          };
-        });
+        this.expenses = this.expenseService.normalizeExpenseCategories(expenses);
         this.groupedExpenses = this.expenseService.groupExpensesByDay(this.expenses);
         this.loading.set(false);
       },
@@ -545,5 +563,10 @@ export class ViewExpensesComponent implements OnInit {
   exportToExcel(): void {
     if (!this.group) return;
     this.excelExportService.exportExpensesToExcel(this.expenses, this.group.name);
+  }
+
+  getCurrencySymbol(code: Currency | undefined): string {
+    if (!code) return '';
+    return CurrencyDetails[code]?.symbol || code;
   }
 }

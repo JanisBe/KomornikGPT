@@ -15,6 +15,7 @@ public record GroupDto(
     LocalDateTime createdAt,
     boolean isPublic,
     Currency defaultCurrency,
+    List<Currency> currencies,
     String viewToken
 ) {
     public static GroupDto fromGroup(Group group) {
@@ -29,6 +30,7 @@ public record GroupDto(
                 group.getCreatedAt(),
                 group.isPublic(),
                 group.getDefaultCurrency(),
+                group.getCurrencies(),
                 group.getViewToken()
         );
     }

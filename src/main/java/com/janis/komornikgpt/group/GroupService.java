@@ -44,6 +44,7 @@ public class GroupService {
             group.setViewToken(UUID.randomUUID().toString().substring(0, 8));
         }
         group.setDefaultCurrency(request.defaultCurrency());
+        group.setCurrencies(new ArrayList<>(request.currencies()));
         List<User> users = new ArrayList<>();
 
         // Process each member request
@@ -97,6 +98,9 @@ public class GroupService {
         }
         if (request.defaultCurrency() != null) {
             group.setDefaultCurrency(request.defaultCurrency());
+        }
+        if (request.currencies() != null) {
+            group.setCurrencies(new ArrayList<>(request.currencies()));
         }
         if (request.description() != null) {
             group.setDescription(request.description());

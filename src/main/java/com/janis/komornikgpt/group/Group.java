@@ -11,6 +11,7 @@ import lombok.ToString;
 import org.hibernate.proxy.HibernateProxy;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
@@ -31,6 +32,12 @@ public class Group {
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private Currency defaultCurrency = Currency.PLN;
+
+    @ElementCollection(fetch = FetchType.EAGER)
+    @CollectionTable(name = "group_currencies", joinColumns = @JoinColumn(name = "group_id"))
+    @Enumerated(EnumType.STRING)
+    @Column(name = "currency")
+    private List<Currency> currencies = new ArrayList<>();
 
     @Column(length = 1000)
     private String description;

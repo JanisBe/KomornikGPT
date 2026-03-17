@@ -13,6 +13,7 @@ export interface Group {
   createdBy?: User;
   isPublic?: boolean;
   defaultCurrency?: Currency;
+  currencies?: Currency[];
   viewToken?: string;
 }
 
@@ -26,6 +27,7 @@ export interface CreateGroupRequest {
   description?: string;
   isPublic: boolean;
   defaultCurrency: Currency;
+  currencies: Currency[];
   members: { userId?: number; userName: string; email?: string }[];
   sendInvitationEmail: boolean;
 }

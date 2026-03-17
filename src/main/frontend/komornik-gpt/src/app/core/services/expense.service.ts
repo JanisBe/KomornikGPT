@@ -6,6 +6,7 @@ import {CreateExpenseDto, Expense, GroupedExpenses, SettlementDto} from '../mode
 import {tap} from 'rxjs/operators';
 import {NotificationService} from './notification.service';
 import {GroupExpenses} from '../models/group.model';
+import {DEFAULT_CATEGORY, enumValueToCategory} from '../models/expense-category.model';
 
 @Injectable({
   providedIn: 'root'
@@ -97,5 +98,18 @@ export class ExpenseService {
         expenses: expenses.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
       }))
       .sort((a, b) => b.date.getTime() - a.date.getTime());
+  }
+
+  normalizeExpenseCategories(expenses: any[]): any[] {
+    return expenses.map(expense => {
+      const category = typeof expense.category === 'string'
+        ? enumValueToCategory(expense.category as string)
+        : expense.category || DEFAULT_CATEGORY;
+
+      return {
+        ...expense,
+        category: category
+      };
+    });
   }
 }

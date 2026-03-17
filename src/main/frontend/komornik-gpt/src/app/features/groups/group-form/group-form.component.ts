@@ -60,27 +60,42 @@ import {NotificationService} from '../../../core/services/notification.service';
                     placeholder="Opis grupy"></textarea>
         </mat-form-field>
       </div>
-      <div class="form-row">
-        <div class="checkbox-column">
-          <mat-checkbox formControlName="isPublic" class="mb-2">Grupa publiczna</mat-checkbox>
-          <mat-checkbox formControlName="sendInvitationEmail" class="mb-2">
-            Wyślij e-mail z zaproszeniem do nowych członków
-          </mat-checkbox>
-        </div>
-        <div class="form-field currency-field">
-          <mat-form-field appearance="outline">
-            <mat-label>Domyślna waluta</mat-label>
-            <mat-select formControlName="currency" required>
+      <div class="checkbox-row">
+        <mat-checkbox formControlName="isPublic">Grupa publiczna</mat-checkbox>
+        <mat-checkbox formControlName="sendInvitationEmail">
+          Wyślij e-mail z zaproszeniem do nowych członków
+        </mat-checkbox>
+      </div>
+
+      <div class="currency-row">
+        <div class="currency-select-container">
+          <mat-form-field appearance="outline" class="full-width">
+            <mat-label>Dostępne waluty</mat-label>
+            <mat-select formControlName="currencies" required multiple>
               @for (currency of currencies; track currency) {
                 <mat-option [value]="currency">{{ currency }}</mat-option>
               }
             </mat-select>
             <mat-icon matSuffix>currency_exchange</mat-icon>
-            @if (groupForm.get('currency')?.errors?.['required']) {
-              <mat-error>Domyślna waluta jest wymagana</mat-error>
+            @if (groupForm.get('currencies')?.errors?.['required']) {
+              <mat-error>Wymagana przynajmniej jedna waluta</mat-error>
             }
           </mat-form-field>
         </div>
+
+        @if (groupForm.get('currencies')?.value?.length > 1) {
+          <div class="currency-select-container">
+            <mat-form-field appearance="outline" class="full-width">
+              <mat-label>Domyślna waluta</mat-label>
+              <mat-select formControlName="defaultCurrency" required>
+                @for (currency of groupForm.get('currencies')?.value; track currency) {
+                  <mat-option [value]="currency">{{ currency }}</mat-option>
+                }
+              </mat-select>
+              <mat-icon matSuffix>star</mat-icon>
+            </mat-form-field>
+          </div>
+        }
       </div>
       <div formArrayName="members" class="members-container">
         <h3>Członkowie</h3>
@@ -176,35 +191,42 @@ import {NotificationService} from '../../../core/services/notification.service';
     }
 
     .member-inputs {
-      display: grid;
-      grid-template-columns: 1fr 1fr auto;
+      display: flex;
+      flex-wrap: wrap;
       gap: 16px;
-      align-items: center;
+      align-items: flex-start;
+      flex: 1;
+    }
+
+    .username-field, .email-field {
+      flex: 1;
+      min-width: 200px;
     }
 
     .remove-member-btn {
-      grid-column: 3;
+      margin-top: 4px;
     }
 
     @media (max-width: 768px) {
       .member-inputs {
-        grid-template-columns: 1fr auto;
-        grid-template-areas:
-          "username remove"
-          "email email";
-        gap: 8px 16px;
+        flex-direction: column;
+        gap: 0;
       }
 
-      .username-field {
-        grid-area: username;
+      .username-field, .email-field {
+        width: 100%;
       }
 
-      .email-field {
-        grid-area: email;
+      .member-row {
+        position: relative;
+        padding-top: 10px;
       }
 
       .remove-member-btn {
-        grid-area: remove;
+        position: absolute;
+        top: -5px;
+        right: -10px;
+        z-index: 1;
       }
     }
 
@@ -226,6 +248,34 @@ import {NotificationService} from '../../../core/services/notification.service';
       height: auto;
     }
 
+    .checkbox-row {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      margin-bottom: 24px;
+    }
+
+    .currency-row {
+      display: flex;
+      gap: 16px;
+      align-items: flex-start;
+      margin-bottom: 16px;
+    }
+
+    .currency-select-container {
+      flex: 1;
+      min-width: 0; /* Prevents flex items from overflowing */
+    }
+
+    @media (max-width: 600px) {
+      .currency-row {
+        flex-direction: column;
+        gap: 0;
+      }
+      .currency-select-container {
+        width: 100%;
+      }
+    }
   `]
 })
 export class GroupFormComponent implements OnInit {
@@ -250,7 +300,8 @@ export class GroupFormComponent implements OnInit {
       description: [''],
       members: this.fb.array([]),
       isPublic: [false],
-      currency: [Currency.PLN, Validators.required],
+      currencies: [[Currency.PLN], Validators.required],
+      defaultCurrency: [Currency.PLN, Validators.required],
       sendInvitationEmail: [true]
     });
 
@@ -266,7 +317,10 @@ export class GroupFormComponent implements OnInit {
               name: this.group.name,
               description: this.group.description,
               isPublic: this.group.isPublic ?? false,
-              currency: this.group.defaultCurrency || Currency.PLN
+              currencies: this.group.currencies && this.group.currencies.length > 0
+                ? this.group.currencies
+                : [this.group.defaultCurrency || Currency.PLN],
+              defaultCurrency: this.group.defaultCurrency || Currency.PLN
             });
           } else {
             this.addMember();
@@ -276,6 +330,15 @@ export class GroupFormComponent implements OnInit {
           console.error(error);
         }
       });
+    });
+
+    this.groupForm.get('currencies')?.valueChanges.subscribe((selectedCurrencies: Currency[]) => {
+      const defaultCurrencyControl = this.groupForm.get('defaultCurrency');
+      if (selectedCurrencies && selectedCurrencies.length > 0) {
+        if (!selectedCurrencies.includes(defaultCurrencyControl?.value)) {
+          defaultCurrencyControl?.setValue(selectedCurrencies[0]);
+        }
+      }
     });
   }
 
@@ -373,7 +436,8 @@ export class GroupFormComponent implements OnInit {
         description: formValue.description,
         members: memberData,
         isPublic: formValue.isPublic,
-        defaultCurrency: formValue.currency,
+        defaultCurrency: formValue.currencies && formValue.currencies.length > 1 ? formValue.defaultCurrency : (formValue.currencies && formValue.currencies.length > 0 ? formValue.currencies[0] : Currency.PLN),
+        currencies: formValue.currencies,
         sendInvitationEmail: formValue.sendInvitationEmail
       });
     }

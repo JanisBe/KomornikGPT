@@ -14,11 +14,11 @@ import {NotificationService} from '../../../core/services/notification.service';
 import {MatIconModule} from '@angular/material/icon';
 import {MatTooltipModule} from '@angular/material/tooltip';
 import {MatDividerModule} from '@angular/material/divider';
-import {DEFAULT_CATEGORY, enumValueToCategory} from '../../../core/models/expense-category.model';
 import {BreakpointObserver, Breakpoints} from '@angular/cdk/layout';
 import {map} from 'rxjs/operators';
 import {Observable} from 'rxjs';
 import * as XLSX from 'xlsx';
+import {Currency, CurrencyDetails} from '../../../core/models/currency.model';
 
 @Component({
   selector: 'app-my-expenses',
@@ -224,7 +224,7 @@ import * as XLSX from 'xlsx';
           </ng-container>
           <ng-container matColumnDef="amount">
             <th mat-header-cell *matHeaderCellDef> Kwota</th>
-            <td mat-cell *matCellDef="let expense"> {{ expense.amount }} {{ expense.currency }}</td>
+            <td mat-cell *matCellDef="let expense"> {{ expense.amount }} {{ getCurrencySymbol(expense.currency) }}</td>
           </ng-container>
           <ng-container matColumnDef="date">
             <th mat-header-cell *matHeaderCellDef> Data</th>
@@ -345,49 +345,9 @@ export class MyExpensesComponent implements OnInit {
     });
   }
 
-  private loadExpenses() {
-    this.expenseService.getExpenseForUser(this.currentUserId).subscribe({
-      next: (groupExpensesList: GroupExpenses[]) => {
-
-        const newMap = new Map<Group, Expense[]>();
-        const groupKeys: Group[] = [];
-
-        if (groupExpensesList && groupExpensesList.length > 0) {
-          groupExpensesList.forEach(item => {
-            const group = item.group;
-            const expenses = item.expenses;
-
-            if (group && expenses) {
-              const processedExpenses = expenses.map(expense => {
-                // Convert backend category enum to frontend category object if it's a string
-                const category = typeof expense.category === 'string'
-                  ? enumValueToCategory(expense.category as string)
-                  : expense.category || DEFAULT_CATEGORY;
-
-                return {
-                  ...expense,
-                  date: new Date(expense.date),
-                  category: category
-                };
-              });
-
-              newMap.set(group, processedExpenses);
-              groupKeys.push(group);
-            } else {
-              this.msg = 'Nie ma żadnych wydatków 😥';
-            }
-          });
-        } else {
-          this.msg = 'Nie ma żadnych wydatków 😥';
-        }
-
-        this.expensesByGroup.set(newMap);
-        this.expensesByGroupKeys.set(groupKeys);
-      },
-      error: (error: any) => { // <--- 'error' property
-        console.error("Error fetching expenses:", error);
-      },
-    });
+  getCurrencySymbol(code: Currency | undefined): string {
+    if (!code) return '';
+    return CurrencyDetails[code]?.symbol || code;
   }
 
   exportToExcel(): void {
@@ -450,6 +410,43 @@ export class MyExpensesComponent implements OnInit {
     }
   }
 
+  private loadExpenses() {
+    this.expenseService.getExpenseForUser(this.currentUserId).subscribe({
+      next: (groupExpensesList: GroupExpenses[]) => {
+
+        const newMap = new Map<Group, Expense[]>();
+        const groupKeys: Group[] = [];
+
+        if (groupExpensesList && groupExpensesList.length > 0) {
+          groupExpensesList.forEach(item => {
+            const group = item.group;
+            const expenses = item.expenses;
+
+            if (group && expenses) {
+              const processedExpenses = this.expenseService.normalizeExpenseCategories(expenses).map(expense => ({
+                ...expense,
+                date: new Date(expense.date)
+              }));
+
+              newMap.set(group, processedExpenses);
+              groupKeys.push(group);
+            } else {
+              this.msg = 'Nie ma żadnych wydatków 😥';
+            }
+          });
+        } else {
+          this.msg = 'Nie ma żadnych wydatków 😥';
+        }
+
+        this.expensesByGroup.set(newMap);
+        this.expensesByGroupKeys.set(groupKeys);
+      },
+      error: (error: any) => { // <--- 'error' property
+        console.error("Error fetching expenses:", error);
+      },
+    });
+  }
+
   private prepareWorksheetData(): any[][] {
     // Nagłówki
     const headers = ['Grupa', 'Data', 'Opis', 'Kategoria', 'Kwota', 'Waluta', 'Uregulowane'];
@@ -476,7 +473,7 @@ export class MyExpensesComponent implements OnInit {
       expense.description,
       `${expense.category?.mainCategory || 'Bez Kategorii'} - ${expense.category?.subCategory || 'Ogólne'}`,
       expense.amount,
-      expense.currency,
+      this.getCurrencySymbol(expense.currency),
       expense.isPaid ? 'Tak' : 'Nie'
     ]);
 

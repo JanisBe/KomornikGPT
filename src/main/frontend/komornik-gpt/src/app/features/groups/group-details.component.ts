@@ -22,12 +22,12 @@ import {BreakpointObserver, Breakpoints} from '@angular/cdk/layout';
 import {map} from 'rxjs/operators';
 import {Observable} from 'rxjs';
 import {Expense, GroupedExpenses} from '../../core/models/expense.model';
-import {DEFAULT_CATEGORY, enumValueToCategory} from '../../core/models/expense-category.model';
 import {MatTabsModule} from '@angular/material/tabs';
 import {CommonModule} from '@angular/common';
 import {CopyUrlButtonComponent} from '../expenses/copy-url-button';
 import {ExcelExportService} from '../../core/services/excel-export.service';
 import {NotificationService} from '../../core/services/notification.service';
+import {Currency, CurrencyDetails} from '../../core/models/currency.model';
 
 
 @Component({
@@ -148,7 +148,7 @@ import {NotificationService} from '../../core/services/notification.service';
                                 <div class="expense-description">{{ expense.description }}</div>
                                 <div class="expense-details">
                                   <div
-                                    class="expense-amount">{{ expense.amount | number:'1.2-2' }} {{ expense.currency }}
+                                    class="expense-amount">{{ expense.amount | number:'1.2-2' }} {{ getCurrencySymbol(expense.currency) }}
                                   </div>
                                   <div class="expense-payer">Płacił: {{ expense.payer.name }}</div>
                                 </div>
@@ -233,7 +233,7 @@ import {NotificationService} from '../../core/services/notification.service';
 
     .header-content {
       display: flex;
-      align-items: flex-start;
+      align-items: baseline;
       justify-content: space-between;
       width: 100%;
       gap: 20px;
@@ -651,7 +651,7 @@ import {NotificationService} from '../../core/services/notification.service';
     }
   `]
 })
-export class NewGroupDetailsComponent implements OnInit {
+export class GroupDetailsComponent implements OnInit {
   group: Group | null = null;
   loading = signal(true);
   error: string | null = null;
@@ -718,16 +718,7 @@ export class NewGroupDetailsComponent implements OnInit {
     this.expensesLoading.set(true);
     this.expenseService.getExpensesByGroup(this.group.id, this.viewToken).subscribe({
       next: (expenses) => {
-        this.expenses = expenses.map(expense => {
-          const category = typeof expense.category === 'string'
-            ? enumValueToCategory(expense.category as string)
-            : expense.category || DEFAULT_CATEGORY;
-
-          return {
-            ...expense,
-            category: category
-          };
-        });
+        this.expenses = this.expenseService.normalizeExpenseCategories(expenses);
         this.groupedExpenses = this.expenseService.groupExpensesByDay(this.expenses);
         this.expensesLoading.set(false);
       },
@@ -903,5 +894,10 @@ export class NewGroupDetailsComponent implements OnInit {
       return;
     }
     this.excelExportService.exportExpensesToExcel(this.expenses, this.group.name);
+  }
+
+  getCurrencySymbol(code: Currency | undefined): string {
+    if (!code) return '';
+    return CurrencyDetails[code]?.symbol || code;
   }
 }

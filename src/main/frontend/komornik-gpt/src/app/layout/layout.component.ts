@@ -88,12 +88,10 @@ import {MatExpansionModule} from "@angular/material/expansion";
             <a mat-list-item routerLink="/login" routerLinkActive="active" (click)="sidenav.close()">Zaloguj</a>
             <a mat-list-item routerLink="/register" routerLinkActive="active" (click)="sidenav.close()">Zarejestruj</a>
           }
-          @if (showInstallButton) {
             <button mat-list-item (click)="installPWA(); sidenav.close()" (keyup.enter)="installPWA(); sidenav.close()">
               <mat-icon>cloud_download</mat-icon>
               Zainstaluj aplikację
             </button>
-          }
           <button mat-list-item (click)="toggleTheme(); sidenav.close()" (keyup.enter)="toggleTheme(); sidenav.close()"
                   aria-label="Przełącz motyw">
             <mat-icon>{{ themeService.isDarkMode() ? 'light_mode' : 'dark_mode' }}</mat-icon>
@@ -207,9 +205,9 @@ export class LayoutComponent implements OnInit {
   onbeforeinstallprompt(e: Event) {
     e.preventDefault();
     this.deferredPrompt = e;
-    if (this.isMobileDevice()) {
+    //if (this.isMobileDevice()) {
       this.showInstallButton = true;
-    }
+    //}
   }
 
   installPWA() {

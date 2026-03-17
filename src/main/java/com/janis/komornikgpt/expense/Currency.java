@@ -1,5 +1,8 @@
 package com.janis.komornikgpt.expense;
 
+import lombok.Getter;
+
+@Getter
 public enum Currency {
 
     USD("Dolar amerykański"),
@@ -52,7 +55,4 @@ public enum Currency {
         this.description = description;
     }
 
-    public String getDescription() {
-        return description;
-    }
 }

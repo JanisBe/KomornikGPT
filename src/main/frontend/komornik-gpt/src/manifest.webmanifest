@@ -1,0 +1,17 @@
+{
+  "name": "Komornik - Zarządzanie Wydatkami",
+  "short_name": "Komornik",
+  "theme_color": "#3f51b5",
+  "background_color": "#fafafa",
+  "display": "standalone",
+  "scope": "./",
+  "start_url": "./",
+  "icons": [
+    {
+      "src": "assets/icons/icon-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}

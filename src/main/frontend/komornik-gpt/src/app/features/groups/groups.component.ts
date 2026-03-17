@@ -59,15 +59,14 @@ import {NotificationService} from '../../core/services/notification.service';
           </button>
         </div>
       </div>
-      <div class="row">
+      <div class="groups-grid">
         @if (isLoading()) {
-          <div class="col-12 text-center p-5">
+          <div class="loading-state">
             <mat-spinner diameter="50" class="mx-auto"></mat-spinner>
             <p class="mt-3">Ładowanie grup...</p>
           </div>
         } @else {
           @for (group of groups(); track group.id) {
-          <div class="col-md-6 mb-4">
             <mat-card class="group-card">
               <mat-card-header>
                 <mat-card-title>
@@ -120,17 +119,14 @@ import {NotificationService} from '../../core/services/notification.service';
                 </button>
               </mat-card-actions>
             </mat-card>
-          </div>
           } @empty {
-            <div class="col-12">
-              <mat-card>
-                <mat-card-content>
-                  <p class="text-center">Nie masz zarejestrowanych grup,
-                    <span (click)="openCreateGroupDialog()" class="link-primary cursor">stwórz je</span>
-                  </p>
-                </mat-card-content>
-              </mat-card>
-            </div>
+            <mat-card class="empty-state">
+              <mat-card-content>
+                <p class="text-center">Nie masz zarejestrowanych grup,
+                  <span (click)="openCreateGroupDialog()" class="link-primary cursor">stwórz je</span>
+                </p>
+              </mat-card-content>
+            </mat-card>
           }
         }
       </div>
@@ -143,21 +139,31 @@ import {NotificationService} from '../../core/services/notification.service';
       padding: 20px;
     }
 
-    .row {
-      display: flex;
-      flex-wrap: wrap;
-      margin: -15px;
+    .groups-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+      gap: 24px;
+      margin-bottom: 24px;
+      margin-top: 24px;
     }
 
-    .col-md-6 {
-      flex: 0 0 50%;
-      max-width: 50%;
-      padding: 15px;
-      display: flex;
+    .loading-state, .empty-state {
+      grid-column: 1 / -1;
+      width: 100%;
+      text-align: center;
+      padding: 48px 0;
     }
 
-    .mb-4 {
-      margin-bottom: 1.5rem !important;
+    .group-card {
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+    }
+
+    .group-card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
     }
 
     h1 {
@@ -231,6 +237,7 @@ import {NotificationService} from '../../core/services/notification.service';
       color: inherit;
       display: flex;
       align-items: center;
+      gap: 10px;
     }
 
     cursor {
@@ -238,9 +245,9 @@ import {NotificationService} from '../../core/services/notification.service';
     }
 
     @media (max-width: 768px) {
-      .col-md-6 {
-        flex: 0 0 100%;
-        max-width: 100%;
+      .groups-grid {
+        grid-template-columns: 1fr;
+        gap: 16px;
       }
 
       mat-card-actions {

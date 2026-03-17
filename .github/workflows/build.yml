@@ -8,6 +8,9 @@ on:
     branches: [ master, main ]
   workflow_dispatch:
 
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
 jobs:
   build-and-test:
     runs-on: ubuntu-latest
@@ -18,7 +21,7 @@ jobs:
       - name: Set up Node.js
         uses: actions/setup-node@v6
         with:
-          node-version: '20'
+          node-version: '22'
           cache: 'npm'
           cache-dependency-path: src/main/frontend/komornik-gpt/package-lock.json
 
@@ -48,7 +51,7 @@ jobs:
           jar -tf target/*.jar | grep -E "(index\.html|static/)" | head -10 || echo "No static files in JAR"
 
       - name: Upload artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: app-jar
           path: target/*.jar

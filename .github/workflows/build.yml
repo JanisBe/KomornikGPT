@@ -2,7 +2,6 @@ name: KomornikGPT CI/CD
 
 on:
   push:
-    branches: [ * ]
     tags: [ 'v*' ]
   pull_request:
     branches: [ master, main ]

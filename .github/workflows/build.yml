@@ -18,6 +18,19 @@ jobs:
       - name: Checkout repo
         uses: actions/checkout@v6
 
+      - name: Set up Java 24
+        uses: actions/setup-java@v5
+        with:
+          java-version: '24'
+          distribution: 'temurin'
+          cache: 'maven'
+
+      - name: Compile backend
+        run: mvn -B compile -DskipFrontend=true
+
+      - name: Generate OpenAPI spec and TypeScript client
+        run: mvn -B integration-test post-integration-test -DskipFrontend=true -Pgenerate-api
+
       - name: Set up Node.js
         uses: actions/setup-node@v6
         with:
@@ -31,18 +44,11 @@ jobs:
           npm config set registry https://registry.npmjs.org/
           npm ci --fetch-retries=5 --fetch-retry-factor=2
 
-      - name: Build frontend
+      - name: Build frontend (with generated API models)
         working-directory: src/main/frontend/komornik-gpt
         run: npm run build
 
-      - name: Set up Java 24
-        uses: actions/setup-java@v5
-        with:
-          java-version: '24'
-          distribution: 'temurin'
-          cache: 'maven'
-
-      - name: Build and test (backend only, frontend już zbudowany)
+      - name: Build and test (backend, frontend already built)
         run: mvn -B verify -DskipFrontend=true -Pdocker-build
 
       - name: Verify static files were built

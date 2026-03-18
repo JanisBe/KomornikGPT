@@ -1,0 +1,23 @@
+{
+  "$schema": "node_modules/@openapitools/openapi-generator-cli/config.schema.json",
+  "spaces": 2,
+  "generator-cli": {
+    "version": "7.11.0",
+    "generators": {
+      "komornik-api": {
+        "generatorName": "typescript-angular",
+        "inputSpec": "openapi.json",
+        "output": "src/app/core/api",
+        "additionalProperties": {
+          "providedIn": "root",
+          "withSeparateModelsAndApi": true,
+          "modelFileSuffix": ".model",
+          "apiFileSuffix": ".api",
+          "fileNaming": "kebab-case",
+          "npmName": "komornik-api",
+          "angularVersion": "21"
+        }
+      }
+    }
+  }
+}

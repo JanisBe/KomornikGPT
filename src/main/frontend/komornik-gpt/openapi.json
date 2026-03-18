@@ -1,0 +1,2676 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "KomornikGPT API",
+    "description": "Dokumentacja API dla aplikacji do zarządzania wspólnymi wydatkami",
+    "license": {
+      "name": "Apache 2.0",
+      "url": "http://springdoc.org"
+    },
+    "version": "v0.0.1"
+  },
+  "servers": [
+    {
+      "url": "http://localhost:8080",
+      "description": "Generated server url"
+    }
+  ],
+  "security": [
+    {
+      "bearerAuth": []
+    }
+  ],
+  "tags": [
+    {
+      "name": "User",
+      "description": "Endpointy do profilu użytkownika i jego znajomych"
+    },
+    {
+      "name": "Group",
+      "description": "Endpointy do zarządzania grupami wydatków"
+    },
+    {
+      "name": "Auth",
+      "description": "Endpointy do logowania, wylogowywania i zarządzania tokenami"
+    },
+    {
+      "name": "Password",
+      "description": "Endpointy do resetowania hasła i potwierdzania email"
+    },
+    {
+      "name": "Actuator",
+      "description": "Monitor and interact",
+      "externalDocs": {
+        "description": "Spring Boot Actuator Web API Documentation",
+        "url": "https://docs.spring.io/spring-boot/docs/current/actuator-api/html/"
+      }
+    },
+    {
+      "name": "Expense",
+      "description": "Endpointy do zarządzania wydatkami w grupach"
+    }
+  ],
+  "paths": {
+    "/api/users/{id}": {
+      "get": {
+        "tags": [
+          "User"
+        ],
+        "operationId": "getUserById",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/User"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "User"
+        ],
+        "summary": "Zaktualizuj użytkownika po ID",
+        "operationId": "updateUser",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateUserRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/User"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "User"
+        ],
+        "operationId": "deleteUser",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "No Content"
+          }
+        }
+      }
+    },
+    "/api/users/me": {
+      "get": {
+        "tags": [
+          "User"
+        ],
+        "summary": "Pobierz mój profil",
+        "description": "Zwraca pełne dane profilowe aktualnie zalogowanego użytkownika.",
+        "operationId": "getCurrentUser",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserDto"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "User"
+        ],
+        "summary": "Zaktualizuj mój profil",
+        "operationId": "updateCurrentUser",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateUserRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserDto"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/groups/{id}": {
+      "get": {
+        "tags": [
+          "Group"
+        ],
+        "summary": "Pobierz grupę po ID",
+        "description": "Zwraca szczegóły wybranej grupy wraz z listą członków.",
+        "operationId": "getGroupById",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          },
+          {
+            "name": "viewToken",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/GroupDto"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "Group"
+        ],
+        "summary": "Zaktualizuj grupę",
+        "description": "Aktualizuje dane dla grupy o podanym ID.",
+        "operationId": "updateGroup",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateGroupRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/GroupDto"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Group"
+        ],
+        "summary": "Usuń grupę",
+        "description": "Usuwa grupę o podanym ID. Wymaga odpowiednich uprawnień.",
+        "operationId": "deleteGroup",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/expenses/{id}": {
+      "put": {
+        "tags": [
+          "Expense"
+        ],
+        "summary": "Zaktualizuj wydatek",
+        "operationId": "updateExpense",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateExpenseRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ExpenseDto"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Expense"
+        ],
+        "summary": "Usuń wydatek",
+        "operationId": "deleteExpense",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/users/register": {
+      "post": {
+        "tags": [
+          "User"
+        ],
+        "summary": "Zarejestruj użytkownika",
+        "description": "Standardowa rejestracja z e-mail i hasłem.",
+        "operationId": "registerUser",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateUserRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Created",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/User"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/users/create-without-password": {
+      "post": {
+        "tags": [
+          "User"
+        ],
+        "summary": "Utwórz użytkownika (bez hasła)",
+        "description": "Tworzy konto, generuje token i wymaga aktywacji/ustawienia hasła przez link.",
+        "operationId": "createUserWithoutPassword",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateUserWithoutPasswordRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserDto"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/pwd/set-password": {
+      "post": {
+        "tags": [
+          "Password"
+        ],
+        "summary": "Ustaw hasło (zalogowany wpis z OAuth)",
+        "description": "Pozwala użytkownikowi zarejestrowanemu przez OAuth2 na ustawienie własnego hasła (np. dla przyszłych logowań lokalnych).",
+        "operationId": "setPassword",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SetPasswordRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/pwd/set-password-with-token": {
+      "post": {
+        "tags": [
+          "Password"
+        ],
+        "summary": "Ustaw hasło z tokenem rejestrowania",
+        "description": "Procedura ustawienia hasła przy zaproszeniach (createUserWithoutPassword).",
+        "operationId": "setPasswordWithToken",
+        "parameters": [
+          {
+            "name": "token",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SetPasswordRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/pwd/reset-password": {
+      "post": {
+        "tags": [
+          "Password"
+        ],
+        "summary": "Zmień hasło (zapomniane)",
+        "description": "Służy do ustawienia nowego hasła na podstawie tokena z e-maila w procesie 'forgot-password'.",
+        "operationId": "resetPassword",
+        "parameters": [
+          {
+            "name": "token",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SetPasswordRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/pwd/forgot-password": {
+      "post": {
+        "tags": [
+          "Password"
+        ],
+        "summary": "Zapomniałem hasła",
+        "description": "Rozpoczyna procedurę resetowania hasła wysyłając e-mail z tokenem.",
+        "operationId": "forgotPassword",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ForgotPasswordRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/groups": {
+      "get": {
+        "tags": [
+          "Group"
+        ],
+        "summary": "Pobierz wszystkie grupy",
+        "description": "Zwraca listę wszystkich dostępnych grup.",
+        "operationId": "getAllGroups",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/GroupDto"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Group"
+        ],
+        "summary": "Utwórz nową grupę",
+        "description": "Tworzy nową grupę wydatków na podstawie przekazanych danych.",
+        "operationId": "createGroup",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateGroupRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/GroupDto"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/expenses": {
+      "post": {
+        "tags": [
+          "Expense"
+        ],
+        "summary": "Dodaj wydatek",
+        "description": "Aplikuje nowy wydatek dla grupy na podstawie danych i proporcji podziału.",
+        "operationId": "createExpense",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateExpenseRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ExpenseDto"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/expenses/groups/{groupId}/settle": {
+      "post": {
+        "tags": [
+          "Expense"
+        ],
+        "summary": "Rozlicz grupę",
+        "description": "Rozlicza zaległe wyliczenia i oznacza długi jako opłacone.",
+        "operationId": "settleGroup",
+        "parameters": [
+          {
+            "name": "groupId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/auth/refresh": {
+      "post": {
+        "tags": [
+          "Auth"
+        ],
+        "summary": "Odśwież token JWT",
+        "description": "Na podstawie ważnego Refresh Tokena wydaje nowy JWT Access Token.",
+        "operationId": "refreshToken",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/auth/logout": {
+      "post": {
+        "tags": [
+          "Auth"
+        ],
+        "summary": "Wyloguj użytkownika",
+        "description": "Usuwa tokeny z bazy oraz czyści ciasteczka przeglądarki.",
+        "operationId": "logout",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/auth/login": {
+      "post": {
+        "tags": [
+          "Auth"
+        ],
+        "summary": "Zaloguj użytkownika",
+        "description": "Autoryzuje użytkownika i ustawia ciasteczka z JWT oraz Refresh Token.",
+        "operationId": "login",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LoginRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/users": {
+      "get": {
+        "tags": [
+          "User"
+        ],
+        "summary": "Pobierz wszystkich użytkowników",
+        "description": "Zwraca wszystkich zarejestrowanych użytkowników.",
+        "operationId": "getAllUsers",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/UserDto"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/users/{userId}/friends": {
+      "get": {
+        "tags": [
+          "User"
+        ],
+        "summary": "Pobierz znajomych",
+        "description": "Zwraca listę osób, ze wspólnymi grupami uzytkownika.",
+        "operationId": "getUserFriends",
+        "parameters": [
+          {
+            "name": "userId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/UserDto"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/users/check/username": {
+      "get": {
+        "tags": [
+          "User"
+        ],
+        "summary": "Sprawdź nazwę użytkownika",
+        "description": "Weryfikuje czy dany username jest już zajęty podczas rejestracji.",
+        "operationId": "checkUsernameExists",
+        "parameters": [
+          {
+            "name": "username",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "type": "boolean"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/users/check/email": {
+      "get": {
+        "tags": [
+          "User"
+        ],
+        "summary": "Sprawdź adres e-mail",
+        "description": "Weryfikuje czy podany e-mail jest już zarejestrowany.",
+        "operationId": "checkEmailExists",
+        "parameters": [
+          {
+            "name": "email",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "type": "boolean"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/pwd/confirm-email": {
+      "get": {
+        "tags": [
+          "Password"
+        ],
+        "summary": "Potwierdź adres e-mail",
+        "description": "Aktywuje konto użytkownika po kliknięciu linku przesłanego w e-mailu rejestracyjnym.",
+        "operationId": "confirm",
+        "parameters": [
+          {
+            "name": "token",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/groups/my": {
+      "get": {
+        "tags": [
+          "Group"
+        ],
+        "summary": "Pobierz moje grupy",
+        "description": "Zwraca listę grup, do których należy obecnie zalogowany użytkownik.",
+        "operationId": "getMyGroups",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/GroupDto"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/expenses/user/{userId}": {
+      "get": {
+        "tags": [
+          "Expense"
+        ],
+        "summary": "Pobierz wydatki użytkownika",
+        "description": "Zwraca pogrupowaną listę wydatków dla danego użytkownika z różnych grup.",
+        "operationId": "getExpensesByPayerId",
+        "parameters": [
+          {
+            "name": "userId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/GroupExpensesDto"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/expenses/user/{userId}/between": {
+      "get": {
+        "tags": [
+          "Expense"
+        ],
+        "summary": "Pobierz wydatki z zakresu dat (Użytkownik)",
+        "operationId": "getExpensesByPayerIdAndDateBetween",
+        "parameters": [
+          {
+            "name": "userId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          },
+          {
+            "name": "startDate",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          },
+          {
+            "name": "endDate",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ExpenseDto"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/expenses/recalculate/{id}": {
+      "get": {
+        "tags": [
+          "Expense"
+        ],
+        "summary": "Przelicz ponownie",
+        "description": "Wymuś przeliczenie splits ze względu na kursy walut itp.",
+        "operationId": "recalculateExpense",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ExpenseDto"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/expenses/groups/{groupId}/user/{userId}/can-be-deleted": {
+      "get": {
+        "tags": [
+          "Expense"
+        ],
+        "summary": "Sprawdź możliwość usunięcia",
+        "description": "Zwraca informacje czy dany użytkownik może opuścić daną grupę (brak zaległości).",
+        "operationId": "canUserBeDeletedFromGroup",
+        "parameters": [
+          {
+            "name": "userId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          },
+          {
+            "name": "groupId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "type": "boolean"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/expenses/groups/{groupId}/settlement": {
+      "get": {
+        "tags": [
+          "Expense"
+        ],
+        "summary": "Pobierz rozliczenie grupy",
+        "description": "Zwraca ostateczne rozliczenie (kto komu ile jest dłużny) dla całej grupy.",
+        "operationId": "getSettlement",
+        "parameters": [
+          {
+            "name": "groupId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          },
+          {
+            "name": "recalculate",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "default": false
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/SettlementDto"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/expenses/group/{groupId}": {
+      "get": {
+        "tags": [
+          "Expense"
+        ],
+        "summary": "Pobierz wszystkie wydatki grupy",
+        "description": "Zwraca pełną lub częściową listę zweryfikowanych wydatków z wybranej grupy.",
+        "operationId": "getExpensesByGroupId",
+        "parameters": [
+          {
+            "name": "groupId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          },
+          {
+            "name": "viewToken",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ExpenseDto"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/expenses/group/{groupId}/has-unpaid": {
+      "get": {
+        "tags": [
+          "Expense"
+        ],
+        "summary": "Sprawdź nieopłacone wydatki",
+        "description": "Zwraca true, jeśli w grupie istnieją nieopłacone wydatki.",
+        "operationId": "hasUnpaidExpenses",
+        "parameters": [
+          {
+            "name": "groupId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "type": "boolean"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/expenses/group/{groupId}/between": {
+      "get": {
+        "tags": [
+          "Expense"
+        ],
+        "summary": "Pobierz wydatki z zakresu dat (Grupa)",
+        "operationId": "getExpensesByGroupIdAndDateBetween",
+        "parameters": [
+          {
+            "name": "groupId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          },
+          {
+            "name": "startDate",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          },
+          {
+            "name": "endDate",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ExpenseDto"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/auth/user": {
+      "get": {
+        "tags": [
+          "Auth"
+        ],
+        "summary": "Pobierz zalogowanego użytkownika",
+        "description": "Zwraca skrócone dane powiązane z aktualnym tokenem JWT.",
+        "operationId": "getCurrentUser_1",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/actuator": {
+      "get": {
+        "tags": [
+          "Actuator"
+        ],
+        "summary": "Actuator root web endpoint",
+        "operationId": "links",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/vnd.spring-boot.actuator.v3+json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": {
+                    "type": "object",
+                    "additionalProperties": {
+                      "$ref": "#/components/schemas/Link"
+                    }
+                  }
+                }
+              },
+              "application/vnd.spring-boot.actuator.v2+json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": {
+                    "type": "object",
+                    "additionalProperties": {
+                      "$ref": "#/components/schemas/Link"
+                    }
+                  }
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": {
+                    "type": "object",
+                    "additionalProperties": {
+                      "$ref": "#/components/schemas/Link"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/actuator/health": {
+      "get": {
+        "tags": [
+          "Actuator"
+        ],
+        "summary": "Actuator web endpoint 'health'",
+        "operationId": "health",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/vnd.spring-boot.actuator.v3+json": {
+                "schema": {
+                  "type": "object"
+                }
+              },
+              "application/vnd.spring-boot.actuator.v2+json": {
+                "schema": {
+                  "type": "object"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "UpdateUserRequest": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "maxLength": 50,
+            "minLength": 2
+          },
+          "surname": {
+            "type": "string",
+            "maxLength": 50,
+            "minLength": 2
+          },
+          "email": {
+            "type": "string",
+            "format": "email"
+          },
+          "currentPassword": {
+            "type": "string"
+          },
+          "newPassword": {
+            "type": "string",
+            "maxLength": 2147483647,
+            "minLength": 4
+          }
+        }
+      },
+      "Expense": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "payer": {
+            "$ref": "#/components/schemas/User"
+          },
+          "amount": {
+            "type": "number"
+          },
+          "description": {
+            "type": "string"
+          },
+          "date": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "currency": {
+            "type": "string",
+            "enum": [
+              "USD",
+              "EUR",
+              "JPY",
+              "GBP",
+              "AUD",
+              "CAD",
+              "CHF",
+              "CNY",
+              "SEK",
+              "NZD",
+              "MXN",
+              "SGD",
+              "HKD",
+              "NOK",
+              "KRW",
+              "TRY",
+              "RUB",
+              "INR",
+              "BRL",
+              "ZAR",
+              "DKK",
+              "PLN",
+              "TWD",
+              "THB",
+              "MYR",
+              "IDR",
+              "CZK",
+              "HUF",
+              "ILS",
+              "CLP",
+              "PHP",
+              "AED",
+              "COP",
+              "SAR",
+              "RON",
+              "PEN",
+              "VND",
+              "PKR",
+              "KZT",
+              "EGP"
+            ]
+          },
+          "group": {
+            "$ref": "#/components/schemas/Group"
+          },
+          "splits": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ExpenseSplit"
+            }
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "paid": {
+            "type": "boolean"
+          },
+          "category": {
+            "type": "string",
+            "enum": [
+              "NO_CATEGORY_GENERAL",
+              "HOME_APPLIANCES",
+              "HOME_RENT",
+              "HOME_ELECTRONICS",
+              "HOME_OTHER",
+              "HOME_MORTGAGE",
+              "HOME_FURNITURE",
+              "HOME_SERVICES",
+              "HOME_MAINTENANCE",
+              "HOME_PETS",
+              "ENTERTAINMENT_MOVIES",
+              "ENTERTAINMENT_GAMES",
+              "ENTERTAINMENT_OTHER",
+              "ENTERTAINMENT_MUSIC",
+              "ENTERTAINMENT_SPORTS",
+              "LIFE_EDUCATION",
+              "LIFE_OTHER",
+              "LIFE_CHILDCARE",
+              "LIFE_TAXES",
+              "LIFE_GIFTS",
+              "LIFE_INSURANCE",
+              "LIFE_CLOTHING",
+              "LIFE_MEDICAL",
+              "FOOD_ALCOHOL",
+              "FOOD_GROCERIES",
+              "FOOD_OTHER",
+              "FOOD_RESTAURANT"
+            ]
+          }
+        }
+      },
+      "ExpenseSplit": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "expense": {
+            "$ref": "#/components/schemas/Expense"
+          },
+          "user": {
+            "$ref": "#/components/schemas/User"
+          },
+          "amountOwed": {
+            "type": "number"
+          }
+        }
+      },
+      "Group": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "name": {
+            "type": "string"
+          },
+          "defaultCurrency": {
+            "type": "string",
+            "enum": [
+              "USD",
+              "EUR",
+              "JPY",
+              "GBP",
+              "AUD",
+              "CAD",
+              "CHF",
+              "CNY",
+              "SEK",
+              "NZD",
+              "MXN",
+              "SGD",
+              "HKD",
+              "NOK",
+              "KRW",
+              "TRY",
+              "RUB",
+              "INR",
+              "BRL",
+              "ZAR",
+              "DKK",
+              "PLN",
+              "TWD",
+              "THB",
+              "MYR",
+              "IDR",
+              "CZK",
+              "HUF",
+              "ILS",
+              "CLP",
+              "PHP",
+              "AED",
+              "COP",
+              "SAR",
+              "RON",
+              "PEN",
+              "VND",
+              "PKR",
+              "KZT",
+              "EGP"
+            ]
+          },
+          "currencies": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "enum": [
+                "USD",
+                "EUR",
+                "JPY",
+                "GBP",
+                "AUD",
+                "CAD",
+                "CHF",
+                "CNY",
+                "SEK",
+                "NZD",
+                "MXN",
+                "SGD",
+                "HKD",
+                "NOK",
+                "KRW",
+                "TRY",
+                "RUB",
+                "INR",
+                "BRL",
+                "ZAR",
+                "DKK",
+                "PLN",
+                "TWD",
+                "THB",
+                "MYR",
+                "IDR",
+                "CZK",
+                "HUF",
+                "ILS",
+                "CLP",
+                "PHP",
+                "AED",
+                "COP",
+                "SAR",
+                "RON",
+                "PEN",
+                "VND",
+                "PKR",
+                "KZT",
+                "EGP"
+              ]
+            }
+          },
+          "description": {
+            "type": "string"
+          },
+          "users": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/User"
+            }
+          },
+          "createdBy": {
+            "$ref": "#/components/schemas/User"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "viewToken": {
+            "type": "string"
+          },
+          "public": {
+            "type": "boolean"
+          }
+        }
+      },
+      "User": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "email": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "surname": {
+            "type": "string"
+          },
+          "requiresPasswordSetup": {
+            "type": "boolean"
+          },
+          "role": {
+            "type": "string",
+            "enum": [
+              "USER",
+              "ADMIN"
+            ]
+          },
+          "expensesPaid": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Expense"
+            }
+          },
+          "splits": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ExpenseSplit"
+            }
+          },
+          "groups": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Group"
+            }
+          }
+        }
+      },
+      "UserDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "username": {
+            "type": "string"
+          },
+          "email": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "surname": {
+            "type": "string"
+          },
+          "role": {
+            "type": "string",
+            "enum": [
+              "USER",
+              "ADMIN"
+            ]
+          }
+        }
+      },
+      "MemberRequest": {
+        "type": "object",
+        "properties": {
+          "userId": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "userName": {
+            "type": "string",
+            "maxLength": 50,
+            "minLength": 2
+          },
+          "email": {
+            "type": "string"
+          }
+        }
+      },
+      "UpdateGroupRequest": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "maxLength": 50,
+            "minLength": 2
+          },
+          "description": {
+            "type": "string"
+          },
+          "isPublic": {
+            "type": "boolean"
+          },
+          "defaultCurrency": {
+            "type": "string",
+            "enum": [
+              "USD",
+              "EUR",
+              "JPY",
+              "GBP",
+              "AUD",
+              "CAD",
+              "CHF",
+              "CNY",
+              "SEK",
+              "NZD",
+              "MXN",
+              "SGD",
+              "HKD",
+              "NOK",
+              "KRW",
+              "TRY",
+              "RUB",
+              "INR",
+              "BRL",
+              "ZAR",
+              "DKK",
+              "PLN",
+              "TWD",
+              "THB",
+              "MYR",
+              "IDR",
+              "CZK",
+              "HUF",
+              "ILS",
+              "CLP",
+              "PHP",
+              "AED",
+              "COP",
+              "SAR",
+              "RON",
+              "PEN",
+              "VND",
+              "PKR",
+              "KZT",
+              "EGP"
+            ]
+          },
+          "currencies": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "enum": [
+                "USD",
+                "EUR",
+                "JPY",
+                "GBP",
+                "AUD",
+                "CAD",
+                "CHF",
+                "CNY",
+                "SEK",
+                "NZD",
+                "MXN",
+                "SGD",
+                "HKD",
+                "NOK",
+                "KRW",
+                "TRY",
+                "RUB",
+                "INR",
+                "BRL",
+                "ZAR",
+                "DKK",
+                "PLN",
+                "TWD",
+                "THB",
+                "MYR",
+                "IDR",
+                "CZK",
+                "HUF",
+                "ILS",
+                "CLP",
+                "PHP",
+                "AED",
+                "COP",
+                "SAR",
+                "RON",
+                "PEN",
+                "VND",
+                "PKR",
+                "KZT",
+                "EGP"
+              ]
+            }
+          },
+          "members": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/MemberRequest"
+            }
+          }
+        },
+        "required": [
+          "currencies",
+          "defaultCurrency",
+          "members"
+        ]
+      },
+      "GroupDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "name": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "members": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/UserDto"
+            }
+          },
+          "createdBy": {
+            "$ref": "#/components/schemas/UserDto"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "isPublic": {
+            "type": "boolean"
+          },
+          "defaultCurrency": {
+            "type": "string",
+            "enum": [
+              "USD",
+              "EUR",
+              "JPY",
+              "GBP",
+              "AUD",
+              "CAD",
+              "CHF",
+              "CNY",
+              "SEK",
+              "NZD",
+              "MXN",
+              "SGD",
+              "HKD",
+              "NOK",
+              "KRW",
+              "TRY",
+              "RUB",
+              "INR",
+              "BRL",
+              "ZAR",
+              "DKK",
+              "PLN",
+              "TWD",
+              "THB",
+              "MYR",
+              "IDR",
+              "CZK",
+              "HUF",
+              "ILS",
+              "CLP",
+              "PHP",
+              "AED",
+              "COP",
+              "SAR",
+              "RON",
+              "PEN",
+              "VND",
+              "PKR",
+              "KZT",
+              "EGP"
+            ]
+          },
+          "currencies": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "enum": [
+                "USD",
+                "EUR",
+                "JPY",
+                "GBP",
+                "AUD",
+                "CAD",
+                "CHF",
+                "CNY",
+                "SEK",
+                "NZD",
+                "MXN",
+                "SGD",
+                "HKD",
+                "NOK",
+                "KRW",
+                "TRY",
+                "RUB",
+                "INR",
+                "BRL",
+                "ZAR",
+                "DKK",
+                "PLN",
+                "TWD",
+                "THB",
+                "MYR",
+                "IDR",
+                "CZK",
+                "HUF",
+                "ILS",
+                "CLP",
+                "PHP",
+                "AED",
+                "COP",
+                "SAR",
+                "RON",
+                "PEN",
+                "VND",
+                "PKR",
+                "KZT",
+                "EGP"
+              ]
+            }
+          },
+          "viewToken": {
+            "type": "string"
+          }
+        }
+      },
+      "SplitDto": {
+        "type": "object",
+        "properties": {
+          "userId": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "amountOwed": {
+            "type": "number"
+          }
+        }
+      },
+      "UpdateExpenseRequest": {
+        "type": "object",
+        "properties": {
+          "payerId": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "groupId": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "amount": {
+            "type": "number"
+          },
+          "currency": {
+            "type": "string",
+            "enum": [
+              "USD",
+              "EUR",
+              "JPY",
+              "GBP",
+              "AUD",
+              "CAD",
+              "CHF",
+              "CNY",
+              "SEK",
+              "NZD",
+              "MXN",
+              "SGD",
+              "HKD",
+              "NOK",
+              "KRW",
+              "TRY",
+              "RUB",
+              "INR",
+              "BRL",
+              "ZAR",
+              "DKK",
+              "PLN",
+              "TWD",
+              "THB",
+              "MYR",
+              "IDR",
+              "CZK",
+              "HUF",
+              "ILS",
+              "CLP",
+              "PHP",
+              "AED",
+              "COP",
+              "SAR",
+              "RON",
+              "PEN",
+              "VND",
+              "PKR",
+              "KZT",
+              "EGP"
+            ]
+          },
+          "description": {
+            "type": "string"
+          },
+          "date": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "splits": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SplitDto"
+            }
+          },
+          "category": {
+            "type": "string",
+            "enum": [
+              "NO_CATEGORY_GENERAL",
+              "HOME_APPLIANCES",
+              "HOME_RENT",
+              "HOME_ELECTRONICS",
+              "HOME_OTHER",
+              "HOME_MORTGAGE",
+              "HOME_FURNITURE",
+              "HOME_SERVICES",
+              "HOME_MAINTENANCE",
+              "HOME_PETS",
+              "ENTERTAINMENT_MOVIES",
+              "ENTERTAINMENT_GAMES",
+              "ENTERTAINMENT_OTHER",
+              "ENTERTAINMENT_MUSIC",
+              "ENTERTAINMENT_SPORTS",
+              "LIFE_EDUCATION",
+              "LIFE_OTHER",
+              "LIFE_CHILDCARE",
+              "LIFE_TAXES",
+              "LIFE_GIFTS",
+              "LIFE_INSURANCE",
+              "LIFE_CLOTHING",
+              "LIFE_MEDICAL",
+              "FOOD_ALCOHOL",
+              "FOOD_GROCERIES",
+              "FOOD_OTHER",
+              "FOOD_RESTAURANT"
+            ]
+          }
+        }
+      },
+      "ExpenseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "description": {
+            "type": "string"
+          },
+          "amount": {
+            "type": "number"
+          },
+          "currency": {
+            "type": "string",
+            "enum": [
+              "USD",
+              "EUR",
+              "JPY",
+              "GBP",
+              "AUD",
+              "CAD",
+              "CHF",
+              "CNY",
+              "SEK",
+              "NZD",
+              "MXN",
+              "SGD",
+              "HKD",
+              "NOK",
+              "KRW",
+              "TRY",
+              "RUB",
+              "INR",
+              "BRL",
+              "ZAR",
+              "DKK",
+              "PLN",
+              "TWD",
+              "THB",
+              "MYR",
+              "IDR",
+              "CZK",
+              "HUF",
+              "ILS",
+              "CLP",
+              "PHP",
+              "AED",
+              "COP",
+              "SAR",
+              "RON",
+              "PEN",
+              "VND",
+              "PKR",
+              "KZT",
+              "EGP"
+            ]
+          },
+          "date": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "payer": {
+            "$ref": "#/components/schemas/UserDto"
+          },
+          "group": {
+            "$ref": "#/components/schemas/GroupDto"
+          },
+          "splits": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ExpenseSplitDto"
+            }
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "isPaid": {
+            "type": "boolean"
+          },
+          "category": {
+            "type": "string",
+            "enum": [
+              "NO_CATEGORY_GENERAL",
+              "HOME_APPLIANCES",
+              "HOME_RENT",
+              "HOME_ELECTRONICS",
+              "HOME_OTHER",
+              "HOME_MORTGAGE",
+              "HOME_FURNITURE",
+              "HOME_SERVICES",
+              "HOME_MAINTENANCE",
+              "HOME_PETS",
+              "ENTERTAINMENT_MOVIES",
+              "ENTERTAINMENT_GAMES",
+              "ENTERTAINMENT_OTHER",
+              "ENTERTAINMENT_MUSIC",
+              "ENTERTAINMENT_SPORTS",
+              "LIFE_EDUCATION",
+              "LIFE_OTHER",
+              "LIFE_CHILDCARE",
+              "LIFE_TAXES",
+              "LIFE_GIFTS",
+              "LIFE_INSURANCE",
+              "LIFE_CLOTHING",
+              "LIFE_MEDICAL",
+              "FOOD_ALCOHOL",
+              "FOOD_GROCERIES",
+              "FOOD_OTHER",
+              "FOOD_RESTAURANT"
+            ]
+          }
+        }
+      },
+      "ExpenseSplitDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "user": {
+            "$ref": "#/components/schemas/UserDto"
+          },
+          "amountOwed": {
+            "type": "number"
+          }
+        }
+      },
+      "CreateUserRequest": {
+        "type": "object",
+        "properties": {
+          "username": {
+            "type": "string"
+          },
+          "email": {
+            "type": "string"
+          },
+          "password": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "surname": {
+            "type": "string"
+          }
+        }
+      },
+      "CreateUserWithoutPasswordRequest": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "maxLength": 50,
+            "minLength": 2
+          },
+          "surname": {
+            "type": "string",
+            "maxLength": 50,
+            "minLength": 2
+          },
+          "username": {
+            "type": "string",
+            "maxLength": 50,
+            "minLength": 3
+          },
+          "email": {
+            "type": "string",
+            "format": "email",
+            "minLength": 1
+          }
+        },
+        "required": [
+          "email",
+          "name",
+          "surname",
+          "username"
+        ]
+      },
+      "SetPasswordRequest": {
+        "type": "object",
+        "properties": {
+          "password": {
+            "type": "string"
+          }
+        }
+      },
+      "ForgotPasswordRequest": {
+        "type": "object",
+        "properties": {
+          "email": {
+            "type": "string"
+          }
+        }
+      },
+      "CreateGroupRequest": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "maxLength": 50,
+            "minLength": 2
+          },
+          "description": {
+            "type": "string",
+            "maxLength": 1000,
+            "minLength": 0
+          },
+          "isPublic": {
+            "type": "boolean"
+          },
+          "defaultCurrency": {
+            "type": "string",
+            "enum": [
+              "USD",
+              "EUR",
+              "JPY",
+              "GBP",
+              "AUD",
+              "CAD",
+              "CHF",
+              "CNY",
+              "SEK",
+              "NZD",
+              "MXN",
+              "SGD",
+              "HKD",
+              "NOK",
+              "KRW",
+              "TRY",
+              "RUB",
+              "INR",
+              "BRL",
+              "ZAR",
+              "DKK",
+              "PLN",
+              "TWD",
+              "THB",
+              "MYR",
+              "IDR",
+              "CZK",
+              "HUF",
+              "ILS",
+              "CLP",
+              "PHP",
+              "AED",
+              "COP",
+              "SAR",
+              "RON",
+              "PEN",
+              "VND",
+              "PKR",
+              "KZT",
+              "EGP"
+            ]
+          },
+          "currencies": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "enum": [
+                "USD",
+                "EUR",
+                "JPY",
+                "GBP",
+                "AUD",
+                "CAD",
+                "CHF",
+                "CNY",
+                "SEK",
+                "NZD",
+                "MXN",
+                "SGD",
+                "HKD",
+                "NOK",
+                "KRW",
+                "TRY",
+                "RUB",
+                "INR",
+                "BRL",
+                "ZAR",
+                "DKK",
+                "PLN",
+                "TWD",
+                "THB",
+                "MYR",
+                "IDR",
+                "CZK",
+                "HUF",
+                "ILS",
+                "CLP",
+                "PHP",
+                "AED",
+                "COP",
+                "SAR",
+                "RON",
+                "PEN",
+                "VND",
+                "PKR",
+                "KZT",
+                "EGP"
+              ]
+            }
+          },
+          "members": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/MemberRequest"
+            }
+          }
+        },
+        "required": [
+          "currencies",
+          "defaultCurrency",
+          "members",
+          "name"
+        ]
+      },
+      "CreateExpenseRequest": {
+        "type": "object",
+        "properties": {
+          "description": {
+            "type": "string"
+          },
+          "amount": {
+            "type": "number"
+          },
+          "currency": {
+            "type": "string",
+            "enum": [
+              "USD",
+              "EUR",
+              "JPY",
+              "GBP",
+              "AUD",
+              "CAD",
+              "CHF",
+              "CNY",
+              "SEK",
+              "NZD",
+              "MXN",
+              "SGD",
+              "HKD",
+              "NOK",
+              "KRW",
+              "TRY",
+              "RUB",
+              "INR",
+              "BRL",
+              "ZAR",
+              "DKK",
+              "PLN",
+              "TWD",
+              "THB",
+              "MYR",
+              "IDR",
+              "CZK",
+              "HUF",
+              "ILS",
+              "CLP",
+              "PHP",
+              "AED",
+              "COP",
+              "SAR",
+              "RON",
+              "PEN",
+              "VND",
+              "PKR",
+              "KZT",
+              "EGP"
+            ]
+          },
+          "date": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "payerId": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "groupId": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "splits": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ExpenseSplitRequest"
+            }
+          },
+          "category": {
+            "type": "string",
+            "enum": [
+              "NO_CATEGORY_GENERAL",
+              "HOME_APPLIANCES",
+              "HOME_RENT",
+              "HOME_ELECTRONICS",
+              "HOME_OTHER",
+              "HOME_MORTGAGE",
+              "HOME_FURNITURE",
+              "HOME_SERVICES",
+              "HOME_MAINTENANCE",
+              "HOME_PETS",
+              "ENTERTAINMENT_MOVIES",
+              "ENTERTAINMENT_GAMES",
+              "ENTERTAINMENT_OTHER",
+              "ENTERTAINMENT_MUSIC",
+              "ENTERTAINMENT_SPORTS",
+              "LIFE_EDUCATION",
+              "LIFE_OTHER",
+              "LIFE_CHILDCARE",
+              "LIFE_TAXES",
+              "LIFE_GIFTS",
+              "LIFE_INSURANCE",
+              "LIFE_CLOTHING",
+              "LIFE_MEDICAL",
+              "FOOD_ALCOHOL",
+              "FOOD_GROCERIES",
+              "FOOD_OTHER",
+              "FOOD_RESTAURANT"
+            ]
+          }
+        }
+      },
+      "ExpenseSplitRequest": {
+        "type": "object",
+        "properties": {
+          "userId": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "amountOwed": {
+            "type": "number"
+          }
+        }
+      },
+      "LoginRequest": {
+        "type": "object",
+        "properties": {
+          "email": {
+            "type": "string"
+          },
+          "password": {
+            "type": "string"
+          }
+        }
+      },
+      "GroupExpensesDto": {
+        "type": "object",
+        "properties": {
+          "group": {
+            "$ref": "#/components/schemas/GroupDto"
+          },
+          "expenses": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ExpenseDto"
+            }
+          }
+        }
+      },
+      "SettlementDto": {
+        "type": "object",
+        "properties": {
+          "from": {
+            "type": "string"
+          },
+          "to": {
+            "type": "string"
+          },
+          "amount": {
+            "type": "number"
+          },
+          "currency": {
+            "type": "string",
+            "enum": [
+              "USD",
+              "EUR",
+              "JPY",
+              "GBP",
+              "AUD",
+              "CAD",
+              "CHF",
+              "CNY",
+              "SEK",
+              "NZD",
+              "MXN",
+              "SGD",
+              "HKD",
+              "NOK",
+              "KRW",
+              "TRY",
+              "RUB",
+              "INR",
+              "BRL",
+              "ZAR",
+              "DKK",
+              "PLN",
+              "TWD",
+              "THB",
+              "MYR",
+              "IDR",
+              "CZK",
+              "HUF",
+              "ILS",
+              "CLP",
+              "PHP",
+              "AED",
+              "COP",
+              "SAR",
+              "RON",
+              "PEN",
+              "VND",
+              "PKR",
+              "KZT",
+              "EGP"
+            ]
+          }
+        }
+      },
+      "Link": {
+        "type": "object",
+        "properties": {
+          "href": {
+            "type": "string"
+          },
+          "templated": {
+            "type": "boolean"
+          }
+        }
+      }
+    },
+    "securitySchemes": {
+      "bearerAuth": {
+        "type": "http",
+        "name": "bearerAuth",
+        "scheme": "bearer",
+        "bearerFormat": "JWT"
+      }
+    }
+  }
+}

@@ -11,7 +11,9 @@
     "build": "ng build",
     "watch": "ng build --watch --configuration development",
     "test": "ng test",
-    "lint": "ng lint"
+    "lint": "ng lint",
+    "api:download": "curl http://localhost:8080/v3/api-docs -o openapi.json",
+    "api:generate": "openapi-generator-cli generate -i openapi.json -g typescript-angular -o src/app/core/api --additional-properties=providedIn=root,withSeparateModelsAndApi=true,modelFileSuffix=.model,apiFileSuffix=.api,fileNaming=kebab-case,npmName=komornik-api"
   },
   "private": true,
   "dependencies": {
@@ -46,6 +48,7 @@
     "karma-jasmine": "~5.1.0",
     "karma-jasmine-html-reporter": "~2.1.0",
     "typescript": "~5.9.3",
-    "typescript-eslint": "latest"
+    "typescript-eslint": "latest",
+    "@openapitools/openapi-generator-cli": "^2.15.3"
   }
 }

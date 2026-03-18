@@ -17,7 +17,7 @@ import java.util.stream.Collectors;
 @RestController
 @RequestMapping("/api/users")
 @RequiredArgsConstructor
-@Tag(name = "Użytkownicy", description = "Endpointy do profilu użytkownika i jego znajomych")
+@Tag(name = "User", description = "Endpointy do profilu użytkownika i jego znajomych")
 public class UserRestController {
     private final UserService userService;
 

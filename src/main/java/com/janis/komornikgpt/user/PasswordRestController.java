@@ -25,7 +25,7 @@ import java.time.LocalDateTime;
 @RestController
 @RequestMapping("/api/pwd/")
 @RequiredArgsConstructor
-@Tag(name = "Hasła", description = "Endpointy do resetowania hasła i potwierdzania email")
+@Tag(name = "Password", description = "Endpointy do resetowania hasła i potwierdzania email")
 public class PasswordRestController {
     private final VerificationTokenRepository tokenRepo;
     private final UserService userService;

@@ -25,7 +25,7 @@ import java.util.Map;
 @RequestMapping("/api/auth")
 @RequiredArgsConstructor
 @Slf4j
-@Tag(name = "Autoryzacja", description = "Endpointy do logowania, wylogowywania i zarządzania tokenami")
+@Tag(name = "Auth", description = "Endpointy do logowania, wylogowywania i zarządzania tokenami")
 public class AuthRestController {
     private final AuthenticationManager authenticationManager;
     private final JwtTokenProvider jwtTokenProvider;

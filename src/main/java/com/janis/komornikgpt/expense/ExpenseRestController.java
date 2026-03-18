@@ -16,7 +16,7 @@ import java.util.Map;
 @RestController
 @RequestMapping("/api/expenses")
 @RequiredArgsConstructor
-@Tag(name = "Wydatki", description = "Endpointy do zarządzania wydatkami w grupach")
+@Tag(name = "Expense", description = "Endpointy do zarządzania wydatkami w grupach")
 public class ExpenseRestController {
     private final ExpenseSettlementService expenseSettlementService;
     private final ExpenseService expenseService;

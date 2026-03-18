@@ -21,7 +21,7 @@ import java.util.stream.Collectors;
 @RestController
 @RequestMapping("/api/groups")
 @RequiredArgsConstructor
-@Tag(name = "Grupy", description = "Endpointy do zarządzania grupami wydatków")
+@Tag(name = "Group", description = "Endpointy do zarządzania grupami wydatków")
 public class GroupRestController {
     private final GroupService groupService;
     private final UserService userService;

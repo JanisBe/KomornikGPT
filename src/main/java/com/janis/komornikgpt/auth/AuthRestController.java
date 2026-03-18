@@ -3,6 +3,8 @@ package com.janis.komornikgpt.auth;
 import com.janis.komornikgpt.exception.UserNotFoundException;
 import com.janis.komornikgpt.user.User;
 import com.janis.komornikgpt.user.UserService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -23,6 +25,7 @@ import java.util.Map;
 @RequestMapping("/api/auth")
 @RequiredArgsConstructor
 @Slf4j
+@Tag(name = "Autoryzacja", description = "Endpointy do logowania, wylogowywania i zarządzania tokenami")
 public class AuthRestController {
     private final AuthenticationManager authenticationManager;
     private final JwtTokenProvider jwtTokenProvider;
@@ -49,6 +52,7 @@ public class AuthRestController {
     private String cookieDomain;
 
     @PostMapping("/login")
+    @Operation(summary = "Zaloguj użytkownika", description = "Autoryzuje użytkownika i ustawia ciasteczka z JWT oraz Refresh Token.")
     public ResponseEntity<?> login(@RequestBody LoginRequest request, HttpServletResponse response) {
         Authentication authentication = authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(request.getEmail(), request.getPassword()));
@@ -71,6 +75,7 @@ public class AuthRestController {
     }
 
     @GetMapping("/user")
+    @Operation(summary = "Pobierz zalogowanego użytkownika", description = "Zwraca skrócone dane powiązane z aktualnym tokenem JWT.")
     public ResponseEntity<?> getCurrentUser() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         if (authentication == null || !authentication.isAuthenticated()
@@ -93,6 +98,7 @@ public class AuthRestController {
     }
 
     @PostMapping("/refresh")
+    @Operation(summary = "Odśwież token JWT", description = "Na podstawie ważnego Refresh Tokena wydaje nowy JWT Access Token.")
     public ResponseEntity<?> refreshToken(HttpServletRequest request, HttpServletResponse response) {
         String refreshTokenString = jwtTokenProvider.extractRefreshTokenFromCookies(request);
 
@@ -112,7 +118,8 @@ public class AuthRestController {
     }
 
     @PostMapping("/logout")
-    public ResponseEntity<?> logout(HttpServletRequest request, HttpServletResponse response) {
+    @Operation(summary = "Wyloguj użytkownika", description = "Usuwa tokeny z bazy oraz czyści ciasteczka przeglądarki.")
+    public ResponseEntity<?> logout(HttpServletResponse response) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         if (authentication != null && !"anonymousUser".equals(authentication.getPrincipal())) {
             String identifier = authentication.getName();

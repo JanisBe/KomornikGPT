@@ -20,6 +20,8 @@ public class SpaWebFilter extends OncePerRequestFilter {
         if (!path.startsWith("/api") &&
                 !path.startsWith("/oauth2") &&
                 !path.startsWith("/actuator") &&
+                !path.startsWith("/v3/api-docs") &&
+                !path.startsWith("/swagger-ui") &&
                 !path.startsWith("/login/oauth2") &&
                 !path.contains(".")) {
             request.getRequestDispatcher("/index.html").forward(request, response);

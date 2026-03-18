@@ -6,6 +6,8 @@ import com.janis.komornikgpt.mail.ForgotPasswordRequest;
 import com.janis.komornikgpt.mail.SetPasswordRequest;
 import com.janis.komornikgpt.mail.VerificationToken;
 import com.janis.komornikgpt.mail.VerificationTokenRepository;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.core.env.Environment;
@@ -23,6 +25,7 @@ import java.time.LocalDateTime;
 @RestController
 @RequestMapping("/api/pwd/")
 @RequiredArgsConstructor
+@Tag(name = "Hasła", description = "Endpointy do resetowania hasła i potwierdzania email")
 public class PasswordRestController {
     private final VerificationTokenRepository tokenRepo;
     private final UserService userService;
@@ -31,6 +34,7 @@ public class PasswordRestController {
     private final AuthRestController authRestController;
 
     @GetMapping("/confirm-email")
+    @Operation(summary = "Potwierdź adres e-mail", description = "Aktywuje konto użytkownika po kliknięciu linku przesłanego w e-mailu rejestracyjnym.")
     public ResponseEntity<?> confirm(@RequestParam String token, HttpServletResponse response) {
         VerificationToken vt = getVerificationToken(token);
 
@@ -46,6 +50,7 @@ public class PasswordRestController {
     }
 
     @PostMapping("/forgot-password")
+    @Operation(summary = "Zapomniałem hasła", description = "Rozpoczyna procedurę resetowania hasła wysyłając e-mail z tokenem.")
     public ResponseEntity<Void> forgotPassword(@RequestBody ForgotPasswordRequest request) {
         boolean emailSent = userService.handleForgotPasswordRequest(request.email());
 
@@ -57,6 +62,7 @@ public class PasswordRestController {
     }
 
     @PostMapping("/reset-password")
+    @Operation(summary = "Zmień hasło (zapomniane)", description = "Służy do ustawienia nowego hasła na podstawie tokena z e-maila w procesie 'forgot-password'.")
     public ResponseEntity<?> resetPassword(
             @RequestParam String token,
             @RequestBody SetPasswordRequest request,
@@ -77,6 +83,7 @@ public class PasswordRestController {
     }
 
     @PostMapping("/set-password")
+    @Operation(summary = "Ustaw hasło (zalogowany wpis z OAuth)", description = "Pozwala użytkownikowi zarejestrowanemu przez OAuth2 na ustawienie własnego hasła (np. dla przyszłych logowań lokalnych).")
     public ResponseEntity<Void> setPassword(@RequestBody SetPasswordRequest request, Authentication authentication) {
         if (authentication == null) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
@@ -90,6 +97,7 @@ public class PasswordRestController {
     }
 
     @PostMapping("/set-password-with-token")
+    @Operation(summary = "Ustaw hasło z tokenem rejestrowania", description = "Procedura ustawienia hasła przy zaproszeniach (createUserWithoutPassword).")
     public ResponseEntity<?> setPasswordWithToken(
             @RequestParam String token,
             @RequestBody SetPasswordRequest request,

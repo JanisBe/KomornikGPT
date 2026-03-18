@@ -44,6 +44,12 @@ public class SecurityConfig {
             "/assets/**"
     };
 
+    public static final String[] SWAGGER_RESOURCES = {
+            "/v3/api-docs/**",
+            "/swagger-ui/**",
+            "/swagger-ui.html"
+    };
+
     public static final String[] PUBLIC_API_GET = {
             "/api/auth/**",
             "/api/users/**",
@@ -100,6 +106,7 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/", "/index.html").permitAll()
                         .requestMatchers(STATIC_RESOURCES).permitAll()
+                        .requestMatchers(SWAGGER_RESOURCES).permitAll()
                         .requestMatchers(OAUTH_URLS).permitAll()
                         .requestMatchers(HttpMethod.GET, PUBLIC_API_GET).permitAll()
                         .requestMatchers(HttpMethod.POST, PUBLIC_API_POST).permitAll()

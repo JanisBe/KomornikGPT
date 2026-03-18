@@ -22,7 +22,7 @@
         <maven.version>3.9.9</maven.version>
         <postgresql.version>42.7.10</postgresql.version>
         <skipFrontend>false</skipFrontend>
-        <spring.security.test.version>7.1.0-M2</spring.security.test.version>
+        <spring.security.test.version>7.1.0-M3</spring.security.test.version>
         <frontend.build.script>run build</frontend.build.script>
     </properties>
     <version>0.0.1-SNAPSHOT</version>
@@ -119,6 +119,14 @@
             <artifactId>spring-boot-docker-compose</artifactId>
             <scope>runtime</scope>
             <optional>true</optional>
+        </dependency>
+        <dependency>
+            <groupId>org.flywaydb</groupId>
+            <artifactId>flyway-core</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.flywaydb</groupId>
+            <artifactId>flyway-database-postgresql</artifactId>
         </dependency>
     </dependencies>
     <build>

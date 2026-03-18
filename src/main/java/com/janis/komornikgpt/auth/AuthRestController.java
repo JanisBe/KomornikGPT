@@ -18,9 +18,6 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.HashMap;
-import java.util.Map;
-
 @RestController
 @RequestMapping("/api/auth")
 @RequiredArgsConstructor
@@ -51,16 +48,27 @@ public class AuthRestController {
     @Value("${jwt.cookie.domain:}")
     private String cookieDomain;
 
+    private static ResponseEntity<CurrentUserResponse> getMapResponseEntity(User user) {
+        return ResponseEntity.ok(new CurrentUserResponse(
+                true,
+                user.getId(),
+                user.getName(),
+                user.getEmail(),
+                user.getUsername(),
+                user.getRole()
+        ));
+    }
+
     @PostMapping("/login")
     @Operation(summary = "Zaloguj użytkownika", description = "Autoryzuje użytkownika i ustawia ciasteczka z JWT oraz Refresh Token.")
-    public ResponseEntity<?> login(@RequestBody LoginRequest request, HttpServletResponse response) {
+    public ResponseEntity<CurrentUserResponse> login(@RequestBody LoginRequest request, HttpServletResponse response) {
         Authentication authentication = authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(request.getEmail(), request.getPassword()));
 
         return loginInternal(authentication, response);
     }
 
-    public ResponseEntity<?> loginInternal(Authentication authentication, HttpServletResponse response) {
+    public ResponseEntity<CurrentUserResponse> loginInternal(Authentication authentication, HttpServletResponse response) {
 
         SecurityContextHolder.getContext().setAuthentication(authentication);
         String username = authentication.getName();
@@ -74,21 +82,6 @@ public class AuthRestController {
         return getMapResponseEntity(user);
     }
 
-    @GetMapping("/user")
-    @Operation(summary = "Pobierz zalogowanego użytkownika", description = "Zwraca skrócone dane powiązane z aktualnym tokenem JWT.")
-    public ResponseEntity<?> getCurrentUser() {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        if (authentication == null || !authentication.isAuthenticated()
-                || "anonymousUser".equals(authentication.getPrincipal())) {
-            return ResponseEntity.ok(Map.of("authenticated", false));
-        }
-
-        String identifier = authentication.getName();
-        User user = findUserByIdentifier(identifier);
-
-        return getMapResponseEntity(user);
-    }
-
     private User findUserByIdentifier(String identifier) {
         try {
             return userService.getUserByEmail(identifier);
@@ -97,9 +90,24 @@ public class AuthRestController {
         }
     }
 
+    @GetMapping("/user")
+    @Operation(summary = "Pobierz zalogowanego użytkownika", description = "Zwraca skrócone dane powiązane z aktualnym tokenem JWT.")
+    public ResponseEntity<CurrentUserResponse> getCurrentUser() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null || !authentication.isAuthenticated()
+                || "anonymousUser".equals(authentication.getPrincipal())) {
+            return ResponseEntity.ok(CurrentUserResponse.unauthenticated());
+        }
+
+        String identifier = authentication.getName();
+        User user = findUserByIdentifier(identifier);
+
+        return getMapResponseEntity(user);
+    }
+
     @PostMapping("/refresh")
     @Operation(summary = "Odśwież token JWT", description = "Na podstawie ważnego Refresh Tokena wydaje nowy JWT Access Token.")
-    public ResponseEntity<?> refreshToken(HttpServletRequest request, HttpServletResponse response) {
+    public ResponseEntity<MessageResponse> refreshToken(HttpServletRequest request, HttpServletResponse response) {
         String refreshTokenString = jwtTokenProvider.extractRefreshTokenFromCookies(request);
 
         if (refreshTokenString != null && !refreshTokenString.isEmpty()) {
@@ -109,17 +117,30 @@ public class AuthRestController {
                     .map(user -> {
                         String token = jwtTokenProvider.generateToken(user);
                         response.addCookie(createJwtCookie(token));
-                        return ResponseEntity.ok(Map.of("message", "Token refreshed successfully"));
+                        return ResponseEntity.ok(new MessageResponse("Token refreshed successfully"));
                     })
-                    .orElseGet(() -> ResponseEntity.status(403).body(Map.of("error", "Refresh token is not in database!")));
+                    .orElseGet(() -> ResponseEntity.status(403).body(new MessageResponse("Refresh token is not in database!")));
         }
 
-        return ResponseEntity.status(403).body(Map.of("error", "Refresh Token is empty!"));
+        return ResponseEntity.status(403).body(new MessageResponse("Refresh Token is empty!"));
+    }
+
+    private Cookie createJwtCookie(String value) {
+        return CookieUtils.createCookie(cookieName, value, cookieExpiration, cookieSecure, cookieDomain, "Lax", cookieSecure);
+    }
+
+    private Cookie createRefreshCookie(String value) {
+        int maxAgeInSeconds = (int) (refreshTokenDurationMs / 1000);
+        return CookieUtils.createCookie(refreshCookieName, value, maxAgeInSeconds, cookieSecure, cookieDomain, "Lax", cookieSecure);
+    }
+
+    private Cookie createClearCookie(String name) {
+        return CookieUtils.createCookie(name, "", 0, cookieSecure, cookieDomain, "Lax", cookieSecure);
     }
 
     @PostMapping("/logout")
     @Operation(summary = "Wyloguj użytkownika", description = "Usuwa tokeny z bazy oraz czyści ciasteczka przeglądarki.")
-    public ResponseEntity<?> logout(HttpServletResponse response) {
+    public ResponseEntity<MessageResponse> logout(HttpServletResponse response) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         if (authentication != null && !"anonymousUser".equals(authentication.getPrincipal())) {
             String identifier = authentication.getName();
@@ -138,30 +159,6 @@ public class AuthRestController {
         SecurityContextHolder.clearContext();
 
         log.info("User logged out successfully");
-        return ResponseEntity.ok(Map.of("message", "Logged out successfully"));
-    }
-
-    private Cookie createJwtCookie(String value) {
-        return CookieUtils.createCookie(cookieName, value, cookieExpiration, cookieSecure, cookieDomain, "Lax", cookieSecure);
-    }
-
-    private Cookie createRefreshCookie(String value) {
-        int maxAgeInSeconds = (int) (refreshTokenDurationMs / 1000);
-        return CookieUtils.createCookie(refreshCookieName, value, maxAgeInSeconds, cookieSecure, cookieDomain, "Lax", cookieSecure);
-    }
-
-    private Cookie createClearCookie(String name) {
-        return CookieUtils.createCookie(name, "", 0, cookieSecure, cookieDomain, "Lax", cookieSecure);
-    }
-
-    private static ResponseEntity<Map<String, Object>> getMapResponseEntity(User user) {
-        Map<String, Object> userDetails = new HashMap<>();
-        userDetails.put("authenticated", true);
-        userDetails.put("name", user.getName());
-        userDetails.put("email", user.getEmail());
-        userDetails.put("username", user.getUsername());
-        userDetails.put("role", user.getRole());
-        userDetails.put("id", user.getId());
-        return ResponseEntity.ok(userDetails);
+        return ResponseEntity.ok(new MessageResponse("Logged out successfully"));
     }
 }

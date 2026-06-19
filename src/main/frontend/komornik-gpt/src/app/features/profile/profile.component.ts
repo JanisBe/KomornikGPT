@@ -1,4 +1,4 @@
-import {Component, inject, OnInit, signal} from '@angular/core';
+import {Component, inject, OnInit, signal, ChangeDetectionStrategy} from '@angular/core';
 
 import {
   AbstractControl,
@@ -160,6 +160,7 @@ import {MatIconModule} from '@angular/material/icon';
       </mat-card>
     </div>
   `,
+  changeDetection: ChangeDetectionStrategy.Eager,
   styles: [`
     .profile-container {
       display: flex;

@@ -1,4 +1,4 @@
-import {Component, EventEmitter, inject, Input, OnInit, Output} from '@angular/core';
+import {Component, EventEmitter, inject, Input, OnInit, Output, ChangeDetectionStrategy} from '@angular/core';
 import {MatDialogModule} from '@angular/material/dialog';
 import {CommonModule} from '@angular/common';
 import {FormArray, FormBuilder, FormGroup, ReactiveFormsModule, Validators} from '@angular/forms';
@@ -154,6 +154,7 @@ import {NotificationService} from '../../../core/services/notification.service';
       </div>
     </form>
   `,
+  changeDetection: ChangeDetectionStrategy.Eager,
   styles: [`
     .group-form-content {
       padding-top: 24px;

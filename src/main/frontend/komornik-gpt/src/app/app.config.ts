@@ -2,7 +2,7 @@ import {ApplicationConfig, importProvidersFrom, isDevMode} from '@angular/core';
 import {provideRouter} from '@angular/router';
 import {routes} from './app.routes';
 import {provideAnimations} from '@angular/platform-browser/animations';
-import {provideHttpClient, withInterceptors, withXsrfConfiguration} from '@angular/common/http';
+import {provideHttpClient, withInterceptors, withXsrfConfiguration, withXhr} from '@angular/common/http';
 import {authInterceptor} from './core/interceptors/auth.interceptor';
 import {registerLocaleData} from '@angular/common';
 import localePl from '@angular/common/locales/pl';
@@ -16,7 +16,7 @@ export const appConfig: ApplicationConfig = {
   providers: [
     provideRouter(routes),
     provideAnimations(),
-    provideHttpClient(
+    provideHttpClient(withXhr(), 
       withInterceptors([authInterceptor]),
       withXsrfConfiguration({
         cookieName: 'XSRF-TOKEN',

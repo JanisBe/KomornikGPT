@@ -1,4 +1,4 @@
-import {Component, inject, OnInit, signal} from '@angular/core';
+import {Component, inject, OnInit, signal, ChangeDetectionStrategy} from '@angular/core';
 import {CommonModule} from '@angular/common';
 import {MatTableModule} from '@angular/material/table';
 import {MatButtonModule, MatIconButton} from '@angular/material/button';
@@ -175,6 +175,7 @@ import {Currency, CurrencyDetails} from '../../../core/models/currency.model';
         justify-content: center;
       }
     }`],
+  changeDetection: ChangeDetectionStrategy.Eager,
   template: `
     @if (expensesByGroupKeys().length > 0) {
       <div class="export-header">

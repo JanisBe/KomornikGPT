@@ -1,4 +1,4 @@
-import {Component, inject, Input, OnInit} from '@angular/core';
+import {Component, inject, Input, OnInit, ChangeDetectionStrategy} from '@angular/core';
 import {Clipboard, ClipboardModule} from '@angular/cdk/clipboard';
 import {NotificationService} from '../../core/services/notification.service';
 import {MatIconModule} from '@angular/material/icon';
@@ -25,6 +25,7 @@ import {MatTooltipModule} from '@angular/material/tooltip';
       </button>
     </div>
   `,
+  changeDetection: ChangeDetectionStrategy.Eager,
   styles: [`
     .copy-url-button {
       display: flex;

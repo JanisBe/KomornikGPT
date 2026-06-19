@@ -1,4 +1,4 @@
-import {Component, HostListener, inject, OnInit, ViewChild} from '@angular/core';
+import {Component, HostListener, inject, OnInit, ViewChild, ChangeDetectionStrategy} from '@angular/core';
 import {RouterModule} from '@angular/router';
 import {AuthService} from '../core/services/auth.service';
 import {ThemeService} from '../core/services/theme.service';
@@ -107,6 +107,7 @@ import {MatExpansionModule} from "@angular/material/expansion";
       </mat-sidenav-content>
     </mat-sidenav-container>
   `,
+  changeDetection: ChangeDetectionStrategy.Eager,
   styles: [`
     .spacer {
       flex: 1 1 auto;

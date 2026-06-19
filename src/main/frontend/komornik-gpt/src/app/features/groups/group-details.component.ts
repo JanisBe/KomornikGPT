@@ -1,4 +1,4 @@
-import {Component, inject, OnInit, signal} from '@angular/core';
+import {Component, inject, OnInit, signal, ChangeDetectionStrategy} from '@angular/core';
 import {ActivatedRoute, Router, RouterModule} from '@angular/router';
 import {GroupService} from '../../core/services/group.service';
 import {Group} from '../../core/models/group.model';
@@ -212,6 +212,7 @@ import {Currency, CurrencyDetails} from '../../core/models/currency.model';
       </div>
     }
   `,
+  changeDetection: ChangeDetectionStrategy.Eager,
   styles: [`
     .container {
       max-width: 1200px;

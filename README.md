@@ -1,3 +1,3 @@
 arcyprojekt do rozliczeń kasy
 work in progress
-dostępny pod adresem [Komornik.site](https://komornik.site)
+dostępny pod adresem [komornik.uno](https://komornik.uno)

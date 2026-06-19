@@ -1,4 +1,4 @@
-import {Component, inject, OnInit, signal} from '@angular/core';
+import {Component, inject, OnInit, signal, ChangeDetectionStrategy} from '@angular/core';
 import {ActivatedRoute, Router} from '@angular/router';
 import {AuthService} from '../../core/services/auth.service';
 
@@ -21,6 +21,7 @@ import {MatProgressSpinnerModule} from "@angular/material/progress-spinner";
       }
     </div>
   `,
+  changeDetection: ChangeDetectionStrategy.Eager,
   styles: []
 })
 export class AuthCallbackComponent implements OnInit {

@@ -1,4 +1,4 @@
-import {Component, ElementRef, inject, ViewChild} from '@angular/core';
+import {Component, ElementRef, inject, ViewChild, ChangeDetectionStrategy} from '@angular/core';
 import {CommonModule} from '@angular/common';
 import {FormBuilder, FormGroup, ReactiveFormsModule, Validators} from '@angular/forms';
 import {MAT_DIALOG_DATA, MatDialogModule, MatDialogRef} from '@angular/material/dialog';
@@ -204,7 +204,7 @@ import {NotificationService} from '../../../core/services/notification.service';
                   <span [class.error]="!isSplitValid">
                     W sumie: {{ totalSplitAmount | number: '1.2-2' }}
                     @if (expenseForm.get('amount')?.value) {
-                      z {{ expenseForm.get('amount')?.value | number: '1.2-2' }}
+                      z {{ $safeNavigationMigration(expenseForm.get('amount')?.value) | number: '1.2-2' }}
                       ({{ getSplitPercentage() | number: '1.0-0' }}%)
                     }
                   </span>
@@ -278,6 +278,7 @@ import {NotificationService} from '../../../core/services/notification.service';
       </form>
     </div>
   `,
+  changeDetection: ChangeDetectionStrategy.Eager,
   styles: [`
     :host {
       display: flex;

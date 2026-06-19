@@ -1,4 +1,4 @@
-import {Component, inject, OnInit, signal} from '@angular/core';
+import {Component, inject, OnInit, signal, ChangeDetectionStrategy} from '@angular/core';
 
 import {
   AbstractControl,
@@ -63,6 +63,7 @@ import {finalize} from "rxjs";
       </button>
     </form>
   `,
+  changeDetection: ChangeDetectionStrategy.Eager,
   styles: [`
     .password-form {
       max-width: 400px;

@@ -15,13 +15,6 @@ export const APP_DATE_FORMATS = {
 };
 
 export class AppDateAdapter extends NativeDateAdapter {
-  constructor(
-    matDateLocale: string,
-    platform: Platform
-  ) {
-    super(matDateLocale, platform);
-  }
-
   override getFirstDayOfWeek(): number {
     return 1; // Monday
   }
@@ -57,10 +50,7 @@ export class AppDateAdapter extends NativeDateAdapter {
 export const DATE_PROVIDERS = [
   {
     provide: DateAdapter,
-    useFactory: (locale: string, platform: Platform) => {
-      return new AppDateAdapter(locale, platform);
-    },
-    deps: [MAT_DATE_LOCALE, Platform]
+    useClass: AppDateAdapter
   },
   {provide: MAT_DATE_LOCALE, useValue: 'pl-PL'},
   {provide: MAT_DATE_FORMATS, useValue: APP_DATE_FORMATS}

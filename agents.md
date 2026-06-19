@@ -242,14 +242,14 @@ src/main/frontend/komornik-gpt/
 
 # Frontend: Angular dev server (port 4200, proxies /api to 8080)
 cd src/main/frontend/komornik-gpt
-npm start           # → ng serve
-npm run startLocal  # → ng serve --configuration=local
+pnpm start           # → ng serve
+pnpm startLocal      # → ng serve --configuration=local
 ```
 
 ### Full Build (backend packages frontend)
 
 ```bash
-# Runs npm install + npm run build, copies dist into Spring Boot static resources
+# Runs pnpm install + pnpm run build, copies dist into Spring Boot static resources
 ./mvnw clean package
 ```
 
@@ -267,9 +267,9 @@ docker compose -f docker-compose-local.yml up
 
 | Profile        | Frontend build script | Use case                |
 |----------------|-----------------------|-------------------------|
-| *(none)*       | `npm run build`       | Default dev build       |
-| `docker-build` | `npm run buildProd`   | Production Docker image |
-| `docker-local` | `npm run buildLocal`  | Local Docker image      |
+| *(none)*       | `pnpm run build`      | Default dev build       |
+| `docker-build` | `pnpm run buildProd`  | Production Docker image |
+| `docker-local` | `pnpm run buildLocal` | Local Docker image      |
 
 ---
 

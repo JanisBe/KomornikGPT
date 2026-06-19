@@ -1,4 +1,4 @@
-import {Component, inject, OnInit, signal} from '@angular/core';
+import {Component, inject, OnInit, signal, ChangeDetectionStrategy} from '@angular/core';
 import {ActivatedRoute, Router} from '@angular/router';
 import {PasswordService} from '../../core/services/password.service';
 import {MatProgressSpinnerModule} from '@angular/material/progress-spinner';
@@ -16,6 +16,7 @@ import {finalize} from "rxjs";
       <p>{{ message() }}</p>
     </div>
   `,
+  changeDetection: ChangeDetectionStrategy.Eager,
   styles: [`
     .container {
       display: flex;

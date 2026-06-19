@@ -1,4 +1,4 @@
-import {Component, inject, OnInit, signal} from '@angular/core';
+import {Component, inject, OnInit, signal, ChangeDetectionStrategy} from '@angular/core';
 import {MAT_DIALOG_DATA, MatDialog, MatDialogModule, MatDialogRef} from '@angular/material/dialog';
 import {NotificationService} from '../../../core/services/notification.service';
 import {MatTableModule} from '@angular/material/table';
@@ -68,6 +68,7 @@ import {ExpenseService} from '../../../core/services/expense.service';
       </button>
     </div>
   `,
+  changeDetection: ChangeDetectionStrategy.Eager,
   styles: [`
     table {
       margin-bottom: 16px;
@@ -169,6 +170,7 @@ export class SettleExpensesDialogComponent implements OnInit {
 @Component({
   standalone: true,
   imports: [MatDialogModule, MatButtonModule],
+  changeDetection: ChangeDetectionStrategy.Eager,
   template: `
     <h2 mat-dialog-title>Potwierdź rozliczenie</h2>
     <mat-dialog-content>

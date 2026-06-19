@@ -1,4 +1,4 @@
-import {Component, inject, OnInit, signal} from '@angular/core';
+import {Component, inject, OnInit, signal, ChangeDetectionStrategy} from '@angular/core';
 import {
   AbstractControl,
   AsyncValidatorFn,
@@ -100,6 +100,7 @@ import {finalize, map, Observable} from "rxjs";
       </mat-card>
     </div>
   `,
+  changeDetection: ChangeDetectionStrategy.Eager,
   styles: [`
     .register-container {
       display: flex;

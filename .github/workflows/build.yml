@@ -127,4 +127,3 @@ jobs:
           script: |
             docker compose pull app
             docker compose up -d app
-            docker image prune -f

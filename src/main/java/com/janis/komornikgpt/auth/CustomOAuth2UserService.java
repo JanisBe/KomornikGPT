@@ -10,6 +10,7 @@ import org.springframework.security.oauth2.client.userinfo.DefaultOAuth2UserServ
 import org.springframework.security.oauth2.client.userinfo.OAuth2UserRequest;
 import org.springframework.security.oauth2.client.userinfo.OAuth2UserService;
 import org.springframework.security.oauth2.core.OAuth2AuthenticationException;
+import org.springframework.security.oauth2.core.OAuth2Error;
 import org.springframework.security.oauth2.core.user.DefaultOAuth2User;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.stereotype.Component;
@@ -36,6 +37,8 @@ public class CustomOAuth2UserService implements OAuth2UserService<OAuth2UserRequ
 
     @Override
     public OAuth2User loadUser(OAuth2UserRequest userRequest) throws OAuth2AuthenticationException {
+        String registrationId = userRequest.getClientRegistration().getRegistrationId();
+        log.info("Loading OAuth2 user for provider: {}", registrationId);
         OAuth2User oauth2User = delegate.loadUser(userRequest);
 
         String primaryEmailAddress = extractPrimaryEmailAddress(
@@ -44,7 +47,7 @@ public class CustomOAuth2UserService implements OAuth2UserService<OAuth2UserRequ
 
         if (primaryEmailAddress == null) {
             log.error("Email not found from OAuth2 provider");
-            throw new RuntimeException("Email not found from OAuth2 provider");
+            throw new OAuth2AuthenticationException(new OAuth2Error("email_not_found"), "Email not found from OAuth2 provider");
         }
         String firstName;
         String lastName;
@@ -108,8 +111,10 @@ public class CustomOAuth2UserService implements OAuth2UserService<OAuth2UserRequ
         String email = (String) attributes.get(EMAIL_KEY);
         Optional<User> userOptional = userRepository.findByEmail(email);
         if (userOptional.isPresent()) {
+            log.info("OAuth2 user with email [{}] already exists in the database. Logging in.", email);
             return;
         }
+        log.info("OAuth2 user with email [{}] not found. Creating a new local user account.", email);
         User user = new User();
         if (attributes.containsKey(NAME_ATTRIBUTE)) {
             user.setName((String) attributes.get(NAME_ATTRIBUTE));

@@ -27,8 +27,13 @@ public class OAuth2AuthenticationFailureHandler implements AuthenticationFailure
                                         @NonNull AuthenticationException exception) throws IOException {
         httpCookieOAuth2AuthorizationRequestRepository.removeAuthorizationRequestCookies(request, response);
         String redirectUrl = frontendUrl + "/login?error=" + "Problem z logowaniem z serwisami spolecznosciowymi";
-        log.error("OAuth2AuthenticationFailureHandler.onAuthenticationFailure", exception);
+
+        log.error("OAuth2 Authentication failed: {} | Request URI: {} | Query Params: {}",
+                exception.getMessage(),
+                request.getRequestURI(),
+                request.getQueryString(),
+                exception);
+                
         response.sendRedirect(redirectUrl);
     }
 }
-

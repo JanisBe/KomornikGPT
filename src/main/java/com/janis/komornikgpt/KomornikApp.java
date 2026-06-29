@@ -17,7 +17,7 @@ public class KomornikApp {
 
     private final EmailService emailService;
 
-    public static void main(String[] args) {
+    static void main(String[] args) {
         SpringApplication.run(KomornikApp.class, args);
     }
 

@@ -1,4 +1,4 @@
-import {Component, inject, OnInit, signal, ChangeDetectionStrategy} from '@angular/core';
+import {ChangeDetectionStrategy, Component, inject, OnInit, signal} from '@angular/core';
 import {
   AbstractControl,
   AsyncValidatorFn,
@@ -137,10 +137,10 @@ export class RegisterComponent implements OnInit {
   hide = true;
   isLoading = signal(false);
 
-  private fb = inject(FormBuilder);
-  private router = inject(Router);
-  private notificationService = inject(NotificationService);
-  private userService = inject(UserService);
+  private readonly fb = inject(FormBuilder);
+  private readonly router = inject(Router);
+  private readonly notificationService = inject(NotificationService);
+  private readonly userService = inject(UserService);
 
   ngOnInit(): void {
     this.registerForm = this.fb.group({

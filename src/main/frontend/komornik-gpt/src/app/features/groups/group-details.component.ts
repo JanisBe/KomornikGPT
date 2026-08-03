@@ -1,4 +1,4 @@
-import {Component, inject, OnInit, signal, ChangeDetectionStrategy} from '@angular/core';
+import {ChangeDetectionStrategy, Component, inject, OnInit, signal} from '@angular/core';
 import {ActivatedRoute, Router, RouterModule} from '@angular/router';
 import {GroupService} from '../../core/services/group.service';
 import {Group} from '../../core/models/group.model';
@@ -667,15 +667,15 @@ export class GroupDetailsComponent implements OnInit {
   selectedTabIndex = 0;
   viewToken: string | null = null;
 
-  private route = inject(ActivatedRoute);
-  private groupService = inject(GroupService);
-  private authService = inject(AuthService);
-  private dialog = inject(MatDialog);
-  private expenseService = inject(ExpenseService);
-  private notificationService = inject(NotificationService);
-  private router = inject(Router);
-  private breakpointObserver = inject(BreakpointObserver);
-  private excelExportService = inject(ExcelExportService);
+  private readonly route = inject(ActivatedRoute);
+  private readonly groupService = inject(GroupService);
+  private readonly authService = inject(AuthService);
+  private readonly dialog = inject(MatDialog);
+  private readonly expenseService = inject(ExpenseService);
+  private readonly notificationService = inject(NotificationService);
+  private readonly router = inject(Router);
+  private readonly breakpointObserver = inject(BreakpointObserver);
+  private readonly excelExportService = inject(ExcelExportService);
 
   constructor() {
     this.isMobile$ = this.breakpointObserver.observe(Breakpoints.Handset)

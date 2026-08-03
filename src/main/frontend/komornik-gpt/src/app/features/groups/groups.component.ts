@@ -1,4 +1,4 @@
-import {Component, inject, OnInit, signal, ChangeDetectionStrategy} from '@angular/core';
+import {ChangeDetectionStrategy, Component, inject, OnInit, signal} from '@angular/core';
 
 import {MatCardModule} from '@angular/material/card';
 import {MatIconModule} from '@angular/material/icon';
@@ -279,13 +279,13 @@ export class GroupsComponent implements OnInit {
   windowOrigin: string = window.location.origin;
   isMobile$: Observable<boolean>;
 
-  private groupService = inject(GroupService);
-  private dialog = inject(MatDialog);
-  private authService = inject(AuthService);
-  private notificationService = inject(NotificationService);
-  private expenseService = inject(ExpenseService);
-  private router = inject(Router);
-  private breakpointObserver = inject(BreakpointObserver);
+  private readonly groupService = inject(GroupService);
+  private readonly dialog = inject(MatDialog);
+  private readonly authService = inject(AuthService);
+  private readonly notificationService = inject(NotificationService);
+  private readonly expenseService = inject(ExpenseService);
+  private readonly router = inject(Router);
+  private readonly breakpointObserver = inject(BreakpointObserver);
 
 
   constructor() {
@@ -364,7 +364,7 @@ export class GroupsComponent implements OnInit {
   }
 
   canDeleteGroup(group: Group): boolean {
-    if (!this.currentUser || !group || !group.members) return false;
+    if (!this.currentUser || !group?.members) return false;
 
     // Check if the current user is part of the group
     const isGroupMember = group.members.some(member => member.id === this.currentUser?.id);

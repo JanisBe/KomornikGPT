@@ -1,4 +1,4 @@
-import {Component, inject, OnInit, signal, ChangeDetectionStrategy} from '@angular/core';
+import {ChangeDetectionStrategy, Component, inject, OnInit, signal} from '@angular/core';
 import {
   AbstractControl,
   FormBuilder,
@@ -137,11 +137,11 @@ export class ResetPasswordComponent implements OnInit {
   hide = true;
   hideConfirm = true;
   token = '';
-  private fb = inject(FormBuilder);
-  private passwordService = inject(PasswordService);
-  private router = inject(Router);
-  private route = inject(ActivatedRoute);
-  private notificationService = inject(NotificationService);
+  private readonly fb = inject(FormBuilder);
+  private readonly passwordService = inject(PasswordService);
+  private readonly router = inject(Router);
+  private readonly route = inject(ActivatedRoute);
+  private readonly notificationService = inject(NotificationService);
 
   ngOnInit(): void {
     this.resetPasswordForm = this.fb.group({

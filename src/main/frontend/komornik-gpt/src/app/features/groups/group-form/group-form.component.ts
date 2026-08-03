@@ -1,4 +1,4 @@
-import {Component, EventEmitter, inject, Input, OnInit, Output, ChangeDetectionStrategy} from '@angular/core';
+import {ChangeDetectionStrategy, Component, EventEmitter, inject, Input, OnInit, Output} from '@angular/core';
 import {MatDialogModule} from '@angular/material/dialog';
 import {CommonModule} from '@angular/common';
 import {FormArray, FormBuilder, FormGroup, ReactiveFormsModule, Validators} from '@angular/forms';
@@ -289,11 +289,11 @@ export class GroupFormComponent implements OnInit {
   filteredUsers: Observable<User[]>[] = [];
   currencies = Object.values(Currency);
 
-  private fb = inject(FormBuilder);
-  private userService = inject(UserService);
-  private authService = inject(AuthService);
-  private expenseService = inject(ExpenseService);
-  private notificationService = inject(NotificationService);
+  private readonly fb = inject(FormBuilder);
+  private readonly userService = inject(UserService);
+  private readonly authService = inject(AuthService);
+  private readonly expenseService = inject(ExpenseService);
+  private readonly notificationService = inject(NotificationService);
 
   ngOnInit(): void {
     this.groupForm = this.fb.group({

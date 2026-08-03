@@ -1,4 +1,4 @@
-import {Component, inject, OnInit, signal, ChangeDetectionStrategy} from '@angular/core';
+import {ChangeDetectionStrategy, Component, inject, OnInit, signal} from '@angular/core';
 
 import {FormBuilder, FormGroup, ReactiveFormsModule, Validators} from '@angular/forms';
 import {ActivatedRoute, Router, RouterModule} from '@angular/router';
@@ -293,12 +293,12 @@ export class LoginComponent implements OnInit {
   message: string | null = null; // Message to display feedback to the user
   hide = true;
 
-  private fb = inject(FormBuilder);
-  private authService = inject(AuthService);
-  private socialAuthService = inject(SocialAuthService);
-  private router = inject(Router);
-  private route = inject(ActivatedRoute);
-  private notificationService = inject(NotificationService);
+  private readonly fb = inject(FormBuilder);
+  private readonly authService = inject(AuthService);
+  private readonly socialAuthService = inject(SocialAuthService);
+  private readonly router = inject(Router);
+  private readonly route = inject(ActivatedRoute);
+  private readonly notificationService = inject(NotificationService);
 
   ngOnInit(): void {
     this.loginForm = this.fb.group({

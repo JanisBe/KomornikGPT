@@ -9,7 +9,7 @@ import {environment} from '../../../environments/environment';
 })
 export class GroupService {
   private readonly apiUrl = `${environment.apiUrl}/groups`;
-  private http = inject(HttpClient);
+  private readonly http = inject(HttpClient);
 
   getGroups(): Observable<Group[]> {
     return this.http.get<GroupResponse[]>(this.apiUrl).pipe(

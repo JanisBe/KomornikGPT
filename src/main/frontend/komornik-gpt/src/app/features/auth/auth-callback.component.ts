@@ -1,4 +1,4 @@
-import {Component, inject, OnInit, signal, ChangeDetectionStrategy} from '@angular/core';
+import {ChangeDetectionStrategy, Component, inject, OnInit, signal} from '@angular/core';
 import {ActivatedRoute, Router} from '@angular/router';
 import {AuthService} from '../../core/services/auth.service';
 
@@ -26,9 +26,9 @@ import {MatProgressSpinnerModule} from "@angular/material/progress-spinner";
 })
 export class AuthCallbackComponent implements OnInit {
   isLoading = signal(true);
-  private route = inject(ActivatedRoute);
-  private router = inject(Router);
-  private authService = inject(AuthService);
+  private readonly route = inject(ActivatedRoute);
+  private readonly router = inject(Router);
+  private readonly authService = inject(AuthService);
 
   ngOnInit(): void {
     this.route.queryParams.subscribe(params => {

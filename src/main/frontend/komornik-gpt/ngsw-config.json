@@ -26,5 +26,13 @@
         ]
       }
     }
+  ],
+  "navigationUrls": [
+    "/**",
+    "!/api/**",
+    "!/oauth2/**",
+    "!/login/oauth2/**",
+    "!/logout",
+    "!/actuator/**"
   ]
 }

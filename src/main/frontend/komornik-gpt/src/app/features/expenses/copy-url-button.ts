@@ -1,4 +1,4 @@
-import {Component, inject, Input, OnInit, ChangeDetectionStrategy} from '@angular/core';
+import {ChangeDetectionStrategy, Component, inject, Input, OnInit} from '@angular/core';
 import {Clipboard, ClipboardModule} from '@angular/cdk/clipboard';
 import {NotificationService} from '../../core/services/notification.service';
 import {MatIconModule} from '@angular/material/icon';
@@ -47,8 +47,8 @@ import {MatTooltipModule} from '@angular/material/tooltip';
   `]
 })
 export class CopyUrlButtonComponent implements OnInit {
-  private clipboard = inject(Clipboard);
-  private notificationService = inject(NotificationService);
+  private readonly clipboard = inject(Clipboard);
+  private readonly notificationService = inject(NotificationService);
 
   @Input() groupId!: number;
 

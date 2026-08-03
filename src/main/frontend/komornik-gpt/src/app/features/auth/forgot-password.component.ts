@@ -1,4 +1,4 @@
-import {Component, inject, signal, ChangeDetectionStrategy} from '@angular/core';
+import {ChangeDetectionStrategy, Component, inject, signal} from '@angular/core';
 
 import {FormBuilder, FormGroup, ReactiveFormsModule, Validators} from '@angular/forms';
 import {RouterModule} from '@angular/router';
@@ -141,9 +141,9 @@ export class ForgotPasswordComponent {
   errorMessage = '';
   emailSent = false;
 
-  private fb = inject(FormBuilder);
-  private notificationService = inject(NotificationService);
-  private passwordService = inject(PasswordService);
+  private readonly fb = inject(FormBuilder);
+  private readonly notificationService = inject(NotificationService);
+  private readonly passwordService = inject(PasswordService);
 
   constructor() {
     this.forgotPasswordForm = this.fb.group({

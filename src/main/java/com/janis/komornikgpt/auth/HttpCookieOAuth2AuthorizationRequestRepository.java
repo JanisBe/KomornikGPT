@@ -1,5 +1,6 @@
 package com.janis.komornikgpt.auth;
 
+import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
@@ -29,8 +30,7 @@ public class HttpCookieOAuth2AuthorizationRequestRepository implements Authoriza
     public void saveAuthorizationRequest(@Nullable OAuth2AuthorizationRequest authorizationRequest, @NonNull HttpServletRequest request, @NonNull HttpServletResponse response) {
         if (authorizationRequest == null) {
             log.debug("Removing OAuth2 authorization request cookies");
-            CookieUtils.deleteCookie(request, response, OAUTH2_AUTHORIZATION_REQUEST_COOKIE_NAME);
-            CookieUtils.deleteCookie(request, response, REDIRECT_URI_PARAM_COOKIE_NAME);
+            removeAuthorizationRequestCookies(request, response);
             return;
         }
 
@@ -39,17 +39,41 @@ public class HttpCookieOAuth2AuthorizationRequestRepository implements Authoriza
                 authorizationRequest.getRedirectUri(),
                 authorizationRequest.getAuthorizationUri());
 
-        CookieUtils.addCookie(response, OAUTH2_AUTHORIZATION_REQUEST_COOKIE_NAME, CookieUtils.serialize(authorizationRequest), cookieExpireSeconds);
+        boolean isSecure = request.isSecure();
+        Cookie authCookie = CookieUtils.createCookie(
+                OAUTH2_AUTHORIZATION_REQUEST_COOKIE_NAME,
+                CookieUtils.serialize(authorizationRequest),
+                cookieExpireSeconds,
+                isSecure,
+                null,
+                "Lax",
+                isSecure
+        );
+        response.addCookie(authCookie);
+
         String redirectUriAfterLogin = request.getParameter(REDIRECT_URI_PARAM_COOKIE_NAME);
         if (StringUtils.hasText(redirectUriAfterLogin)) {
             log.debug("Target redirect URI after login: {}", redirectUriAfterLogin);
-            CookieUtils.addCookie(response, REDIRECT_URI_PARAM_COOKIE_NAME, redirectUriAfterLogin, cookieExpireSeconds);
+            Cookie redirectCookie = CookieUtils.createCookie(
+                    REDIRECT_URI_PARAM_COOKIE_NAME,
+                    redirectUriAfterLogin,
+                    cookieExpireSeconds,
+                    isSecure,
+                    null,
+                    "Lax",
+                    isSecure
+            );
+            response.addCookie(redirectCookie);
         }
     }
 
     @Override
     public OAuth2AuthorizationRequest removeAuthorizationRequest(@NonNull HttpServletRequest request, @NonNull HttpServletResponse response) {
-        return this.loadAuthorizationRequest(request);
+        OAuth2AuthorizationRequest authorizationRequest = this.loadAuthorizationRequest(request);
+        if (authorizationRequest != null) {
+            removeAuthorizationRequestCookies(request, response);
+        }
+        return authorizationRequest;
     }
 
     public void removeAuthorizationRequestCookies(@NonNull HttpServletRequest request, @NonNull HttpServletResponse response) {

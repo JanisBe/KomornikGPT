@@ -9,9 +9,9 @@ import {GroupService} from '../services/group.service';
   providedIn: 'root'
 })
 export class AuthGuard implements CanActivate {
-  private authService = inject(AuthService);
-  private router = inject(Router);
-  private groupService = inject(GroupService);
+  private readonly authService = inject(AuthService);
+  private readonly router = inject(Router);
+  private readonly groupService = inject(GroupService);
 
   canActivate(route: ActivatedRouteSnapshot, state: RouterStateSnapshot): Observable<boolean | UrlTree> {
     // Allow public group details page for unauthenticated users
@@ -19,7 +19,7 @@ export class AuthGuard implements CanActivate {
       const groupId = route.params['id'];
       return this.groupService.getGroup(groupId).pipe(
         map(group => {
-          if (group && group.isPublic) {
+          if (group?.isPublic) {
             return true;
           }
           // If not public, require authentication

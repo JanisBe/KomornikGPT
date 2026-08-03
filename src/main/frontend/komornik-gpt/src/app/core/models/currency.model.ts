@@ -1,8 +1,9 @@
 export enum Currency {
-  USD = "USD",
-  EUR = "EUR",
   PLN = "PLN",
+  CZK = "CZK",
+  EUR = "EUR",
   GBP = "GBP",
+  USD = "USD",
   JPY = "JPY",
   CHF = "CHF",
   AUD = "AUD",
@@ -25,7 +26,6 @@ export enum Currency {
   THB = "THB",
   MYR = "MYR",
   IDR = "IDR",
-  CZK = "CZK",
   HUF = "HUF",
   ILS = "ILS",
   CLP = "CLP",
@@ -48,10 +48,11 @@ export interface CurrencyInfo {
 }
 
 export const CurrencyDetails: Record<Currency, CurrencyInfo> = {
-  [Currency.USD]: {code: Currency.USD, description: "Dolar amerykański", symbol: "$"},
-  [Currency.EUR]: {code: Currency.EUR, description: "Euro", symbol: "€"},
   [Currency.PLN]: {code: Currency.PLN, description: "Polski złoty", symbol: "zł"},
+  [Currency.CZK]: {code: Currency.CZK, description: "Korona czeska", symbol: "Kč"},
+  [Currency.EUR]: {code: Currency.EUR, description: "Euro", symbol: "€"},
   [Currency.GBP]: {code: Currency.GBP, description: "Funt szterling", symbol: "£"},
+  [Currency.USD]: {code: Currency.USD, description: "Dolar amerykański", symbol: "$"},
   [Currency.JPY]: {code: Currency.JPY, description: "Jen japoński", symbol: "¥"},
   [Currency.CHF]: {code: Currency.CHF, description: "Frank szwajcarski", symbol: "CHF"},
   [Currency.AUD]: {code: Currency.AUD, description: "Dolar australijski", symbol: "$"},
@@ -74,7 +75,6 @@ export const CurrencyDetails: Record<Currency, CurrencyInfo> = {
   [Currency.THB]: {code: Currency.THB, description: "Baht tajski", symbol: "฿"},
   [Currency.MYR]: {code: Currency.MYR, description: "Ringgit malezyjski", symbol: "RM"},
   [Currency.IDR]: {code: Currency.IDR, description: "Rupia indonezyjska", symbol: "Rp"},
-  [Currency.CZK]: {code: Currency.CZK, description: "Korona czeska", symbol: "Kč"},
   [Currency.HUF]: {code: Currency.HUF, description: "Forint węgierski", symbol: "Ft"},
   [Currency.ILS]: {code: Currency.ILS, description: "Szekel izraelski", symbol: "₪"},
   [Currency.CLP]: {code: Currency.CLP, description: "Peso chilijskie", symbol: "$"},

@@ -8,7 +8,7 @@ import {environment} from '../../../environments/environment';
 })
 export class PasswordService {
   private readonly apiUrl = `${environment.apiUrl}/pwd`;
-  private http = inject(HttpClient);
+  private readonly http = inject(HttpClient);
 
   forgotPassword(email: string): Observable<void> {
     return this.http.post<void>(`${this.apiUrl}/forgot-password`, {email});

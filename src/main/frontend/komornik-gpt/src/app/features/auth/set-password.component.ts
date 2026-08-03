@@ -1,4 +1,4 @@
-import {Component, inject, OnInit, signal, ChangeDetectionStrategy} from '@angular/core';
+import {ChangeDetectionStrategy, Component, inject, OnInit, signal} from '@angular/core';
 
 import {
   AbstractControl,
@@ -79,21 +79,21 @@ import {finalize} from "rxjs";
   `]
 })
 export class SetPasswordComponent implements OnInit {
+  private readonly authService = inject(AuthService);
+  private readonly passwordService = inject(PasswordService);
+  private readonly router = inject(Router);
+  private readonly notificationService = inject(NotificationService);
+  private readonly route = inject(ActivatedRoute);
+  private readonly fb = inject(FormBuilder);
   error: string | undefined;
   hide = true;
   hideConfirm = true;
-  isLoading = signal(false);
 
-  private fb = inject(FormBuilder);
+  isLoading = signal(false);
   form = this.fb.group({
     newPassword: ['', [Validators.required, Validators.minLength(4)]],
     confirmPassword: ['', Validators.required]
   }, {validators: this.passwordsMatchValidator, updateOn: 'blur'});
-  private authService = inject(AuthService);
-  private passwordService = inject(PasswordService);
-  private router = inject(Router);
-  private notificationService = inject(NotificationService);
-  private route = inject(ActivatedRoute);
   private token: string | null = null;
 
   ngOnInit(): void {

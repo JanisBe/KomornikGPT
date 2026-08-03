@@ -15,8 +15,8 @@ export class AuthService {
   public user$ = this.currentUserSubject.asObservable();
   private authCheckInProgress: Observable<User> | null = null;
 
-  private http = inject(HttpClient);
-  private router = inject(Router);
+  private readonly http = inject(HttpClient);
+  private readonly router = inject(Router);
 
   constructor() {
     this.checkAuthStatus();

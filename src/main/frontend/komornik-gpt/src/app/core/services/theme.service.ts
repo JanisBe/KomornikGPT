@@ -4,7 +4,7 @@ import {inject, Injectable, Renderer2, RendererFactory2} from '@angular/core';
   providedIn: 'root'
 })
 export class ThemeService {
-  private renderer: Renderer2;
+  private readonly renderer: Renderer2;
   private colorTheme: string;
 
   constructor() {

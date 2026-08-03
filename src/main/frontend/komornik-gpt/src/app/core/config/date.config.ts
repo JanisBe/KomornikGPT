@@ -1,5 +1,4 @@
 import {DateAdapter, MAT_DATE_FORMATS, MAT_DATE_LOCALE, NativeDateAdapter} from '@angular/material/core';
-import {Platform} from '@angular/cdk/platform';
 import {formatDate} from '@angular/common';
 
 export const APP_DATE_FORMATS = {
@@ -34,9 +33,9 @@ export class AppDateAdapter extends NativeDateAdapter {
   override parse(value: string): Date | null {
     const parts = value.split('/');
     if (parts.length === 3) {
-      const day = parseInt(parts[0], 10);
-      const month = parseInt(parts[1], 10) - 1;
-      const year = parseInt(parts[2], 10);
+      const day = Number.parseInt(parts[0], 10);
+      const month = Number.parseInt(parts[1], 10) - 1;
+      const year = Number.parseInt(parts[2], 10);
       return new Date(year, month, day);
     }
     return super.parse(value);

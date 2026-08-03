@@ -1,4 +1,4 @@
-import {Component, ElementRef, inject, ViewChild, ChangeDetectionStrategy} from '@angular/core';
+import {ChangeDetectionStrategy, Component, ElementRef, inject, ViewChild} from '@angular/core';
 import {CommonModule} from '@angular/common';
 import {FormBuilder, FormGroup, ReactiveFormsModule, Validators} from '@angular/forms';
 import {MAT_DIALOG_DATA, MatDialogModule, MatDialogRef} from '@angular/material/dialog';
@@ -639,11 +639,12 @@ export class AddExpenseDialogComponent {
     expense?: Expense;
     isEdit?: boolean;
   };
-  private fb = inject(FormBuilder);
-  private dialogRef = inject(MatDialogRef<AddExpenseDialogComponent>);
-  private dateAdapter = inject(DateAdapter<Date>);
-  private authService = inject(AuthService);
-  private expenseService = inject(ExpenseService);
+  private readonly fb = inject(FormBuilder);
+  private readonly dialogRef = inject(MatDialogRef<AddExpenseDialogComponent>);
+  private readonly dateAdapter = inject(DateAdapter<Date>);
+  private readonly authService = inject(AuthService);
+  private readonly expenseService = inject(ExpenseService);
+  private readonly notificationService = inject(NotificationService);
   expenseForm!: FormGroup;
   currencies = Object.values(Currency);
   totalSplitAmount = 0;
@@ -657,7 +658,6 @@ export class AddExpenseDialogComponent {
   activeMainCategory: string | null = null;
   lastEditedField: string | null = null;
   @ViewChild('categorySelector') categorySelector!: ElementRef;
-  private notificationService = inject(NotificationService);
 
   get selectedCategoryName(): string {
     return `${this.selectedCategory.mainCategory} - ${this.selectedCategory.subCategory}`;
@@ -702,7 +702,7 @@ export class AddExpenseDialogComponent {
     this.dateAdapter.setLocale('pl');
 
     // Load currencies from group if available, else load default currency
-    if (this.data.group && this.data.group.currencies && this.data.group.currencies.length > 0) {
+    if (this.data.group?.currencies && this.data.group.currencies.length > 0) {
       this.currencies = [...this.data.group.currencies];
       // Sort so default currency is first
       const defaultCur = this.data.group.defaultCurrency;
@@ -711,7 +711,7 @@ export class AddExpenseDialogComponent {
           return x === defaultCur ? -1 : y === defaultCur ? 1 : 0;
         });
       }
-    } else if (this.data.group && this.data.group.defaultCurrency) {
+    } else if (this.data.group?.defaultCurrency) {
       this.currencies = [this.data.group.defaultCurrency];
     } else {
       this.currencies = Object.values(Currency);
@@ -720,7 +720,7 @@ export class AddExpenseDialogComponent {
     this.initForm();
 
     if (this.isEditMode && this.data.expense) {
-      this.populateForm(this.data.expense, this.data.group.defaultCurrency);
+      this.populateForm(this.data.expense, this.data.group?.defaultCurrency);
     }
 
     this.expenseForm.get('amount')?.valueChanges.subscribe(() => {
@@ -733,10 +733,10 @@ export class AddExpenseDialogComponent {
     if (!splits) return;
 
     this.totalSplitAmount = +Object.values(splits)
-      .reduce((sum: number, value: any) => sum + (parseFloat(value) || 0), 0)
+      .reduce((sum: number, value: any) => sum + (Number.parseFloat(value) || 0), 0)
       .toFixed(2);
 
-    const totalAmount = parseFloat(this.expenseForm.get('amount')?.value) || 0;
+    const totalAmount = Number.parseFloat(this.expenseForm.get('amount')?.value) || 0;
     this.isSplitValid = Math.abs(this.totalSplitAmount - totalAmount) < 0.01;
   }
 
@@ -749,7 +749,7 @@ export class AddExpenseDialogComponent {
     let value = input.value;
 
     if (value.includes(',')) {
-      value = value.replace(/,/g, '.');
+      value = value.replaceAll(',', '.');
     }
 
     value = value.replace(/[^0-9.]/g, '');
@@ -769,14 +769,14 @@ export class AddExpenseDialogComponent {
   }
 
   onSplitBlur() {
-    const totalAmount = parseFloat(this.expenseForm.get('amount')?.value) || 0;
+    const totalAmount = Number.parseFloat(this.expenseForm.get('amount')?.value) || 0;
     if (totalAmount === 0 || !this.lastEditedField) return;
 
     const difference = totalAmount - this.totalSplitAmount;
 
     if (Math.abs(difference) > 0.01) {
       const splitsGroup = this.expenseForm.get('splits') as FormGroup;
-      const editedUserAmount = parseFloat(splitsGroup.get(this.lastEditedField)?.value) || 0;
+      const editedUserAmount = Number.parseFloat(splitsGroup.get(this.lastEditedField)?.value) || 0;
       const remainingAmount = totalAmount - editedUserAmount;
       const otherMembersCount = this.data.group.members.length - 1; // Wszyscy oprócz tego który edytował
 
@@ -823,18 +823,18 @@ export class AddExpenseDialogComponent {
     if (this.expenseForm.valid && this.isSplitValid) {
       const formValue = this.expenseForm.value;
       const splits = Object.entries(formValue.splits).map(([userId, amountOwed]) => ({
-        userId: parseInt(userId),
-        amountOwed: parseFloat(amountOwed as string)
+        userId: Number.parseInt(userId),
+        amountOwed: Number.parseFloat(amountOwed as string)
       }));
 
       const categoryEnumValue = categoryToEnumValue(this.selectedCategory);
 
       const expenseData = {
         description: formValue.description,
-        amount: parseFloat(formValue.amount),
+        amount: Number.parseFloat(formValue.amount),
         currency: formValue.currency,
         date: formValue.date.toISOString(),
-        payerId: parseInt(formValue.payerId),
+        payerId: Number.parseInt(formValue.payerId),
         groupId: this.data.group.id,
         splits,
         category: categoryEnumValue
@@ -849,13 +849,13 @@ export class AddExpenseDialogComponent {
   }
 
   getSplitPercentage(): number {
-    const totalAmount = parseFloat(this.expenseForm.get('amount')?.value) || 0;
+    const totalAmount = Number.parseFloat(this.expenseForm.get('amount')?.value) || 0;
     if (totalAmount === 0) return 0;
     return +((this.totalSplitAmount / totalAmount) * 100).toFixed(0);
   }
 
   splitEqually() {
-    const totalAmount = parseFloat(this.expenseForm.get('amount')?.value);
+    const totalAmount = Number.parseFloat(this.expenseForm.get('amount')?.value);
     if (!totalAmount) {
       return;
     }
@@ -877,7 +877,7 @@ export class AddExpenseDialogComponent {
   }
 
   assignFullAmountToMember(memberId: number) {
-    const totalAmount = parseFloat(this.expenseForm.get('amount')?.value);
+    const totalAmount = Number.parseFloat(this.expenseForm.get('amount')?.value);
     if (!totalAmount) {
       return;
     }
@@ -962,7 +962,7 @@ export class AddExpenseDialogComponent {
       amount: ['', [Validators.required, Validators.min(0)]],
       currency: [this.data.group.defaultCurrency || Currency.PLN, Validators.required],
       date: [new Date(), Validators.required],
-      payerId: [currentUserId !== null ? currentUserId : '', Validators.required],
+      payerId: [currentUserId ?? '', Validators.required],
       splits: this.fb.group({}),
       category: ['']
     });

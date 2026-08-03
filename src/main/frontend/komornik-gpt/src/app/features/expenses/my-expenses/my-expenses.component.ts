@@ -1,4 +1,4 @@
-import {Component, inject, OnInit, signal, ChangeDetectionStrategy} from '@angular/core';
+import {ChangeDetectionStrategy, Component, inject, OnInit, signal} from '@angular/core';
 import {CommonModule} from '@angular/common';
 import {MatTableModule} from '@angular/material/table';
 import {MatButtonModule, MatIconButton} from '@angular/material/button';
@@ -268,11 +268,11 @@ export class MyExpensesComponent implements OnInit {
   expensesByGroupKeys = signal<Group[]>([]);
   columns = ['description', 'category', 'amount', 'date', 'actions'];
   msg = 'Ładowanie wydatków...';
-  private expenseService = inject(ExpenseService);
-  private authService = inject(AuthService);
-  private notificationService = inject(NotificationService);
-  private dialog = inject(MatDialog);
-  private breakpointObserver = inject(BreakpointObserver);
+  private readonly expenseService = inject(ExpenseService);
+  private readonly authService = inject(AuthService);
+  private readonly notificationService = inject(NotificationService);
+  private readonly dialog = inject(MatDialog);
+  private readonly breakpointObserver = inject(BreakpointObserver);
 
   isMobile$: Observable<boolean>;
 

@@ -49,6 +49,10 @@ public class OAuth2AuthenticationSuccessHandler extends SimpleUrlAuthenticationS
 
     @Value("${jwt.cookie.secure:true}")
     private boolean cookieSecure;
+
+    @Value("${jwt.cookie.domain:}")
+    private String cookieDomain;
+
     @Value("${frontend.url:http://localhost:8080}")
     private String frontendUrl;
     @Override
@@ -93,8 +97,8 @@ public class OAuth2AuthenticationSuccessHandler extends SimpleUrlAuthenticationS
         String token = jwtTokenProvider.generateToken(user);
         RefreshToken refreshToken = refreshTokenService.createRefreshToken(user.getId());
 
-        Cookie cookie = CookieUtils.createCookie(cookieName, token, cookieExpiration, cookieSecure, null, "Lax", cookieSecure);
-        Cookie refreshCookie = CookieUtils.createCookie(refreshCookieName, refreshToken.getToken(), (int) (refreshTokenDurationMs / 1000), cookieSecure, null, "Lax", cookieSecure);
+        Cookie cookie = CookieUtils.createCookie(cookieName, token, cookieExpiration, cookieSecure, cookieDomain, "Lax", cookieSecure);
+        Cookie refreshCookie = CookieUtils.createCookie(refreshCookieName, refreshToken.getToken(), (int) (refreshTokenDurationMs / 1000), cookieSecure, cookieDomain, "Lax", cookieSecure);
 
         log.info("Cookies created using CookieUtils: JWT secure={} | Refresh secure={}", cookie.getSecure(), refreshCookie.getSecure());
         

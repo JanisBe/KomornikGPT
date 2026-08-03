@@ -1,4 +1,4 @@
-import {Component, inject, OnInit, signal, ChangeDetectionStrategy} from '@angular/core';
+import {ChangeDetectionStrategy, Component, inject, OnInit, signal} from '@angular/core';
 import {ActivatedRoute, Router} from '@angular/router';
 import {PasswordService} from '../../core/services/password.service';
 import {MatProgressSpinnerModule} from '@angular/material/progress-spinner';
@@ -33,9 +33,9 @@ export class ConfirmEmailComponent implements OnInit {
   message = signal('Weryfikowanie adresu e-mail...');
   isLoading = signal(true);
 
-  private route = inject(ActivatedRoute);
-  private passwordService = inject(PasswordService);
-  private router = inject(Router);
+  private readonly route = inject(ActivatedRoute);
+  private readonly passwordService = inject(PasswordService);
+  private readonly router = inject(Router);
 
   ngOnInit(): void {
     const token = this.route.snapshot.queryParamMap.get('token');

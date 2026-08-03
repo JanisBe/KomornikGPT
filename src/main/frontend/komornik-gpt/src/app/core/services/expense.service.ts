@@ -13,8 +13,8 @@ import {DEFAULT_CATEGORY, enumValueToCategory} from '../models/expense-category.
 })
 export class ExpenseService {
   private readonly apiUrl = `${environment.apiUrl}/expenses`;
-  private http = inject(HttpClient);
-  private notificationService = inject(NotificationService);
+  private readonly http = inject(HttpClient);
+  private readonly notificationService = inject(NotificationService);
 
   getExpensesByGroup(groupId: number, viewToken?: string | null): Observable<Expense[]> {
     let url = `${this.apiUrl}/group/${groupId}`;

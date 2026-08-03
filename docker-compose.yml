@@ -4,3 +4,16 @@ services:
     ports:
       - "1080:1080"  # Web UI
       - "1025:1025"  # SMTP
+#  postgresql:
+#    image: postgres:15
+#    ports:
+#      - "5432:5432"
+#    environment:
+#      POSTGRES_USER: root
+#      POSTGRES_PASSWORD: password
+#      POSTGRES_DB: komornik
+#    volumes:
+#      - postgresql:/var/lib/postgresql/data
+
+volumes:
+  postgresql:

@@ -24,8 +24,6 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 import java.util.Arrays;
 import java.util.List;
 
-import static org.springframework.security.config.Customizer.withDefaults;
-
 @Configuration
 @EnableWebSecurity
 @RequiredArgsConstructor
@@ -126,7 +124,7 @@ public class SecurityConfig {
                 .headers(headers -> headers
                         .xssProtection(xss -> xss.headerValue(
                                 XXssProtectionHeaderWriter.HeaderValue.ENABLED_MODE_BLOCK)))
-                .redirectToHttps(withDefaults())
+//                .redirectToHttps(withDefaults())
                 .logout(logout -> logout
                         .logoutUrl("/logout")
                         .logoutSuccessUrl(frontendUrl)

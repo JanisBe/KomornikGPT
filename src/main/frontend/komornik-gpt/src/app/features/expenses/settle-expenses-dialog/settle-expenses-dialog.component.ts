@@ -1,4 +1,4 @@
-import {Component, inject, OnInit, signal, ChangeDetectionStrategy} from '@angular/core';
+import {ChangeDetectionStrategy, Component, inject, OnInit, signal} from '@angular/core';
 import {MAT_DIALOG_DATA, MatDialog, MatDialogModule, MatDialogRef} from '@angular/material/dialog';
 import {NotificationService} from '../../../core/services/notification.service';
 import {MatTableModule} from '@angular/material/table';
@@ -90,10 +90,10 @@ export class SettleExpensesDialogComponent implements OnInit {
   recalculated = false;
 
   data = inject<{ group: Group }>(MAT_DIALOG_DATA);
-  private dialogRef = inject(MatDialogRef<SettleExpensesDialogComponent>);
-  private notificationService = inject(NotificationService);
-  private dialog = inject(MatDialog);
-  private expenseService = inject(ExpenseService);
+  private readonly dialogRef = inject(MatDialogRef<SettleExpensesDialogComponent>);
+  private readonly notificationService = inject(NotificationService);
+  private readonly dialog = inject(MatDialog);
+  private readonly expenseService = inject(ExpenseService);
 
   ngOnInit(): void {
     this.expenseService.calculateExpense(this.data.group.id).subscribe({

@@ -6,7 +6,7 @@ import {NotificationService} from './notification.service';
   providedIn: 'root'
 })
 export class ExcelExportService {
-  private notificationService = inject(NotificationService);
+  private readonly notificationService = inject(NotificationService);
 
   // Dodajemy async przed nazwą metody
   async exportExpensesToExcel(expenses: Expense[], groupName: string): Promise<void> {

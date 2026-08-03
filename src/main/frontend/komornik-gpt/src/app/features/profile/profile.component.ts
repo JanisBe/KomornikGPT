@@ -1,4 +1,4 @@
-import {Component, inject, OnInit, signal, ChangeDetectionStrategy} from '@angular/core';
+import {ChangeDetectionStrategy, Component, inject, OnInit, signal} from '@angular/core';
 
 import {
   AbstractControl,
@@ -230,10 +230,10 @@ export class ProfileComponent implements OnInit {
   hideNew = true;
   hideConfirm = true;
 
-  private fb = inject(FormBuilder);
-  private authService = inject(AuthService);
-  private groupService = inject(GroupService);
-  private notificationService = inject(NotificationService);
+  private readonly fb = inject(FormBuilder);
+  private readonly authService = inject(AuthService);
+  private readonly groupService = inject(GroupService);
+  private readonly notificationService = inject(NotificationService);
 
   constructor() {
     this.profileForm = this.fb.group({

@@ -263,10 +263,10 @@ export class ViewExpensesDialogComponent implements OnInit {
   isMobile$: Observable<boolean>;
 
   public data = inject<{ group: Group }>(MAT_DIALOG_DATA);
-  private expenseService = inject(ExpenseService);
-  private notificationService = inject(NotificationService);
-  private dialog = inject(MatDialog);
-  private breakpointObserver = inject(BreakpointObserver);
+  private readonly expenseService = inject(ExpenseService);
+  private readonly notificationService = inject(NotificationService);
+  private readonly dialog = inject(MatDialog);
+  private readonly breakpointObserver = inject(BreakpointObserver);
 
   constructor() {
     this.isMobile$ = this.breakpointObserver.observe(Breakpoints.Handset)

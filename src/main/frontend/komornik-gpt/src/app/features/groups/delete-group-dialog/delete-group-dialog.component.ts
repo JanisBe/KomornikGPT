@@ -1,4 +1,4 @@
-import {Component, inject, OnInit, signal, ChangeDetectionStrategy} from '@angular/core';
+import {ChangeDetectionStrategy, Component, inject, OnInit, signal} from '@angular/core';
 
 import {MAT_DIALOG_DATA, MatDialogModule} from '@angular/material/dialog';
 import {MatButtonModule} from '@angular/material/button';
@@ -71,7 +71,7 @@ export class DeleteGroupDialogComponent implements OnInit {
   isLoading = signal(true);
 
   data = inject<Group>(MAT_DIALOG_DATA);
-  private expenseService = inject(ExpenseService);
+  private readonly expenseService = inject(ExpenseService);
 
   ngOnInit(): void {
     this.expenseService.hasUnpaidExpenses(this.data.id)

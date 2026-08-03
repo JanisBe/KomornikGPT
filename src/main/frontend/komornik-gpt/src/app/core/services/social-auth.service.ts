@@ -13,9 +13,9 @@ import {User} from '../models/user.model';
 export class SocialAuthService {
   private readonly apiUrl = `${environment.apiUrl}/auth`;
   private readonly oauth2ApiUrl = `${environment.oAuth}`;
-  private http = inject(HttpClient);
-  private authService = inject(AuthService);
-  private router = inject(Router);
+  private readonly http = inject(HttpClient);
+  private readonly authService = inject(AuthService);
+  private readonly router = inject(Router);
 
   constructor() {
     if (window.location.pathname === '/auth/callback') {

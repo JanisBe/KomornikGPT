@@ -1,6 +1,8 @@
 package com.janis.komornikgpt.expense;
 
+import com.janis.komornikgpt.exception.GroupNotFoundException;
 import com.janis.komornikgpt.exception.ResourceNotFoundException;
+import com.janis.komornikgpt.exception.UserNotFoundException;
 import com.janis.komornikgpt.group.Group;
 import com.janis.komornikgpt.group.GroupDto;
 import com.janis.komornikgpt.group.GroupRepository;
@@ -39,10 +41,10 @@ public class ExpenseService {
 
         User payer = userRepository.findById(request.payerId())
                 .orElseThrow(
-                        () -> new RuntimeException("User not found with id: " + request.payerId()));
+                        () -> new UserNotFoundException("User not found with id: " + request.payerId()));
         Group group = groupRepository.findById(request.groupId())
                 .orElseThrow(
-                        () -> new RuntimeException("Group not found with id: " + request.groupId()));
+                        () -> new GroupNotFoundException("Group not found with id: " + request.groupId()));
 
         Expense expense = new Expense();
         expense.setDescription(request.description());
@@ -61,7 +63,7 @@ public class ExpenseService {
         request.splits().forEach(splitDto -> {
             ExpenseSplit split = new ExpenseSplit();
             split.setUser(userRepository.findById(splitDto.userId())
-                    .orElseThrow(() -> new RuntimeException("User not found with id: " + splitDto.userId())));
+                    .orElseThrow(() -> new UserNotFoundException("User not found with id: " + splitDto.userId())));
             split.setAmountOwed(splitDto.amountOwed());
             split.setExpense(expense);
             expense.getSplits().add(split);
@@ -170,7 +172,7 @@ public class ExpenseService {
         expense.setCategory(request.category());
         expense.setPayer(userRepository.findById(request.payerId())
                 .orElseThrow(
-                        () -> new RuntimeException("User not found with id: " + request.payerId())));
+                        () -> new UserNotFoundException("User not found with id: " + request.payerId())));
 
         // Update splits
         expense.getSplits().clear();
@@ -180,7 +182,9 @@ public class ExpenseService {
     }
 
     public boolean canUserBeDeletedFromGroup(Long userId, Long groupId) {
-        BigDecimal sum = expenseRepository.countUnpaidAmountOwedByUserIdAndGroupId(userId, groupId);
-        return sum != null && sum.compareTo(BigDecimal.ZERO) < 0;
+        BigDecimal sumOwed = expenseRepository.sumUnpaidAmountOwedByUserIdAndGroupId(userId, groupId);
+        boolean hasUnpaidDebts = sumOwed != null && sumOwed.compareTo(BigDecimal.ZERO) > 0;
+        boolean hasUnsettledExpensesAsPayer = expenseRepository.countUnpaidExpensesByPayerIdAndGroupId(userId, groupId) > 0;
+        return !hasUnpaidDebts && !hasUnsettledExpensesAsPayer;
     }
 }

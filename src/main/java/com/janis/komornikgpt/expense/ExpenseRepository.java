@@ -19,7 +19,8 @@ public interface ExpenseRepository extends JpaRepository<Expense, Long> {
         @Param("endDate") LocalDateTime endDate
     );
 
-    List<Expense> findAllByPayerIdOrderByDateDesc(Long userId);
+    @Query("SELECT DISTINCT e FROM Expense e JOIN FETCH e.payer LEFT JOIN FETCH e.splits s LEFT JOIN FETCH s.user WHERE e.payer.id = :userId ORDER BY e.date DESC")
+    List<Expense> findAllByPayerIdOrderByDateDesc(@Param("userId") Long userId);
     
     @Query("SELECT e FROM Expense e WHERE e.payer.id = :userId AND e.date BETWEEN :startDate AND :endDate")
     List<Expense> findAllByPayerIdAndDateBetween(
@@ -27,15 +28,16 @@ public interface ExpenseRepository extends JpaRepository<Expense, Long> {
         @Param("startDate") LocalDateTime startDate,
         @Param("endDate") LocalDateTime endDate
     );
-    
-    List<Expense> findAllByGroupIdOrderByDateDesc(Long groupId);
 
-    List<Expense> findAllByGroup_IdAndPaidFalse(Long groupId);
+    @Query("SELECT DISTINCT e FROM Expense e JOIN FETCH e.payer LEFT JOIN FETCH e.splits s LEFT JOIN FETCH s.user WHERE e.group.id = :groupId ORDER BY e.date DESC")
+    List<Expense> findAllByGroupIdOrderByDateDesc(@Param("groupId") Long groupId);
+
+    @Query("SELECT DISTINCT e FROM Expense e JOIN FETCH e.payer LEFT JOIN FETCH e.splits s LEFT JOIN FETCH s.user WHERE e.group.id = :groupId AND e.paid = false")
+    List<Expense> findAllByGroup_IdAndPaidFalse(@Param("groupId") Long groupId);
 
     @Query("SELECT SUM(es.amountOwed) FROM ExpenseSplit es WHERE es.user.id = :userId AND es.expense.group.id = :groupId AND es.expense.paid = false")
     BigDecimal sumUnpaidAmountOwedByUserIdAndGroupId(@Param("userId") Long userId, @Param("groupId") Long groupId);
 
-    @Query("SELECT COUNT(es.amountOwed) FROM ExpenseSplit es WHERE es.user.id = :userId AND es.expense.group.id = :groupId AND es.expense.paid = false")
-    BigDecimal countUnpaidAmountOwedByUserIdAndGroupId(@Param("userId") Long userId, @Param("groupId") Long groupId);
-
+    @Query("SELECT COUNT(e) FROM Expense e WHERE e.payer.id = :userId AND e.group.id = :groupId AND e.paid = false")
+    long countUnpaidExpensesByPayerIdAndGroupId(@Param("userId") Long userId, @Param("groupId") Long groupId);
 }

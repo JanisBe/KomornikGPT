@@ -93,7 +93,7 @@ public class UserService implements UserDetailsService {
         if (request.newPassword() != null && !request.newPassword().isEmpty()) {
             if (request.currentPassword() == null
                     || !passwordEncoder.matches(request.currentPassword(), user.getPassword())) {
-                throw new RuntimeException("Current password is incorrect");
+                throw new IllegalArgumentException("Current password is incorrect");
             }
             user.setPassword(passwordEncoder.encode(request.newPassword()));
         }
@@ -106,7 +106,7 @@ public class UserService implements UserDetailsService {
     @Transactional
     public User updateUser(String username, UpdateUserRequest request) {
         User user = userRepository.findByUsername(username)
-                .orElseThrow(() -> new RuntimeException("User not found"));
+                .orElseThrow(() -> new UserNotFoundException("User not found with username: " + username));
 
         updateUserDetails(request, user);
 
@@ -125,7 +125,7 @@ public class UserService implements UserDetailsService {
     public UserCreationResult createUserWithoutPassword(CreateUserWithoutPasswordRequest request) {
         if (userRepository.existsByEmail(request.email())) {
             User existingUser = userRepository.findByEmail(request.email())
-                    .orElseThrow(() -> new RuntimeException("User not found")); // Should not happen if existsByEmail is true
+                    .orElseThrow(() -> new UserNotFoundException("User not found with email: " + request.email()));
             return new UserCreationResult(existingUser, false, null);
         }
 
@@ -156,7 +156,7 @@ public class UserService implements UserDetailsService {
 
     public User findByEmail(String email) {
         return userRepository.findByEmail(email)
-                .orElseThrow(() -> new RuntimeException("User not found"));
+                .orElseThrow(() -> new UserNotFoundException("User not found with email: " + email));
     }
 
     public User saveUser(User user) {
@@ -177,7 +177,7 @@ public class UserService implements UserDetailsService {
             emailService.sendPasswordResetEmail(user.getEmail(), token);
 
             return true;
-        } catch (UserNotFoundException e) {
+        } catch (UserNotFoundException _) {
             return false;
         }
     }

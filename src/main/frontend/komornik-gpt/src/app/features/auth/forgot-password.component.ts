@@ -82,7 +82,7 @@ import {PasswordService} from '../../core/services/password.service';
       </mat-card>
     </div>
   `,
-  changeDetection: ChangeDetectionStrategy.Eager,
+  changeDetection: ChangeDetectionStrategy.OnPush,
   styles: [`
     .forgot-password-container {
       display: flex;

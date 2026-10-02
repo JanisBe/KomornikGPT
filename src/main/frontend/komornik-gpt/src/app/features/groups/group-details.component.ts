@@ -1,4 +1,5 @@
 import {ChangeDetectionStrategy, Component, inject, OnInit, signal} from '@angular/core';
+import {toSignal} from '@angular/core/rxjs-interop';
 import {ActivatedRoute, Router, RouterModule} from '@angular/router';
 import {GroupService} from '../../core/services/group.service';
 import {Group} from '../../core/models/group.model';
@@ -20,7 +21,6 @@ import {EditGroupDialogComponent} from './edit-group-dialog/edit-group-dialog.co
 import {DeleteGroupDialogComponent} from './delete-group-dialog/delete-group-dialog.component';
 import {BreakpointObserver, Breakpoints} from '@angular/cdk/layout';
 import {map} from 'rxjs/operators';
-import {Observable} from 'rxjs';
 import {Expense, GroupedExpenses} from '../../core/models/expense.model';
 import {MatTabsModule} from '@angular/material/tabs';
 import {CommonModule} from '@angular/common';
@@ -212,7 +212,7 @@ import {Currency, CurrencyDetails} from '../../core/models/currency.model';
       </div>
     }
   `,
-  changeDetection: ChangeDetectionStrategy.Eager,
+  changeDetection: ChangeDetectionStrategy.OnPush,
   styles: [`
     .container {
       max-width: 1200px;
@@ -658,7 +658,6 @@ export class GroupDetailsComponent implements OnInit {
   error: string | null = null;
   isAuthenticated = false;
   currentUser: User | null = null;
-  isMobile$: Observable<boolean>;
 
   // New properties for expenses
   expenses: Expense[] = [];
@@ -677,10 +676,10 @@ export class GroupDetailsComponent implements OnInit {
   private readonly breakpointObserver = inject(BreakpointObserver);
   private readonly excelExportService = inject(ExcelExportService);
 
-  constructor() {
-    this.isMobile$ = this.breakpointObserver.observe(Breakpoints.Handset)
-      .pipe(map(result => result.matches));
-  }
+  readonly isMobile = toSignal(
+    this.breakpointObserver.observe(Breakpoints.Handset).pipe(map(result => result.matches)),
+    {initialValue: false}
+  );
 
   ngOnInit(): void {
     const id = this.route.snapshot.paramMap.get('id');
@@ -733,41 +732,40 @@ export class GroupDetailsComponent implements OnInit {
 
   editExpense(expense: Expense): void {
     if (!this.group || !this.currentUser) return;
-    this.isMobile$.subscribe(isMobile => {
-      const dialogConfig = {
-        data: {
-          group: this.group,
-          expense: expense,
-          isEdit: true,
-          currentUser: this.currentUser
-        },
-        width: isMobile ? '100vw' : '800px',
-        maxWidth: isMobile ? '100vw' : '90vw',
-        height: isMobile ? '100vh' : undefined,
-        maxHeight: isMobile ? '100vh' : '90vh',
-        panelClass: isMobile ? 'mobile-dialog-container' : undefined
-      };
+    const isMobile = this.isMobile();
+    const dialogConfig = {
+      data: {
+        group: this.group,
+        expense: expense,
+        isEdit: true,
+        currentUser: this.currentUser
+      },
+      width: isMobile ? '100vw' : '800px',
+      maxWidth: isMobile ? '100vw' : '90vw',
+      height: isMobile ? '100vh' : undefined,
+      maxHeight: isMobile ? '100vh' : '90vh',
+      panelClass: isMobile ? 'mobile-dialog-container' : undefined
+    };
 
-      const dialogRef = this.dialog.open(AddExpenseDialogComponent, dialogConfig);
+    const dialogRef = this.dialog.open(AddExpenseDialogComponent, dialogConfig);
 
-      dialogRef.afterClosed().subscribe(result => {
-        if (result) {
-          if (result.deleted) {
-            this.loadExpenses();
-          } else {
-            this.expenseService.updateExpense(expense.id, result).subscribe({
-              next: () => {
-                this.notificationService.showSuccess('Wydatek został zaktualizowany');
-                this.loadExpenses();
-              },
-              error: (error) => {
-                console.error(error);
-                this.notificationService.showError('Błąd podczas aktualizacji wydatku');
-              }
-            });
-          }
+    dialogRef.afterClosed().subscribe(result => {
+      if (result) {
+        if (result.deleted) {
+          this.loadExpenses();
+        } else {
+          this.expenseService.updateExpense(expense.id, result).subscribe({
+            next: () => {
+              this.notificationService.showSuccess('Wydatek został zaktualizowany');
+              this.loadExpenses();
+            },
+            error: (error) => {
+              console.error(error);
+              this.notificationService.showError('Błąd podczas aktualizacji wydatku');
+            }
+          });
         }
-      });
+      }
     });
   }
 
@@ -798,32 +796,31 @@ export class GroupDetailsComponent implements OnInit {
   }
 
   addExpense(group: Group): void {
-    this.isMobile$.subscribe(isMobile => {
-      const dialogConfig = {
-        data: {group, currentUser: this.currentUser},
-        width: isMobile ? '100vw' : '800px',
-        maxWidth: isMobile ? '100vw' : '90vw',
-        height: isMobile ? '100vh' : undefined,
-        maxHeight: isMobile ? '100vh' : '90vh',
-        panelClass: isMobile ? 'mobile-dialog-container' : undefined
-      };
+    const isMobile = this.isMobile();
+    const dialogConfig = {
+      data: {group, currentUser: this.currentUser},
+      width: isMobile ? '100vw' : '800px',
+      maxWidth: isMobile ? '100vw' : '90vw',
+      height: isMobile ? '100vh' : undefined,
+      maxHeight: isMobile ? '100vh' : '90vh',
+      panelClass: isMobile ? 'mobile-dialog-container' : undefined
+    };
 
-      const dialogRef = this.dialog.open(AddExpenseDialogComponent, dialogConfig);
+    const dialogRef = this.dialog.open(AddExpenseDialogComponent, dialogConfig);
 
-      dialogRef.afterClosed().subscribe(result => {
-        if (result) {
-          this.expenseService.createExpense(result).subscribe({
-            next: () => {
-              this.notificationService.showSuccess('Wydatek został dodany');
-              this.loadExpenses(); // Refresh expenses after adding
-            },
-            error: (error: HttpErrorResponse) => {
-              console.error(error);
-              this.notificationService.showError('Błąd podczas dodawania wydatku');
-            }
-          });
-        }
-      });
+    dialogRef.afterClosed().subscribe(result => {
+      if (result) {
+        this.expenseService.createExpense(result).subscribe({
+          next: () => {
+            this.notificationService.showSuccess('Wydatek został dodany');
+            this.loadExpenses(); // Refresh expenses after adding
+          },
+          error: (error: HttpErrorResponse) => {
+            console.error(error);
+            this.notificationService.showError('Błąd podczas dodawania wydatku');
+          }
+        });
+      }
     });
   }
 
@@ -833,32 +830,31 @@ export class GroupDetailsComponent implements OnInit {
       return;
     }
 
-    this.isMobile$.subscribe(isMobile => {
-      const dialogConfig = {
-        data: {group, currentUser: this.currentUser},
-        width: isMobile ? '100vw' : '800px',
-        maxWidth: isMobile ? '100vw' : '90vw',
-        height: isMobile ? '100vh' : undefined,
-        maxHeight: isMobile ? '100vh' : '90vh',
-        panelClass: isMobile ? 'mobile-dialog-container' : undefined
-      };
+    const isMobile = this.isMobile();
+    const dialogConfig = {
+      data: {group, currentUser: this.currentUser},
+      width: isMobile ? '100vw' : '800px',
+      maxWidth: isMobile ? '100vw' : '90vw',
+      height: isMobile ? '100vh' : undefined,
+      maxHeight: isMobile ? '100vh' : '90vh',
+      panelClass: isMobile ? 'mobile-dialog-container' : undefined
+    };
 
-      const dialogRef = this.dialog.open(EditGroupDialogComponent, dialogConfig);
+    const dialogRef = this.dialog.open(EditGroupDialogComponent, dialogConfig);
 
-      dialogRef.afterClosed().subscribe(result => {
-        if (result) {
-          this.groupService.updateGroup(group.id, result).subscribe({
-            next: (updatedGroup) => {
-              this.group = updatedGroup;
-              this.notificationService.showSuccess('Grupa została zaktualizowana');
-            },
-            error: (error) => {
-              console.error(error);
-              this.notificationService.showError('Błąd podczas aktualizacji grupy');
-            }
-          });
-        }
-      });
+    dialogRef.afterClosed().subscribe(result => {
+      if (result) {
+        this.groupService.updateGroup(group.id, result).subscribe({
+          next: (updatedGroup) => {
+            this.group = updatedGroup;
+            this.notificationService.showSuccess('Grupa została zaktualizowana');
+          },
+          error: (error) => {
+            console.error(error);
+            this.notificationService.showError('Błąd podczas aktualizacji grupy');
+          }
+        });
+      }
     });
   }
 

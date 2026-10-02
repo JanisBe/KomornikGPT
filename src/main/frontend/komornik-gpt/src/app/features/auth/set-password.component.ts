@@ -63,7 +63,7 @@ import {finalize} from "rxjs";
       </button>
     </form>
   `,
-  changeDetection: ChangeDetectionStrategy.Eager,
+  changeDetection: ChangeDetectionStrategy.OnPush,
   styles: [`
     .password-form {
       max-width: 400px;

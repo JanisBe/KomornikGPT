@@ -100,7 +100,7 @@ import {finalize, map, Observable} from "rxjs";
       </mat-card>
     </div>
   `,
-  changeDetection: ChangeDetectionStrategy.Eager,
+  changeDetection: ChangeDetectionStrategy.OnPush,
   styles: [`
     .register-container {
       display: flex;

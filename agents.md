@@ -50,14 +50,14 @@ KomornikGPT/
 
 | Item        | Value                                                |
 |-------------|------------------------------------------------------|
-| Language    | Java 21                                              |
-| Framework   | Spring Boot 4.1.0-M2                                 |
+| Language    | Java 25                                              |
+| Framework   | Spring Boot 4.2.0-M2                                 |
 | Build tool  | Maven 3.9.9                                          |
 | Database    | PostgreSQL 42.7.x (driver)                           |
 | ORM         | Spring Data JPA / Hibernate                          |
 | Security    | Spring Security + JJWT 0.13.0 + OAuth2 Client        |
 | HTTP client | Spring `RestClient` (spring-boot-starter-restclient) |
-| Utilities   | Lombok 1.18.44                                       |
+| Utilities   | Lombok 1.18.48                                       |
 | Email       | Spring Mail                                          |
 | Metrics     | Micrometer + Prometheus                              |
 | Templating  | Thymeleaf (email templates)                          |
@@ -71,6 +71,7 @@ src/main/java/com/janis/komornikgpt/
 │
 ├── auth/                     ← Authentication & security
 │   ├── AuthRestController.java
+│   ├── AuthService.java
 │   ├── JwtAuthenticationFilter.java
 │   ├── JwtTokenProvider.java
 │   ├── RefreshTokenService.java
@@ -155,8 +156,8 @@ src/main/java/com/janis/komornikgpt/
 | Item         | Value                                             |
 |--------------|---------------------------------------------------|
 | Language     | TypeScript 5.9                                    |
-| Framework    | Angular 21 (standalone components)                |
-| UI Library   | Angular Material 21                               |
+| Framework    | Angular 22 (standalone components)                |
+| UI Library   | Angular Material 22                               |
 | HTTP         | Angular `HttpClient` with functional interceptors |
 | State        | Angular Signals (preferred) + RxJS                |
 | Styling      | SCSS (component-scoped)                           |

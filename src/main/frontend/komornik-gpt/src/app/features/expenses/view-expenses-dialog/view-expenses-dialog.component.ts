@@ -1,4 +1,5 @@
 import {Component, inject, OnInit} from '@angular/core';
+import {toSignal} from '@angular/core/rxjs-interop';
 import {CommonModule} from '@angular/common';
 import {MAT_DIALOG_DATA, MatDialog, MatDialogModule} from '@angular/material/dialog';
 import {MatButtonModule} from '@angular/material/button';
@@ -13,7 +14,6 @@ import {SettleExpensesDialogComponent} from '../settle-expenses-dialog';
 import {CopyUrlButtonComponent} from '../copy-url-button';
 import {BreakpointObserver, Breakpoints} from '@angular/cdk/layout';
 import {map} from 'rxjs/operators';
-import {Observable} from 'rxjs';
 import {NotificationService} from '../../../core/services/notification.service';
 
 
@@ -260,7 +260,6 @@ import {NotificationService} from '../../../core/services/notification.service';
 export class ViewExpensesDialogComponent implements OnInit {
   expenses: Expense[] = [];
   groupedExpenses: GroupedExpenses[] = [];
-  isMobile$: Observable<boolean>;
 
   public data = inject<{ group: Group }>(MAT_DIALOG_DATA);
   private readonly expenseService = inject(ExpenseService);
@@ -268,10 +267,10 @@ export class ViewExpensesDialogComponent implements OnInit {
   private readonly dialog = inject(MatDialog);
   private readonly breakpointObserver = inject(BreakpointObserver);
 
-  constructor() {
-    this.isMobile$ = this.breakpointObserver.observe(Breakpoints.Handset)
-      .pipe(map(result => result.matches));
-  }
+  readonly isMobile = toSignal(
+    this.breakpointObserver.observe(Breakpoints.Handset).pipe(map(result => result.matches)),
+    {initialValue: false}
+  );
 
   ngOnInit() {
     this.loadExpenses();
@@ -313,36 +312,35 @@ export class ViewExpensesDialogComponent implements OnInit {
   }
 
   editExpense(expense: Expense) {
-    this.isMobile$.subscribe(isMobile => {
-      const dialogConfig = {
-        data: {
-          group: this.data.group,
-          expense,
-          isEdit: true
-        },
-        width: isMobile ? '100vw' : '800px',
-        maxWidth: isMobile ? '100vw' : '90vw',
-        height: isMobile ? '100vh' : undefined,
-        maxHeight: isMobile ? '100vh' : '90vh',
-        panelClass: isMobile ? 'mobile-dialog-container' : undefined
-      };
+    const isMobile = this.isMobile();
+    const dialogConfig = {
+      data: {
+        group: this.data.group,
+        expense,
+        isEdit: true
+      },
+      width: isMobile ? '100vw' : '800px',
+      maxWidth: isMobile ? '100vw' : '90vw',
+      height: isMobile ? '100vh' : undefined,
+      maxHeight: isMobile ? '100vh' : '90vh',
+      panelClass: isMobile ? 'mobile-dialog-container' : undefined
+    };
 
-      const dialogRef = this.dialog.open(AddExpenseDialogComponent, dialogConfig);
+    const dialogRef = this.dialog.open(AddExpenseDialogComponent, dialogConfig);
 
-      dialogRef.afterClosed().subscribe(result => {
-        if (result) {
-          this.expenseService.updateExpense(expense.id, result).subscribe({
-            next: () => {
-              this.notificationService.showSuccess('Expense updated successfully');
-              this.loadExpenses();
-            },
-            error: (error) => {
-              console.error(error);
-              this.notificationService.showError('Error updating expense');
-            }
-          });
-        }
-      });
+    dialogRef.afterClosed().subscribe(result => {
+      if (result) {
+        this.expenseService.updateExpense(expense.id, result).subscribe({
+          next: () => {
+            this.notificationService.showSuccess('Expense updated successfully');
+            this.loadExpenses();
+          },
+          error: (error) => {
+            console.error(error);
+            this.notificationService.showError('Error updating expense');
+          }
+        });
+      }
     });
   }
 

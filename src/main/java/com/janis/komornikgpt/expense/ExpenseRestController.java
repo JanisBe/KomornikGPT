@@ -23,9 +23,9 @@ public class ExpenseRestController {
 
     @GetMapping("/groups/{groupId}/settlement")
     @Operation(summary = "Pobierz rozliczenie grupy", description = "Zwraca ostateczne rozliczenie (kto komu ile jest dłużny) dla całej grupy.")
-    public List<SettlementDto> getSettlement(@PathVariable Long groupId,
-                                             @RequestParam(defaultValue = "false") boolean recalculate) {
-        return expenseSettlementService.getSettlementDtos(groupId, recalculate);
+    public ResponseEntity<List<SettlementDto>> getSettlement(@PathVariable Long groupId,
+                                                             @RequestParam(defaultValue = "false") boolean recalculate) {
+        return ResponseEntity.ok(expenseSettlementService.getSettlementDtos(groupId, recalculate));
     }
 
     @GetMapping("/group/{groupId}/has-unpaid")

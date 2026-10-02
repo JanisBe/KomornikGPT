@@ -204,7 +204,7 @@ import {NotificationService} from '../../../core/services/notification.service';
                   <span [class.error]="!isSplitValid">
                     W sumie: {{ totalSplitAmount | number: '1.2-2' }}
                     @if (expenseForm.get('amount')?.value) {
-                      z {{ $safeNavigationMigration(expenseForm.get('amount')?.value) | number: '1.2-2' }}
+                      z {{ expenseForm.get('amount')?.value | number: '1.2-2' }}
                       ({{ getSplitPercentage() | number: '1.0-0' }}%)
                     }
                   </span>
@@ -278,7 +278,7 @@ import {NotificationService} from '../../../core/services/notification.service';
       </form>
     </div>
   `,
-  changeDetection: ChangeDetectionStrategy.Eager,
+  changeDetection: ChangeDetectionStrategy.OnPush,
   styles: [`
     :host {
       display: flex;

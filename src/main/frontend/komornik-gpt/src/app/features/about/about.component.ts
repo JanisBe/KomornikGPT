@@ -1,4 +1,4 @@
-import {Component, ChangeDetectionStrategy} from '@angular/core';
+import {ChangeDetectionStrategy, Component} from '@angular/core';
 import {environment} from '../../../environments/environment';
 
 @Component({
@@ -23,7 +23,7 @@ import {environment} from '../../../environments/environment';
     </table>
   `,
   imports: [],
-  changeDetection: ChangeDetectionStrategy.Eager,
+  changeDetection: ChangeDetectionStrategy.OnPush,
   styles: `table {
     width: 100%;
     border-collapse: collapse;

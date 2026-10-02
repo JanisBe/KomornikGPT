@@ -137,7 +137,7 @@ import {Currency, CurrencyDetails} from '../../core/models/currency.model';
       </div>
     </div>
   `,
-  changeDetection: ChangeDetectionStrategy.Eager,
+  changeDetection: ChangeDetectionStrategy.OnPush,
   styles: [`
     :host {
       display: block;

@@ -9,9 +9,14 @@ import lombok.ToString;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 
-@Table(name = "exchange_rate", uniqueConstraints = {
-		@UniqueConstraint(columnNames = {"currencyFrom", "currencyTo", "date"})
-})
+@Table(name = "exchange_rate",
+        uniqueConstraints = {
+                @UniqueConstraint(name = "uk_exchange_rate_curr_date", columnNames = {"currencyFrom", "currencyTo", "date"})
+        },
+        indexes = {
+                @Index(name = "idx_exchange_rate_search", columnList = "currencyFrom, currencyTo, date")
+        }
+)
 @Entity
 @Getter
 @Setter

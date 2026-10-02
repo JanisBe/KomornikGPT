@@ -16,7 +16,6 @@ import org.springframework.web.bind.annotation.*;
 
 import java.security.Principal;
 import java.util.List;
-import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/groups")
@@ -28,23 +27,24 @@ public class GroupRestController {
 
     @GetMapping
     @Operation(summary = "Pobierz wszystkie grupy", description = "Zwraca listę wszystkich dostępnych grup.")
-    public List<GroupDto> getAllGroups() {
-        return groupService.findAll().stream()
+    public ResponseEntity<List<GroupDto>> getAllGroups() {
+        List<GroupDto> groups = groupService.findAll().stream()
                 .map(GroupDto::fromGroup)
-                .collect(Collectors.toList());
+                .toList();
+        return ResponseEntity.ok(groups);
     }
 
     @GetMapping("/{id}")
     @Operation(summary = "Pobierz grupę po ID", description = "Zwraca szczegóły wybranej grupy wraz z listą członków.")
-    public GroupDto getGroupById(@PathVariable Long id, @RequestParam(required = false) String viewToken, Principal principal) {
+    public ResponseEntity<GroupDto> getGroupById(@PathVariable Long id, @RequestParam(required = false) String viewToken, Principal principal) {
         Group group = groupService.findById(id);
         if (group.isPublic() && viewToken != null && viewToken.equals(group.getViewToken())) {
-            return GroupDto.fromGroup(group);
+            return ResponseEntity.ok(GroupDto.fromGroup(group));
         }
         if (principal != null) {
             Long userId = extractUserId(principal);
             if (group.getUsers().stream().anyMatch(user -> user.getId().equals(userId))) {
-                return GroupDto.fromGroup(group);
+                return ResponseEntity.ok(GroupDto.fromGroup(group));
             }
         }
 
@@ -61,11 +61,11 @@ public class GroupRestController {
 
     @PutMapping("/{id}")
     @Operation(summary = "Zaktualizuj grupę", description = "Aktualizuje dane dla grupy o podanym ID.")
-    public GroupDto updateGroup(
+    public ResponseEntity<GroupDto> updateGroup(
             @PathVariable Long id,
             @Valid @RequestBody UpdateGroupRequest request) {
         Group updatedGroup = groupService.updateGroup(id, request);
-        return GroupDto.fromGroup(updatedGroup);
+        return ResponseEntity.ok(GroupDto.fromGroup(updatedGroup));
     }
 
     @DeleteMapping("/{id}")
@@ -77,10 +77,11 @@ public class GroupRestController {
 
     @GetMapping("/my")
     @Operation(summary = "Pobierz moje grupy", description = "Zwraca listę grup, do których należy obecnie zalogowany użytkownik.")
-    public List<GroupDto> getMyGroups() {
-        return groupService.findGroupsForCurrentUser().stream()
+    public ResponseEntity<List<GroupDto>> getMyGroups() {
+        List<GroupDto> groups = groupService.findGroupsForCurrentUser().stream()
                 .map(GroupDto::fromGroup)
-                .collect(Collectors.toList());
+                .toList();
+        return ResponseEntity.ok(groups);
     }
 
     private Long extractUserId(Principal principal) {

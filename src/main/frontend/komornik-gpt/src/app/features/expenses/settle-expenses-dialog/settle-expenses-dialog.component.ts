@@ -68,7 +68,7 @@ import {ExpenseService} from '../../../core/services/expense.service';
       </button>
     </div>
   `,
-  changeDetection: ChangeDetectionStrategy.Eager,
+  changeDetection: ChangeDetectionStrategy.OnPush,
   styles: [`
     table {
       margin-bottom: 16px;
@@ -170,7 +170,7 @@ export class SettleExpensesDialogComponent implements OnInit {
 @Component({
   standalone: true,
   imports: [MatDialogModule, MatButtonModule],
-  changeDetection: ChangeDetectionStrategy.Eager,
+  changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <h2 mat-dialog-title>Potwierdź rozliczenie</h2>
     <mat-dialog-content>

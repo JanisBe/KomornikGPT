@@ -1,8 +1,17 @@
-import {Component, HostListener, inject, OnInit, ViewChild, ChangeDetectionStrategy} from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  computed,
+  HostListener,
+  inject,
+  OnInit,
+  signal,
+  ViewChild
+} from '@angular/core';
+import {toSignal} from '@angular/core/rxjs-interop';
 import {RouterModule} from '@angular/router';
 import {AuthService} from '../core/services/auth.service';
 import {ThemeService} from '../core/services/theme.service';
-import {User} from '../core/models/user.model';
 import {MatButtonModule} from "@angular/material/button";
 import {MatIconModule} from "@angular/material/icon";
 import {MatToolbarModule} from "@angular/material/toolbar";
@@ -10,15 +19,14 @@ import {MatSidenav, MatSidenavModule} from "@angular/material/sidenav";
 import {MatListModule} from "@angular/material/list";
 import {GroupService} from "../core/services/group.service";
 import {Group} from "../core/models/group.model";
-import {Observable, of} from "rxjs";
+import {of, switchMap} from "rxjs";
 import {MatMenuModule} from "@angular/material/menu";
-import {AsyncPipe} from "@angular/common";
 import {MatExpansionModule} from "@angular/material/expansion";
 
 @Component({
   selector: 'app-layout',
   standalone: true,
-  imports: [RouterModule, MatButtonModule, MatIconModule, MatToolbarModule, MatSidenavModule, MatListModule, MatMenuModule, AsyncPipe, MatExpansionModule],
+  imports: [RouterModule, MatButtonModule, MatIconModule, MatToolbarModule, MatSidenavModule, MatListModule, MatMenuModule, MatExpansionModule],
   template: `
     <mat-toolbar color="primary">
       <button mat-icon-button class="menu-button" (click)="sidenav.toggle()">
@@ -33,21 +41,21 @@ import {MatExpansionModule} from "@angular/material/expansion";
           <a mat-button [matMenuTriggerFor]="groupsMenu" routerLinkActive="active">Grupy</a>
           <mat-menu #groupsMenu="matMenu">
             <a mat-menu-item routerLink="/groups">Wszystkie grupy</a>
-            @if ((myGroups$ | async)?.length) {
+            @if (myGroups().length) {
               <hr>
-              @for (group of myGroups$ | async; track group.id) {
+              @for (group of myGroups(); track group.id) {
                 <a mat-menu-item [routerLink]="['/groups', group.id]">{{ group.name }}</a>
               }
             }
           </mat-menu>
           <a mat-button routerLink="/expenses" routerLinkActive="active">Moje wydatki</a>
-          <a mat-button routerLink="/profile" routerLinkActive="active">Profil ({{ userName }})</a>
+          <a mat-button routerLink="/profile" routerLinkActive="active">Profil ({{ userName() }})</a>
           <button mat-button (click)="logout()" (keyup.enter)="logout()">Logout</button>
         } @else {
           <a mat-button routerLink="/login" routerLinkActive="active">Zaloguj</a>
           <a mat-button routerLink="/register" routerLinkActive="active">Zarejestruj</a>
         }
-        @if (showInstallButton) {
+        @if (showInstallButton()) {
           <button mat-button (click)="installPWA()">
             <mat-icon>cloud_download</mat-icon>
             Zainstaluj
@@ -71,7 +79,7 @@ import {MatExpansionModule} from "@angular/material/expansion";
                   <mat-nav-list>
                     <a mat-list-item routerLink="/groups" routerLinkActive="active" (click)="sidenav.close()">Wszystkie
                       grupy</a>
-                    @for (group of myGroups$ | async; track group.id) {
+                    @for (group of myGroups(); track group.id) {
                       <a mat-list-item [routerLink]="['/groups', group.id]"
                          (click)="sidenav.close()">{{ group.name }}</a>
                     }
@@ -81,7 +89,7 @@ import {MatExpansionModule} from "@angular/material/expansion";
             </mat-accordion>
             <a mat-list-item routerLink="/expenses" routerLinkActive="active" (click)="sidenav.close()">Moje wydatki</a>
             <a mat-list-item routerLink="/profile" routerLinkActive="active" (click)="sidenav.close()">Profil
-              ({{ userName }})</a>
+              ({{ userName() }})</a>
             <button mat-list-item (click)="logout(); sidenav.close()" (keyup.enter)="logout(); sidenav.close()">Logout
             </button>
           } @else {
@@ -107,7 +115,7 @@ import {MatExpansionModule} from "@angular/material/expansion";
       </mat-sidenav-content>
     </mat-sidenav-container>
   `,
-  changeDetection: ChangeDetectionStrategy.Eager,
+  changeDetection: ChangeDetectionStrategy.OnPush,
   styles: [`
     .spacer {
       flex: 1 1 auto;
@@ -177,50 +185,45 @@ import {MatExpansionModule} from "@angular/material/expansion";
   `]
 })
 export class LayoutComponent implements OnInit {
-  userName = '';
-  deferredPrompt: any;
-  showInstallButton = false;
-  myGroups$: Observable<Group[]> = of([]);
+  deferredPrompt: { prompt: () => void; userChoice: Promise<{ outcome: string }> } | null = null;
+  showInstallButton = signal(false);
 
   @ViewChild('sidenav') sidenav!: MatSidenav;
 
   public authService = inject(AuthService);
   public themeService = inject(ThemeService);
-  private groupService = inject(GroupService);
+  readonly currentUser = toSignal(this.authService.user$, {initialValue: null});
+  readonly userName = computed(() => this.currentUser()?.name ?? '');
+  private readonly groupService = inject(GroupService);
+  readonly myGroups = toSignal(
+    this.authService.user$.pipe(
+      switchMap(user => user ? this.groupService.getMyGroups() : of([]))
+    ),
+    {initialValue: [] as Group[]}
+  );
 
   ngOnInit(): void {
     this.themeService.initTheme();
-    this.authService.user$.subscribe({
-      next: (user: User | null) => {
-        this.userName = user?.name ?? '';
-        if (user) {
-          this.myGroups$ = this.groupService.getMyGroups();
-        } else {
-          this.myGroups$ = of([]);
-        }
-      }
-    });
   }
 
   @HostListener('window:beforeinstallprompt', ['$event'])
   onbeforeinstallprompt(e: Event) {
     e.preventDefault();
-    this.deferredPrompt = e;
-    //if (this.isMobileDevice()) {
-      this.showInstallButton = true;
-    //}
+    this.deferredPrompt = e as unknown as { prompt: () => void; userChoice: Promise<{ outcome: string }> };
+    this.showInstallButton.set(true);
   }
 
   installPWA() {
+    if (!this.deferredPrompt) return;
     this.deferredPrompt.prompt();
-    this.deferredPrompt.userChoice.then((choiceResult: any) => {
+    this.deferredPrompt.userChoice.then((choiceResult: { outcome: string }) => {
       if (choiceResult.outcome === 'accepted') {
         console.log('User accepted the A2HS prompt');
       } else {
         console.log('User dismissed the A2HS prompt');
       }
       this.deferredPrompt = null;
-      this.showInstallButton = false;
+      this.showInstallButton.set(false);
     });
   }
 
@@ -234,7 +237,7 @@ export class LayoutComponent implements OnInit {
   }
 
   private isMobileDevice(): boolean {
-    const userAgent = navigator.userAgent || navigator.vendor || (window as any).opera;
+    const userAgent = navigator.userAgent || navigator.vendor || (window as unknown as { opera?: string }).opera || '';
     return /android|ipad|iphone|ipod/i.test(userAgent);
   }
 }

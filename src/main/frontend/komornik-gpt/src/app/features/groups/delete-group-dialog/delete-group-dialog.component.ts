@@ -33,7 +33,7 @@ import {finalize} from "rxjs";
       </mat-dialog-actions>
     </div>
   `,
-  changeDetection: ChangeDetectionStrategy.Eager,
+  changeDetection: ChangeDetectionStrategy.OnPush,
   styles: [`
     .dialog-container {
       padding: 24px;

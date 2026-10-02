@@ -28,7 +28,7 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
     catchError((error: HttpErrorResponse) => {
       if (error.status === 401) {
         // Allow unauthenticated access to public group details and expenses with token
-        if (req.method === 'GET' && (/\/groups\/[0-9]+$/.test(req.url) || /\/expenses\/group\/[0-9]+$/.test(req.url))) {
+        if (req.method === 'GET' && (/\/groups\/\d+$/.test(req.url) || /\/expenses\/group\/\d+$/.test(req.url))) {
           return throwError(() => error);
         }
 

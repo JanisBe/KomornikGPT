@@ -68,7 +68,7 @@ export class AuthService {
       .pipe(
         tap({
           next: (user: User) => {
-            if (user && user.authenticated) {
+            if (user?.authenticated) {
               this.currentUserSubject.next(user);
             } else {
               this.currentUserSubject.next(null);
@@ -91,7 +91,7 @@ export class AuthService {
     return this.http.get<User>(`${this.apiUrl}/auth/user`, {withCredentials: true})
       .pipe(
         tap((user: User) => {
-          if (user && user.authenticated) {
+          if (user?.authenticated) {
             this.currentUserSubject.next(user);
           } else {
             this.currentUserSubject.next(null);

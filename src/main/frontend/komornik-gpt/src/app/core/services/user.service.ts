@@ -43,7 +43,7 @@ export class UserService {
   }
 
   isAdmin(user: User): boolean {
-    return user && user.role === 'ADMIN';
+    return user?.role === 'ADMIN';
   }
 
   canModifyUser(targetUser: User): Observable<boolean> {

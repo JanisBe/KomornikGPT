@@ -3,9 +3,8 @@ package com.janis.komornikgpt.auth;
 import com.janis.komornikgpt.user.Role;
 import com.janis.komornikgpt.user.User;
 import com.janis.komornikgpt.user.UserRepository;
-import lombok.Getter;
-import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.oauth2.client.userinfo.DefaultOAuth2UserService;
 import org.springframework.security.oauth2.client.userinfo.OAuth2UserRequest;
 import org.springframework.security.oauth2.client.userinfo.OAuth2UserService;
@@ -13,26 +12,25 @@ import org.springframework.security.oauth2.core.OAuth2AuthenticationException;
 import org.springframework.security.oauth2.core.OAuth2Error;
 import org.springframework.security.oauth2.core.user.DefaultOAuth2User;
 import org.springframework.security.oauth2.core.user.OAuth2User;
-import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Service;
 
 import java.util.*;
 
-@Component
+@Service
 @Slf4j
-@Getter
-@Setter
 public class CustomOAuth2UserService implements OAuth2UserService<OAuth2UserRequest, OAuth2User> {
     private static final String NAME_ATTRIBUTE = "name";
     private static final String SURNAME_ATTRIBUTE = "surname";
     private static final String EMAIL_KEY = "email";
     private final UserRepository userRepository;
-    private boolean requiresPasswordSetup = false;
     private final GitHubEmailFetcher emailFetcher;
+    private final PasswordEncoder passwordEncoder;
     private final OAuth2UserService<OAuth2UserRequest, OAuth2User> delegate = new DefaultOAuth2UserService();
 
-    public CustomOAuth2UserService(UserRepository userRepository, GitHubEmailFetcher emailFetcher) {
+    public CustomOAuth2UserService(UserRepository userRepository, GitHubEmailFetcher emailFetcher, PasswordEncoder passwordEncoder) {
         this.userRepository = userRepository;
         this.emailFetcher = emailFetcher;
+        this.passwordEncoder = passwordEncoder;
     }
 
     @Override
@@ -88,7 +86,7 @@ public class CustomOAuth2UserService implements OAuth2UserService<OAuth2UserRequ
         attributes.put(NAME_ATTRIBUTE, firstName);
         attributes.put(SURNAME_ATTRIBUTE, lastName);
         OAuth2User oAuth2User = new DefaultOAuth2User(
-            oauth2User.getAuthorities(),
+                oauth2User.getAuthorities(),
                 attributes,
                 NAME_ATTRIBUTE);
         processOAuth2User(attributes);
@@ -123,7 +121,7 @@ public class CustomOAuth2UserService implements OAuth2UserService<OAuth2UserRequ
         user.setEmail(email);
 
         user.setUsername(generateUsername(email));
-        user.setPassword(UUID.randomUUID().toString());
+        user.setPassword(passwordEncoder.encode(UUID.randomUUID().toString()));
         user.setEnabled(true);
         user.setRequiresPasswordSetup(true);
         user.setRole(Role.USER);

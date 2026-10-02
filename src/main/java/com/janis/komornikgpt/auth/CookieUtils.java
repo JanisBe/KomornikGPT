@@ -31,6 +31,7 @@ public class CookieUtils {
         cookie.setPath("/");
         cookie.setHttpOnly(true);
         cookie.setMaxAge(maxAge);
+        cookie.setSecure(true);
         response.addCookie(cookie);
     }
 
@@ -88,7 +89,7 @@ public class CookieUtils {
             ObjectInputStream ois = new ObjectInputStream(bais);
             Object obj = ois.readObject();
             return cls.cast(obj);
-        } catch (Exception e) {
+        } catch (Exception _) {
             return null;
         }
     }

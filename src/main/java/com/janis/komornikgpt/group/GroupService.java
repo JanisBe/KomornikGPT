@@ -1,9 +1,11 @@
 package com.janis.komornikgpt.group;
 
 import com.janis.komornikgpt.exception.GroupNotFoundException;
+import com.janis.komornikgpt.exception.UserNotFoundException;
 import com.janis.komornikgpt.mail.EmailService;
 import com.janis.komornikgpt.user.*;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -33,7 +35,7 @@ public class GroupService {
     public Group createGroup(CreateGroupRequest request) {
         String username = SecurityContextHolder.getContext().getAuthentication().getName();
         User creator = userRepository.findByUsername(username)
-                .orElseThrow(() -> new RuntimeException("Creator not found"));
+                .orElseThrow(() -> new UserNotFoundException("Creator not found"));
 
         Group group = new Group();
         group.setName(request.name());
@@ -53,7 +55,7 @@ public class GroupService {
             if (memberRequest.userId() != null) {
                 // Existing user
                 user = userRepository.findById(memberRequest.userId())
-                        .orElseThrow(() -> new RuntimeException("User not found with id: " + memberRequest.userId()));
+                        .orElseThrow(() -> new UserNotFoundException("User not found with id: " + memberRequest.userId()));
             } else {
                 // Create new user
                 CreateUserWithoutPasswordRequest createUserRequest = new CreateUserWithoutPasswordRequest(
@@ -86,11 +88,11 @@ public class GroupService {
         Group group = findById(id);
         String username = SecurityContextHolder.getContext().getAuthentication().getName();
         User currentUser = userRepository.findByUsername(username)
-                .orElseThrow(() -> new RuntimeException("User not found"));
+                .orElseThrow(() -> new UserNotFoundException("User not found"));
 
         // Only creator can update the group
         if (!group.getCreatedBy().getId().equals(currentUser.getId())) {
-            throw new RuntimeException("Only the creator can update the group");
+            throw new AccessDeniedException("Only the creator can update the group");
         }
 
         if (request.name() != null) {
@@ -117,7 +119,7 @@ public class GroupService {
                     // Existing user
                     user = userRepository.findById(memberRequest.userId())
                             .orElseThrow(
-                                    () -> new RuntimeException("User not found with id: " + memberRequest.userId()));
+                                    () -> new UserNotFoundException("User not found with id: " + memberRequest.userId()));
                 } else {
                     // Create new user
                     CreateUserWithoutPasswordRequest createUserRequest = new CreateUserWithoutPasswordRequest(
@@ -151,11 +153,11 @@ public class GroupService {
         Group group = findById(id);
         String username = SecurityContextHolder.getContext().getAuthentication().getName();
         User currentUser = userRepository.findByUsername(username)
-                .orElseThrow(() -> new RuntimeException("User not found"));
+                .orElseThrow(() -> new UserNotFoundException("User not found"));
 
         // Only creator can delete the group
         if (!group.getCreatedBy().getId().equals(currentUser.getId())) {
-            throw new RuntimeException("Only the creator can delete the group");
+            throw new AccessDeniedException("Only the creator can delete the group");
         }
 
         groupRepository.delete(group);
@@ -166,7 +168,7 @@ public class GroupService {
                 .orElseThrow(() -> new GroupNotFoundException("Group not found with id: " + groupId));
 
         User user = userRepository.findByUsername(username)
-                .orElseThrow(() -> new RuntimeException("User not found with username: " + username));
+                .orElseThrow(() -> new UserNotFoundException("User not found with username: " + username));
 
         return group.getUsers().stream()
                 .anyMatch(member -> member.getId().equals(user.getId()));
@@ -175,7 +177,7 @@ public class GroupService {
     public List<Group> findGroupsForCurrentUser() {
         String username = SecurityContextHolder.getContext().getAuthentication().getName();
         User user = userRepository.findByUsername(username)
-                .orElseThrow(() -> new RuntimeException("User not found"));
+                .orElseThrow(() -> new UserNotFoundException("User not found"));
         return groupRepository.findByUsers_Id(user.getId());
     }
 

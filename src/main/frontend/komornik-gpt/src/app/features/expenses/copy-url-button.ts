@@ -25,7 +25,7 @@ import {MatTooltipModule} from '@angular/material/tooltip';
       </button>
     </div>
   `,
-  changeDetection: ChangeDetectionStrategy.Eager,
+  changeDetection: ChangeDetectionStrategy.OnPush,
   styles: [`
     .copy-url-button {
       display: flex;

@@ -1,4 +1,4 @@
-import {Component, inject, ViewChild, ChangeDetectionStrategy} from '@angular/core';
+import {ChangeDetectionStrategy, Component, inject, ViewChild} from '@angular/core';
 import {MatDialogModule, MatDialogRef} from '@angular/material/dialog';
 import {MatButtonModule} from '@angular/material/button';
 import {GroupFormComponent} from '../group-form/group-form.component';
@@ -23,7 +23,7 @@ import {GroupFormComponent} from '../group-form/group-form.component';
       </mat-dialog-actions>
     </div>
   `,
-  changeDetection: ChangeDetectionStrategy.Eager,
+  changeDetection: ChangeDetectionStrategy.OnPush,
   styles: [`
     :host {
       display: flex;

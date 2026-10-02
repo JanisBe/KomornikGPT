@@ -1,6 +1,7 @@
 package com.janis.komornikgpt.user;
 
-import com.janis.komornikgpt.auth.AuthRestController;
+import com.janis.komornikgpt.auth.AuthService;
+import com.janis.komornikgpt.auth.CurrentUserResponse;
 import com.janis.komornikgpt.exception.TokenMissingException;
 import com.janis.komornikgpt.mail.ForgotPasswordRequest;
 import com.janis.komornikgpt.mail.SetPasswordRequest;
@@ -31,11 +32,11 @@ public class PasswordRestController {
     private final UserService userService;
     private final PasswordEncoder passwordEncoder;
     private final Environment env;
-    private final AuthRestController authRestController;
+    private final AuthService authService;
 
     @GetMapping("/confirm-email")
     @Operation(summary = "Potwierdź adres e-mail", description = "Aktywuje konto użytkownika po kliknięciu linku przesłanego w e-mailu rejestracyjnym.")
-    public ResponseEntity<?> confirm(@RequestParam String token, HttpServletResponse response) {
+    public ResponseEntity<CurrentUserResponse> confirm(@RequestParam String token, HttpServletResponse response) {
         VerificationToken vt = getVerificationToken(token);
 
         if (vt.getExpiryDate().isBefore(LocalDateTime.now())) {
@@ -46,7 +47,7 @@ public class PasswordRestController {
         user.setEnabled(true);
         userService.saveUser(user);
         tokenRepo.delete(vt);
-        return loginUser(response, user);
+        return ResponseEntity.ok(loginUser(response, user));
     }
 
     @PostMapping("/forgot-password")
@@ -63,7 +64,7 @@ public class PasswordRestController {
 
     @PostMapping("/reset-password")
     @Operation(summary = "Zmień hasło (zapomniane)", description = "Służy do ustawienia nowego hasła na podstawie tokena z e-maila w procesie 'forgot-password'.")
-    public ResponseEntity<?> resetPassword(
+    public ResponseEntity<CurrentUserResponse> resetPassword(
             @RequestParam String token,
             @RequestBody SetPasswordRequest request,
             HttpServletResponse response
@@ -71,7 +72,7 @@ public class PasswordRestController {
         VerificationToken vt = getVerificationToken(token);
 
         if (vt.getExpiryDate().isBefore(LocalDateTime.now())) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Token jest już nieważny");
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Token jest już nieważny");
         }
 
         User user = vt.getUser();
@@ -79,7 +80,7 @@ public class PasswordRestController {
         userService.saveUser(user);
         tokenRepo.delete(vt);
 
-        return loginUser(response, user);
+        return ResponseEntity.ok(loginUser(response, user));
     }
 
     @PostMapping("/set-password")
@@ -98,7 +99,7 @@ public class PasswordRestController {
 
     @PostMapping("/set-password-with-token")
     @Operation(summary = "Ustaw hasło z tokenem rejestrowania", description = "Procedura ustawienia hasła przy zaproszeniach (createUserWithoutPassword).")
-    public ResponseEntity<?> setPasswordWithToken(
+    public ResponseEntity<CurrentUserResponse> setPasswordWithToken(
             @RequestParam String token,
             @RequestBody SetPasswordRequest request,
             HttpServletResponse response
@@ -115,7 +116,7 @@ public class PasswordRestController {
         userService.saveUser(user);
         tokenRepo.delete(vt);
 
-        return loginUser(response, user);
+        return ResponseEntity.ok(loginUser(response, user));
     }
 
     private VerificationToken getVerificationToken(String token) {
@@ -123,12 +124,13 @@ public class PasswordRestController {
                 .orElseThrow(() -> new TokenMissingException("Nie znaleziono tokena"));
     }
 
-    private ResponseEntity<?> loginUser(HttpServletResponse response, User user) {
+    private CurrentUserResponse loginUser(HttpServletResponse response, User user) {
         UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
                 user,
                 null,
                 user.getAuthorities());
 
-        return authRestController.loginInternal(authToken, response);
+        return authService.loginWithAuthentication(authToken, response);
     }
 }
+

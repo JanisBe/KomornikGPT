@@ -1,4 +1,14 @@
-import {ChangeDetectionStrategy, Component, EventEmitter, inject, Input, OnInit, Output} from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  DestroyRef,
+  EventEmitter,
+  inject,
+  Input,
+  OnInit,
+  Output
+} from '@angular/core';
+import {takeUntilDestroyed} from '@angular/core/rxjs-interop';
 import {MatDialogModule} from '@angular/material/dialog';
 import {CommonModule} from '@angular/common';
 import {FormArray, FormBuilder, FormGroup, ReactiveFormsModule, Validators} from '@angular/forms';
@@ -12,7 +22,7 @@ import {MatAutocompleteModule, MatAutocompleteSelectedEvent} from '@angular/mate
 import {MatCheckboxModule} from '@angular/material/checkbox';
 import {MemberInput, User} from '../../../core/models/user.model';
 import {UserService} from '../../../core/services/user.service';
-import {firstValueFrom, Observable} from 'rxjs';
+import {firstValueFrom, Observable, switchMap} from 'rxjs';
 import {map, startWith} from 'rxjs/operators';
 import {MatSelectModule} from '@angular/material/select';
 import {Currency} from '../../../core/models/currency.model';
@@ -154,7 +164,7 @@ import {NotificationService} from '../../../core/services/notification.service';
       </div>
     </form>
   `,
-  changeDetection: ChangeDetectionStrategy.Eager,
+  changeDetection: ChangeDetectionStrategy.OnPush,
   styles: [`
     .group-form-content {
       padding-top: 24px;
@@ -294,6 +304,7 @@ export class GroupFormComponent implements OnInit {
   private readonly authService = inject(AuthService);
   private readonly expenseService = inject(ExpenseService);
   private readonly notificationService = inject(NotificationService);
+  private readonly destroyRef = inject(DestroyRef);
 
   ngOnInit(): void {
     this.groupForm = this.fb.group({
@@ -306,34 +317,37 @@ export class GroupFormComponent implements OnInit {
       sendInvitationEmail: [true]
     });
 
-    this.authService.getCurrentUser().subscribe((user: User) => {
-      this.userService.findUsersFriends(user.id!).subscribe({
-        next: (users: User[]) => {
-          this.availableUsers = users;
-          if (this.group) {
-            this.group.members.forEach(member => {
-              this.addMember(member);
-            });
-            this.groupForm.patchValue({
-              name: this.group.name,
-              description: this.group.description,
-              isPublic: this.group.isPublic ?? false,
-              currencies: this.group.currencies && this.group.currencies.length > 0
-                ? this.group.currencies
-                : [this.group.defaultCurrency || Currency.PLN],
-              defaultCurrency: this.group.defaultCurrency || Currency.PLN
-            });
-          } else {
-            this.addMember();
-          }
-        },
-        error: (error: unknown) => {
-          console.error(error);
+    this.authService.getCurrentUser().pipe(
+      switchMap((user: User) => this.userService.findUsersFriends(user.id!)),
+      takeUntilDestroyed(this.destroyRef)
+    ).subscribe({
+      next: (users: User[]) => {
+        this.availableUsers = users;
+        if (this.group) {
+          this.group.members.forEach(member => {
+            this.addMember(member);
+          });
+          this.groupForm.patchValue({
+            name: this.group.name,
+            description: this.group.description,
+            isPublic: this.group.isPublic ?? false,
+            currencies: this.group.currencies && this.group.currencies.length > 0
+              ? this.group.currencies
+              : [this.group.defaultCurrency || Currency.PLN],
+            defaultCurrency: this.group.defaultCurrency || Currency.PLN
+          });
+        } else {
+          this.addMember();
         }
-      });
+      },
+      error: (error: unknown) => {
+        console.error(error);
+      }
     });
 
-    this.groupForm.get('currencies')?.valueChanges.subscribe((selectedCurrencies: Currency[]) => {
+    this.groupForm.get('currencies')?.valueChanges.pipe(
+      takeUntilDestroyed(this.destroyRef)
+    ).subscribe((selectedCurrencies: Currency[]) => {
       const defaultCurrencyControl = this.groupForm.get('defaultCurrency');
       if (selectedCurrencies && selectedCurrencies.length > 0) {
         if (!selectedCurrencies.includes(defaultCurrencyControl?.value)) {
@@ -421,7 +435,7 @@ export class GroupFormComponent implements OnInit {
       const memberData = formValue.members.map((member: MemberInput) => {
         if (member.userId) {
           return {
-            userId: parseInt(member.userId.toString()),
+            userId: Number.parseInt(member.userId.toString()),
             userName: member.userName,
             email: member.email
           };

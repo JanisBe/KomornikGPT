@@ -72,13 +72,13 @@ public class JwtTokenProvider {
         try {
             extractUsername(token);
             return !isTokenExpired(token);
-        } catch (MalformedJwtException ex) {
+        } catch (MalformedJwtException _) {
             log.error("Invalid JWT token");
-        } catch (ExpiredJwtException ex) {
+        } catch (ExpiredJwtException _) {
             log.error("Expired JWT token");
-        } catch (UnsupportedJwtException ex) {
+        } catch (UnsupportedJwtException _) {
             log.error("Unsupported JWT token");
-        } catch (IllegalArgumentException ex) {
+        } catch (IllegalArgumentException _) {
             log.error("JWT claims string is empty");
         }
         return false;

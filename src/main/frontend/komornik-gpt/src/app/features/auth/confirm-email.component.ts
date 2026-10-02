@@ -16,7 +16,7 @@ import {finalize} from "rxjs";
       <p>{{ message() }}</p>
     </div>
   `,
-  changeDetection: ChangeDetectionStrategy.Eager,
+  changeDetection: ChangeDetectionStrategy.OnPush,
   styles: [`
     .container {
       display: flex;

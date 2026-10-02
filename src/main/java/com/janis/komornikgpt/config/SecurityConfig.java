@@ -52,18 +52,21 @@ public class SecurityConfig {
 
     public static final String[] PUBLIC_API_GET = {
             "/api/auth/**",
-            "/api/users/**",
-            "/api/pwd/**",
-            "/api/groups/**",
+            "/api/users/check/username",
+            "/api/users/check/email",
+            "/api/pwd/confirm-email",
             "/.well-known/**",
             "/api/webauthn/**"
     };
 
     public static final String[] PUBLIC_API_POST = {
             "/api/auth/login",
+            "/api/auth/refresh",
             "/api/auth/logout",
-            "/api/users/**",
-            "/api/pwd/**",
+            "/api/users/register",
+            "/api/pwd/forgot-password",
+            "/api/pwd/reset-password",
+            "/api/pwd/set-password-with-token"
     };
 
     public static final String[] OAUTH_URLS = {
@@ -97,7 +100,7 @@ public class SecurityConfig {
                 .csrf(csrf -> {
                     CookieCsrfTokenRepository csrfRepository = CookieCsrfTokenRepository.withHttpOnlyFalse();
                     csrfRepository.setCookiePath("/");
-                    csrf.ignoringRequestMatchers("/api/auth/login", "/api/users/register")
+                    csrf.ignoringRequestMatchers("/api/auth/login", "/api/auth/refresh", "/api/users/register")
                             .csrfTokenRepository(csrfRepository)
                             .csrfTokenRequestHandler(new SpaCsrfTokenRequestHandler());
                 })
@@ -112,6 +115,7 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.POST, PUBLIC_API_POST).permitAll()
                         .requestMatchers("/actuator/health", "/actuator/info").permitAll()
                         .requestMatchers(expensesWithViewTokenMatcher()).permitAll()
+                        .requestMatchers(groupsWithViewTokenMatcher()).permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/expenses/group/*").authenticated()
                         .anyRequest().authenticated())
                 .oauth2Login(oauth2 -> oauth2
@@ -146,6 +150,19 @@ public class SecurityConfig {
 
             return "GET".equals(method) &&
                     uri.matches("/api/expenses/group/\\d+") &&
+                    viewToken != null &&
+                    !viewToken.trim().isEmpty();
+        };
+    }
+
+    private RequestMatcher groupsWithViewTokenMatcher() {
+        return (HttpServletRequest request) -> {
+            String uri = request.getRequestURI();
+            String method = request.getMethod();
+            String viewToken = request.getParameter("viewToken");
+
+            return "GET".equals(method) &&
+                    uri.matches("/api/groups/\\d+") &&
                     viewToken != null &&
                     !viewToken.trim().isEmpty();
         };

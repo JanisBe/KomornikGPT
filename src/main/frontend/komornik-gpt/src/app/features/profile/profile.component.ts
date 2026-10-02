@@ -160,7 +160,7 @@ import {MatIconModule} from '@angular/material/icon';
       </mat-card>
     </div>
   `,
-  changeDetection: ChangeDetectionStrategy.Eager,
+  changeDetection: ChangeDetectionStrategy.OnPush,
   styles: [`
     .profile-container {
       display: flex;

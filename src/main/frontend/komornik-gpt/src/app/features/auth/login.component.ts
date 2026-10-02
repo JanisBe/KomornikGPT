@@ -130,7 +130,7 @@ import {LoginRequest} from '../../core/models/user.model';
       </mat-card>
     </div>
   `,
-  changeDetection: ChangeDetectionStrategy.Eager,
+  changeDetection: ChangeDetectionStrategy.OnPush,
   styles: [`
     button {
       margin: 5px;

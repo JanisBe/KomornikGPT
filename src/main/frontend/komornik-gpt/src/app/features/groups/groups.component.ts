@@ -1,4 +1,5 @@
-import {ChangeDetectionStrategy, Component, inject, OnInit, signal} from '@angular/core';
+import {ChangeDetectionStrategy, Component, DestroyRef, inject, OnInit, signal} from '@angular/core';
+import {takeUntilDestroyed, toSignal} from '@angular/core/rxjs-interop';
 
 import {MatCardModule} from '@angular/material/card';
 import {MatIconModule} from '@angular/material/icon';
@@ -15,7 +16,7 @@ import {CreateGroupDialogComponent} from './create-group-dialog/create-group-dia
 import {AuthService} from '../../core/services/auth.service';
 import {MatProgressSpinnerModule} from '@angular/material/progress-spinner';
 import {User} from '../../core/models/user.model';
-import {catchError, filter, Observable, of, switchMap} from 'rxjs';
+import {catchError, filter, of, switchMap} from 'rxjs';
 import {AddExpenseDialogComponent} from '../expenses/add-expense-dialog/add-expense-dialog.component';
 import {ExpenseService} from '../../core/services/expense.service';
 import {HttpErrorResponse} from '@angular/common/http';
@@ -132,7 +133,7 @@ import {NotificationService} from '../../core/services/notification.service';
       </div>
     </div>
   `,
-  changeDetection: ChangeDetectionStrategy.Eager,
+  changeDetection: ChangeDetectionStrategy.OnPush,
   styles: [`
     .container {
       max-width: 1400px;
@@ -277,7 +278,6 @@ export class GroupsComponent implements OnInit {
   currentUser: User | null = null;
   isLoading = signal(true);
   windowOrigin: string = window.location.origin;
-  isMobile$: Observable<boolean>;
 
   private readonly groupService = inject(GroupService);
   private readonly dialog = inject(MatDialog);
@@ -286,12 +286,11 @@ export class GroupsComponent implements OnInit {
   private readonly expenseService = inject(ExpenseService);
   private readonly router = inject(Router);
   private readonly breakpointObserver = inject(BreakpointObserver);
-
-
-  constructor() {
-    this.isMobile$ = this.breakpointObserver.observe(Breakpoints.Handset)
-      .pipe(map(result => result.matches));
-  }
+  readonly isMobile = toSignal(
+    this.breakpointObserver.observe(Breakpoints.Handset).pipe(map(result => result.matches)),
+    {initialValue: false}
+  );
+  private readonly destroyRef = inject(DestroyRef);
 
   ngOnInit(): void {
     this.authService.user$.pipe(
@@ -306,7 +305,8 @@ export class GroupsComponent implements OnInit {
             return of([]);
           })
         );
-      })
+      }),
+      takeUntilDestroyed(this.destroyRef)
     ).subscribe({
       next: (groups) => {
         this.groups.set(groups);
@@ -331,31 +331,30 @@ export class GroupsComponent implements OnInit {
   }
 
   createGroup(): void {
-    this.isMobile$.subscribe(isMobile => {
-      const dialogConfig = {
-        width: isMobile ? '100vw' : '800px',
-        maxWidth: isMobile ? '100vw' : '90vw',
-        height: isMobile ? '100vh' : undefined,
-        maxHeight: isMobile ? '100vh' : '90vh',
-        panelClass: isMobile ? 'mobile-dialog-container' : undefined
-      };
+    const isMobile = this.isMobile();
+    const dialogConfig = {
+      width: isMobile ? '100vw' : '800px',
+      maxWidth: isMobile ? '100vw' : '90vw',
+      height: isMobile ? '100vh' : undefined,
+      maxHeight: isMobile ? '100vh' : '90vh',
+      panelClass: isMobile ? 'mobile-dialog-container' : undefined
+    };
 
-      const dialogRef = this.dialog.open(CreateGroupDialogComponent, dialogConfig);
+    const dialogRef = this.dialog.open(CreateGroupDialogComponent, dialogConfig);
 
-      dialogRef.afterClosed().subscribe(result => {
-        if (result) {
-          this.groupService.createGroup(result).subscribe({
-            next: (newGroup) => {
-              this.groups.update(groups => [...groups, newGroup]);
-              this.notificationService.showSuccess('Grupa została utworzona');
-            },
-            error: (error) => {
-              console.error(error);
-              this.notificationService.showError('Nie udało się utworzyć grupy');
-            }
-          });
-        }
-      });
+    dialogRef.afterClosed().subscribe(result => {
+      if (result) {
+        this.groupService.createGroup(result).subscribe({
+          next: (newGroup) => {
+            this.groups.update(groups => [...groups, newGroup]);
+            this.notificationService.showSuccess('Grupa została utworzona');
+          },
+          error: (error) => {
+            console.error(error);
+            this.notificationService.showError('Nie udało się utworzyć grupy');
+          }
+        });
+      }
     });
   }
 
@@ -380,40 +379,39 @@ export class GroupsComponent implements OnInit {
       return;
     }
 
-    this.isMobile$.subscribe(isMobile => {
-      const dialogConfig = {
-        data: {group, currentUser: this.currentUser},
-        width: isMobile ? '100vw' : '800px',
-        maxWidth: isMobile ? '100vw' : '90vw',
-        height: isMobile ? '100vh' : undefined,
-        maxHeight: isMobile ? '100vh' : '90vh',
-        panelClass: isMobile ? 'mobile-dialog-container' : undefined
-      };
+    const isMobile = this.isMobile();
+    const dialogConfig = {
+      data: {group, currentUser: this.currentUser},
+      width: isMobile ? '100vw' : '800px',
+      maxWidth: isMobile ? '100vw' : '90vw',
+      height: isMobile ? '100vh' : undefined,
+      maxHeight: isMobile ? '100vh' : '90vh',
+      panelClass: isMobile ? 'mobile-dialog-container' : undefined
+    };
 
-      const dialogRef = this.dialog.open(EditGroupDialogComponent, dialogConfig);
+    const dialogRef = this.dialog.open(EditGroupDialogComponent, dialogConfig);
 
-      dialogRef.afterClosed().subscribe(result => {
-        if (result) {
-          this.groupService.updateGroup(group.id, result).subscribe({
-            next: (updatedGroup) => {
-              this.groups.update(groups => {
-                const index = groups.findIndex(g => g.id === updatedGroup.id);
-                if (index !== -1) {
-                  const newGroups = [...groups];
-                  newGroups[index] = updatedGroup;
-                  return newGroups;
-                }
-                return groups;
-              });
-              this.notificationService.showSuccess('Grupa została zaktualizowana');
-            },
-            error: (error) => {
-              console.error(error);
-              this.notificationService.showError('Bład podczas aktualizacji grupy');
-            }
-          });
-        }
-      });
+    dialogRef.afterClosed().subscribe(result => {
+      if (result) {
+        this.groupService.updateGroup(group.id, result).subscribe({
+          next: (updatedGroup) => {
+            this.groups.update(groups => {
+              const index = groups.findIndex(g => g.id === updatedGroup.id);
+              if (index !== -1) {
+                const newGroups = [...groups];
+                newGroups[index] = updatedGroup;
+                return newGroups;
+              }
+              return groups;
+            });
+            this.notificationService.showSuccess('Grupa została zaktualizowana');
+          },
+          error: (error) => {
+            console.error(error);
+            this.notificationService.showError('Bład podczas aktualizacji grupy');
+          }
+        });
+      }
     });
   }
 
@@ -461,31 +459,30 @@ export class GroupsComponent implements OnInit {
   }
 
   addExpense(group: Group): void {
-    this.isMobile$.subscribe(isMobile => {
-      const dialogConfig = {
-        data: {group, currentUser: this.currentUser},
-        width: isMobile ? '100vw' : '800px',
-        maxWidth: isMobile ? '100vw' : '90vw',
-        height: isMobile ? '100vh' : undefined,
-        maxHeight: isMobile ? '100vh' : '90vh',
-        panelClass: isMobile ? 'mobile-dialog-container' : undefined
-      };
+    const isMobile = this.isMobile();
+    const dialogConfig = {
+      data: {group, currentUser: this.currentUser},
+      width: isMobile ? '100vw' : '800px',
+      maxWidth: isMobile ? '100vw' : '90vw',
+      height: isMobile ? '100vh' : undefined,
+      maxHeight: isMobile ? '100vh' : '90vh',
+      panelClass: isMobile ? 'mobile-dialog-container' : undefined
+    };
 
-      const dialogRef = this.dialog.open(AddExpenseDialogComponent, dialogConfig);
+    const dialogRef = this.dialog.open(AddExpenseDialogComponent, dialogConfig);
 
-      dialogRef.afterClosed().subscribe(result => {
-        if (result) {
-          this.expenseService.createExpense(result).subscribe({
-            next: () => {
-              this.notificationService.showSuccess('Wydatek został dodany');
-            },
-            error: (error: HttpErrorResponse) => {
-              console.error(error);
-              this.notificationService.showError('Bład podczas dodawania wydatku');
-            }
-          });
-        }
-      });
+    dialogRef.afterClosed().subscribe(result => {
+      if (result) {
+        this.expenseService.createExpense(result).subscribe({
+          next: () => {
+            this.notificationService.showSuccess('Wydatek został dodany');
+          },
+          error: (error: HttpErrorResponse) => {
+            console.error(error);
+            this.notificationService.showError('Bład podczas dodawania wydatku');
+          }
+        });
+      }
     });
   }
 }

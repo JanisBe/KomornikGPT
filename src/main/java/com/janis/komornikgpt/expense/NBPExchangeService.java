@@ -49,7 +49,7 @@ public class NBPExchangeService {
                     .findByCurrencyFromAndCurrencyToAndDate(currency, Currency.PLN, currentDate);
             if (cachedRate.isPresent()) {
                 return amount.multiply(cachedRate.get().getRate())
-                        .setScale(2, RoundingMode.HALF_DOWN);
+                        .setScale(2, RoundingMode.HALF_UP);
             }
 
             // 2. If not in DB, fetch from NBP
@@ -76,7 +76,7 @@ public class NBPExchangeService {
                     exchangeRateRepository.save(newRate);
 
                     return amount.multiply(exchangeRate)
-                            .setScale(2, RoundingMode.HALF_DOWN);
+                            .setScale(2, RoundingMode.HALF_UP);
                 } else {
                     log.warn("Otrzymano pustą odpowiedź z API NBP dla daty {}", formattedDate);
                 }

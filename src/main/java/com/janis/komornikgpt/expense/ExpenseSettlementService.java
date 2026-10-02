@@ -89,7 +89,7 @@ public class ExpenseSettlementService {
     }
 
     public List<Settlement> simplifySettlements(List<Settlement> settlements) {
-        Map<Currency, Map<User, BigDecimal>> balancesPerCurrency = new HashMap<>();
+        Map<Currency, Map<User, BigDecimal>> balancesPerCurrency = new EnumMap<>(Currency.class);
 
         for (Settlement settlement : settlements) {
             Currency currency = settlement.currency();

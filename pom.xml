@@ -279,7 +279,7 @@
         <profile>
             <id>docker-local</id>
             <properties>
-                <frontend.build.script>run buildLocal</frontend.build.script>
+                <frontend.build.script>run buildDev</frontend.build.script>
             </properties>
         </profile>
     </profiles>

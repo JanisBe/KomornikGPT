@@ -41,3 +41,6 @@ docker-compose-local.yml
 local.Dockerfile
 /logs/*
 prod-data
+.env
+.env.local
+.env.*.local

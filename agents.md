@@ -238,13 +238,12 @@ src/main/frontend/komornik-gpt/
 ### Local Development (separate processes)
 
 ```bash
-# Backend: Spring Boot dev server (port 8080)
+# Backend: Spring Boot dev server (port 8080, default profile: local)
 ./mvnw spring-boot:run -DskipFrontend=true
 
 # Frontend: Angular dev server (port 4200, proxies /api to 8080)
 cd src/main/frontend/komornik-gpt
-pnpm start           # → ng serve
-pnpm startLocal      # → ng serve --configuration=local
+pnpm start           # → ng serve (uses environment.ts & proxy.conf.json)
 ```
 
 ### Full Build (backend packages frontend)
@@ -268,22 +267,24 @@ docker compose -f docker-compose-local.yml up
 
 | Profile        | Frontend build script | Use case                |
 |----------------|-----------------------|-------------------------|
-| *(none)*       | `pnpm run build`      | Default dev build       |
+| *(none)*       | `pnpm run build`      | Default build (prod)    |
 | `docker-build` | `pnpm run buildProd`  | Production Docker image |
-| `docker-local` | `pnpm run buildLocal` | Local Docker image      |
+| `docker-local` | `pnpm run buildDev`   | Local Docker image      |
 
 ---
 
 ## 6. Configuration Files
 
-| File                                               | Purpose                                              |
-|----------------------------------------------------|------------------------------------------------------|
-| `src/main/resources/application.properties`        | Shared base config (datasource driver, JPA, logging) |
-| `src/main/resources/application-dev.properties`    | Dev profile overrides                                |
-| `src/main/resources/application-prod.properties`   | Prod profile overrides                               |
-| `src/main/frontend/komornik-gpt/src/environments/` | Angular environment files                            |
-| `docker-compose-local.yml`                         | Local infra (PostgreSQL, pgAdmin)                    |
-| `prometheus.yml`                                   | Prometheus scrape config                             |
+| File                                               | Purpose                                                             |
+|----------------------------------------------------|---------------------------------------------------------------------|
+| `.env.example`                                     | Template for environment variables (committed to git)               |
+| `.env`                                             | Local secrets and environment variables (gitignored, auto-loaded)   |
+| `src/main/resources/application.properties`        | Shared base config (defaults, JPA, OpenAPI, JWT, OAuth endpoints)   |
+| `src/main/resources/application-local.properties`  | Local profile overrides (PostgreSQL localhost, MailDev, debug)      |
+| `src/main/resources/application-prod.properties`   | Prod profile overrides (HTTPS, secure cookies, SMTP, metrics)       |
+| `src/main/frontend/komornik-gpt/src/environments/` | Angular environment files (`environment.ts`, `environment.prod.ts`) |
+| `docker-compose-local.yml`                         | Local infra (PostgreSQL, pgAdmin)                                   |
+| `prometheus.yml`                                   | Prometheus scrape config                                            |
 
 ---
 
@@ -306,5 +307,5 @@ docker compose -f docker-compose-local.yml up
 - Pipeline: build Maven (with frontend) → build Docker image → push to registry → deploy
 - Production runs as a single Docker container serving both backend API and Angular SPA as static resources.
 - PWA is enabled and should work offline.
-- After succesful build, it pushes the image to the registry, downloads it on the Oracle Linux VM server running in
+- After successful build, it pushes the image to the registry, downloads it on the Oracle Linux VM server running in
   Oracle Cloud Free Tier and runs the application as a docker container.

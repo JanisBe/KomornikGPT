@@ -75,39 +75,6 @@
               "aot": true,
               "extractLicenses": true
             },
-            "local": {
-              "budgets": [
-                {
-                  "type": "initial",
-                  "maximumWarning": "1mb",
-                  "maximumError": "2mb"
-                },
-                {
-                  "type": "anyComponentStyle",
-                  "maximumWarning": "10kb",
-                  "maximumError": "20kb"
-                }
-              ],
-              "fileReplacements": [
-                {
-                  "replace": "src/environments/environment.ts",
-                  "with": "src/environments/environment.local.ts"
-                }
-              ],
-              "outputHashing": "all",
-              "optimization": {
-                "scripts": true,
-                "styles": {
-                  "minify": true,
-                  "inlineCritical": false
-                },
-                "fonts": true
-              },
-              "sourceMap": true,
-              "namedChunks": true,
-              "aot": true,
-              "extractLicenses": true
-            },
             "development": {
               "optimization": false,
               "extractLicenses": false,
@@ -124,10 +91,6 @@
             },
             "development": {
               "buildTarget": "komornik-gpt:build:development",
-              "proxyConfig": "proxy.conf.json"
-            },
-            "local": {
-              "buildTarget": "komornik-gpt:build:local",
               "proxyConfig": "proxy.conf.json"
             }
           },

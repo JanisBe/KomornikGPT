@@ -12,7 +12,10 @@ import {MatCardModule} from '@angular/material/card';
 import {MatProgressBarModule} from '@angular/material/progress-bar';
 import {MatIconModule} from '@angular/material/icon';
 import {MatDividerModule} from '@angular/material/divider';
-import {LoginRequest} from '../../core/models/user.model';
+import {MatDialog, MatDialogModule} from '@angular/material/dialog';
+import {LoginRequest, User} from '../../core/models/user.model';
+import {WebAuthnService} from '../../core/services/webauthn.service';
+import {BiometricPromptDialogComponent} from './biometric-prompt-dialog/biometric-prompt-dialog.component';
 
 @Component({
   selector: 'app-login',
@@ -26,7 +29,8 @@ import {LoginRequest} from '../../core/models/user.model';
     MatCardModule,
     MatProgressBarModule,
     MatIconModule,
-    MatDividerModule
+    MatDividerModule,
+    MatDialogModule
   ],
   template: `
     <div class="login-container">
@@ -42,18 +46,18 @@ import {LoginRequest} from '../../core/models/user.model';
         <mat-card-content>
           <form [formGroup]="loginForm" (ngSubmit)="onSubmit()">
             <mat-form-field appearance="outline">
-              <mat-label>Email</mat-label>
-              <input matInput type="email" formControlName="email" required>
+              <mat-label>Email lub nazwa użytkownika</mat-label>
+              <input matInput type="text" formControlName="email" autocomplete="username" required>
+              <mat-hint>Możesz podać swój adres e-mail lub login</mat-hint>
               @if (loginForm.get('email')?.errors?.['required'] && (loginForm.get('email')?.dirty || loginForm.get('email')?.touched)) {
-                <mat-error>Email jest wymagany</mat-error>
-              } @else if (loginForm.get('email')?.errors?.['email'] && (loginForm.get('email')?.dirty || loginForm.get('email')?.touched)) {
-                <mat-error>Email niepoprawny</mat-error>
+                <mat-error>Email lub nazwa użytkownika jest wymagana</mat-error>
               }
             </mat-form-field>
 
             <mat-form-field appearance="outline">
-              <mat-label>Password</mat-label>
-              <input matInput [type]="hide ? 'password' : 'text'" formControlName="password" required>
+              <mat-label>Hasło</mat-label>
+              <input matInput [type]="hide ? 'password' : 'text'" formControlName="password"
+                     autocomplete="current-password" required>
               <button mat-icon-button matSuffix (click)="hide = !hide" type="button">
                 <mat-icon>{{ hide ? 'visibility_off' : 'visibility' }}</mat-icon>
               </button>
@@ -85,6 +89,19 @@ import {LoginRequest} from '../../core/models/user.model';
               </button>
             </div>
           </form>
+
+          @if (hasBiometrics()) {
+            <div class="biometric-login-container">
+              <button mat-stroked-button
+                      type="button"
+                      class="biometric-btn"
+                      (click)="loginWithPasskey()"
+                      [disabled]="isLoading()">
+                <mat-icon>fingerprint</mat-icon>
+                Zaloguj odciskiem palca
+              </button>
+            </div>
+          }
 
           <div class="divider">
             <mat-divider></mat-divider>
@@ -274,6 +291,24 @@ import {LoginRequest} from '../../core/models/user.model';
       font-size: 14px;
     }
 
+    .biometric-login-container {
+      margin-top: 12px;
+      margin-bottom: 4px;
+      display: flex;
+      justify-content: center;
+    }
+
+    .biometric-btn {
+      width: 100%;
+      height: 42px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      font-size: 15px;
+      font-weight: 500;
+    }
+
     @media (max-width: 480px) {
       .form-actions {
         flex-direction: column;
@@ -299,10 +334,17 @@ export class LoginComponent implements OnInit {
   private readonly router = inject(Router);
   private readonly route = inject(ActivatedRoute);
   private readonly notificationService = inject(NotificationService);
+  readonly hasBiometrics = signal(false);
+  private readonly webAuthnService = inject(WebAuthnService);
+  private readonly dialog = inject(MatDialog);
 
   ngOnInit(): void {
+    this.webAuthnService.isPlatformAuthenticatorAvailable().then(avail => {
+      this.hasBiometrics.set(avail);
+    });
+
     this.loginForm = this.fb.group({
-      email: ['', [Validators.required, Validators.email]],
+      email: ['', [Validators.required]],
       password: ['', Validators.required]
     });
     this.route.queryParams.subscribe(params => {
@@ -315,15 +357,34 @@ export class LoginComponent implements OnInit {
         }
       }
 
-      const email = params['email'];
-      if (email) {
-        this.loginForm.get('email')?.setValue(email);
+      const identifier = params['email'] || params['username'];
+      if (identifier) {
+        this.loginForm.get('email')?.setValue(identifier);
       }
       const error = params['error'];
       if (error) {
         this.errorMessage = error;
       }
     });
+  }
+
+  async loginWithPasskey(): Promise<void> {
+    try {
+      this.isLoading.set(true);
+      this.errorMessage = '';
+      await this.webAuthnService.loginWithPasskey();
+      this.isLoading.set(false);
+      this.notificationService.showSuccess('Zalogowano pomyślnie!');
+      this.router.navigate(['/groups']);
+    } catch (error: any) {
+      this.isLoading.set(false);
+      if (error?.name === 'NotAllowedError') {
+        return;
+      }
+      const msg = error?.error?.message || error?.message || 'Nie udało się zalogować odciskiem palca.';
+      this.errorMessage = msg;
+      this.notificationService.showError(msg);
+    }
   }
 
   async loginWithGoogle(): Promise<void> {
@@ -367,9 +428,9 @@ export class LoginComponent implements OnInit {
 
       this.authService.login(credentials)
         .subscribe({
-          next: () => {
+          next: (response) => {
             this.isLoading.set(false);
-            this.router.navigate(['/groups']);
+            this.handlePostLoginPrompt(response.user);
           },
           error: (error) => {
             this.isLoading.set(false);
@@ -379,6 +440,27 @@ export class LoginComponent implements OnInit {
     }
   }
 
+  private handlePostLoginPrompt(user: User): void {
+    if (
+      this.hasBiometrics() &&
+      user?.id &&
+      !this.webAuthnService.isPromptDismissed(user.id) &&
+      !this.webAuthnService.isEnrolled(user.id)
+    ) {
+      const dialogRef = this.dialog.open(BiometricPromptDialogComponent, {
+        width: '420px',
+        disableClose: true
+      });
+      dialogRef.afterClosed().subscribe((enrolled: boolean) => {
+        if (!enrolled && user.id) {
+          this.webAuthnService.dismissPrompt(user.id);
+        }
+        this.router.navigate(['/groups']);
+      });
+    } else {
+      this.router.navigate(['/groups']);
+    }
+  }
 
   private handleError(error: any): void {
     console.log("error", error);

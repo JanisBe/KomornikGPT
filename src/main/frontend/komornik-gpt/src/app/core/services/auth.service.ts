@@ -11,7 +11,7 @@ import {environment} from '../../../environments/environment';
 })
 export class AuthService {
   private readonly apiUrl = environment.apiUrl;
-  private currentUserSubject = new BehaviorSubject<User | null>(null);
+  private readonly currentUserSubject = new BehaviorSubject<User | null>(null);
   public user$ = this.currentUserSubject.asObservable();
   private authCheckInProgress: Observable<User> | null = null;
 
@@ -133,6 +133,10 @@ export class AuthService {
 
   getLoggedUser() {
     return this.currentUserSubject.value;
+  }
+
+  setCurrentUser(user: User): void {
+    this.currentUserSubject.next(user);
   }
 
   private checkAuthStatus(): void {

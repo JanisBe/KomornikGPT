@@ -22,13 +22,17 @@ import {AuthService} from '../../core/services/auth.service';
 import {GroupService} from '../../core/services/group.service';
 import {NotificationService} from '../../core/services/notification.service';
 import {HttpErrorResponse} from '@angular/common/http';
+import {DatePipe} from '@angular/common';
 import {MatIconModule} from '@angular/material/icon';
+import {WebAuthnService} from '../../core/services/webauthn.service';
+import {WebAuthnCredentialDto} from '../../core/models/webauthn.model';
 
 @Component({
   selector: 'app-profile',
   standalone: true,
   imports: [
     ReactiveFormsModule,
+    DatePipe,
     MatCardModule,
     MatFormFieldModule,
     MatInputModule,
@@ -131,6 +135,63 @@ import {MatIconModule} from '@angular/material/icon';
               </div>
             </mat-expansion-panel>
 
+            <mat-expansion-panel class="passkey-panel">
+              <mat-expansion-panel-header>
+                <mat-panel-title>
+                  <mat-icon class="panel-icon">fingerprint</mat-icon>
+                  Logowanie odciskiem palca / Passkeys
+                </mat-panel-title>
+              </mat-expansion-panel-header>
+
+              <div class="passkey-content">
+                <p class="passkey-description">
+                  Możesz logować się do aplikacji bez hasła za pomocą czytnika linii papilarnych, Face ID lub klucza
+                  bezpieczeństwa na tym urządzeniu.
+                </p>
+
+                @if (isBiometricsSupported()) {
+                  <div class="passkey-add-action">
+                    <button mat-stroked-button color="primary" type="button"
+                            (click)="registerPasskey()"
+                            [disabled]="isPasskeyLoading()">
+                      <mat-icon>add</mat-icon>
+                      {{ isPasskeyLoading() ? 'Rejestrowanie...' : 'Dodaj to urządzenie' }}
+                    </button>
+                  </div>
+                } @else {
+                  <div class="unsupported-hint">
+                    <mat-icon>info</mat-icon>
+                    <span>Ta przeglądarka lub urządzenie nie wspiera rejestracji WebAuthn.</span>
+                  </div>
+                }
+
+                <div class="registered-devices-section">
+                  <h4>Zarejestrowane urządzenia</h4>
+                  <mat-list>
+                    @for (cred of credentials(); track cred.id) {
+                      <mat-list-item class="device-item">
+                        <mat-icon matListItemIcon>devices</mat-icon>
+                        <div matListItemTitle>{{ cred.label }}</div>
+                        <div matListItemLine class="device-meta">
+                          Dodano: {{ cred.created | date:'shortDate' }}
+                        </div>
+                        <button mat-icon-button matListItemMeta color="warn" type="button"
+                                (click)="deletePasskey(cred.id)"
+                                title="Usuń to urządzenie">
+                          <mat-icon>delete</mat-icon>
+                        </button>
+                      </mat-list-item>
+                    }
+                    @if (credentials().length === 0) {
+                      <mat-list-item>
+                        <span class="no-devices-text">Brak zarejestrowanych urządzeń.</span>
+                      </mat-list-item>
+                    }
+                  </mat-list>
+                </div>
+              </div>
+            </mat-expansion-panel>
+
             <div class="form-actions">
               <button mat-raised-button color="primary" type="submit"
                       [disabled]="!profileForm.valid || isLoading()">
@@ -188,6 +249,56 @@ import {MatIconModule} from '@angular/material/icon';
       justify-content: flex-end;
     }
 
+    .passkey-panel {
+      margin-top: 16px;
+    }
+
+    .panel-icon {
+      margin-right: 8px;
+      vertical-align: middle;
+    }
+
+    .passkey-content {
+      padding: 8px 0;
+    }
+
+    .passkey-description {
+      margin-bottom: 16px;
+      font-size: 0.9rem;
+      color: rgba(0, 0, 0, 0.7);
+    }
+
+    .passkey-add-action {
+      margin-bottom: 16px;
+    }
+
+    .unsupported-hint {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 12px;
+      margin-bottom: 16px;
+      background: rgba(0, 0, 0, 0.05);
+      border-radius: 4px;
+      font-size: 0.85rem;
+    }
+
+    .registered-devices-section h4 {
+      margin: 16px 0 8px 0;
+      font-size: 0.95rem;
+      font-weight: 600;
+    }
+
+    .device-meta {
+      font-size: 0.8rem;
+      color: rgba(0, 0, 0, 0.54);
+    }
+
+    .no-devices-text {
+      font-size: 0.85rem;
+      color: rgba(0, 0, 0, 0.54);
+    }
+
     mat-card-header {
       margin-bottom: 24px;
     }
@@ -234,6 +345,10 @@ export class ProfileComponent implements OnInit {
   private readonly authService = inject(AuthService);
   private readonly groupService = inject(GroupService);
   private readonly notificationService = inject(NotificationService);
+  readonly credentials = signal<WebAuthnCredentialDto[]>([]);
+  readonly isPasskeyLoading = signal(false);
+  readonly isBiometricsSupported = signal(false);
+  private readonly webAuthnService = inject(WebAuthnService);
 
   constructor() {
     this.profileForm = this.fb.group({
@@ -253,6 +368,12 @@ export class ProfileComponent implements OnInit {
   }
 
   ngOnInit(): void {
+    // Check WebAuthn support
+    this.webAuthnService.isPlatformAuthenticatorAvailable().then(avail => {
+      this.isBiometricsSupported.set(avail || this.webAuthnService.isSupported());
+    });
+    this.loadPasskeys();
+
     // Load user data
     this.authService.getCurrentUser().subscribe({
       next: (user: User) => {
@@ -276,6 +397,43 @@ export class ProfileComponent implements OnInit {
       error: (error) => {
         console.error(error);
         this.notificationService.showError('Nie załadowano grup');
+      }
+    });
+  }
+
+  loadPasskeys(): void {
+    this.webAuthnService.getCredentials().subscribe({
+      next: (creds) => this.credentials.set(creds),
+      error: (err) => console.error('Failed to load passkeys', err)
+    });
+  }
+
+  async registerPasskey(): Promise<void> {
+    try {
+      this.isPasskeyLoading.set(true);
+      await this.webAuthnService.registerCurrentDevice();
+      this.notificationService.showSuccess('Urządzenie zostało pomyślnie dodane!');
+      this.loadPasskeys();
+    } catch (error: any) {
+      if (error?.name === 'NotAllowedError') {
+        return;
+      }
+      const msg = error?.error?.message || error?.message || 'Nie udało się zarejestrować urządzenia.';
+      this.notificationService.showError(msg);
+    } finally {
+      this.isPasskeyLoading.set(false);
+    }
+  }
+
+  deletePasskey(id: number): void {
+    this.webAuthnService.deleteCredential(id).subscribe({
+      next: () => {
+        this.notificationService.showSuccess('Urządzenie zostało usunięte');
+        this.loadPasskeys();
+      },
+      error: (error) => {
+        const msg = error?.error?.message || 'Błąd podczas usuwania urządzenia';
+        this.notificationService.showError(msg);
       }
     });
   }

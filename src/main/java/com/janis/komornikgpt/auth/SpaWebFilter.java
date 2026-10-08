@@ -16,8 +16,10 @@ public class SpaWebFilter extends OncePerRequestFilter {
                                     @NonNull FilterChain filterChain) throws ServletException, IOException {
         String path = request.getRequestURI();
 
-        // Don't forward API, OAuth2, Actuator, or requests for files (containing a dot)
+        // Don't forward API, WebAuthn, OAuth2, Actuator, or requests for files (containing a dot)
         if (!path.startsWith("/api") &&
+                !path.startsWith("/webauthn") &&
+                !path.startsWith("/login/webauthn") &&
                 !path.startsWith("/oauth2") &&
                 !path.startsWith("/actuator") &&
                 !path.startsWith("/v3/api-docs") &&

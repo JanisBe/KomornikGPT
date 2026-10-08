@@ -6,7 +6,13 @@ import {Router} from '@angular/router';
 import {AuthService} from '../services/auth.service';
 import {NotificationService} from '../services/notification.service';
 
-const PUBLIC_PATHS = ['/api/auth/login', '/api/users/register', '/api/auth/refresh'];
+const PUBLIC_PATHS = [
+  '/api/auth/login',
+  '/api/users/register',
+  '/api/auth/refresh',
+  '/login/webauthn',
+  '/webauthn'
+];
 
 let isRefreshing = false;
 const refreshTokenSubject = new BehaviorSubject<any>(null);

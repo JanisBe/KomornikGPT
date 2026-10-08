@@ -9,12 +9,16 @@ import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
+import org.springframework.web.server.ResponseStatusException;
 
+import java.util.Base64;
+import java.util.List;
 import java.util.Optional;
 
 @Service
@@ -26,6 +30,7 @@ public class AuthService {
     private final JwtTokenProvider jwtTokenProvider;
     private final UserService userService;
     private final RefreshTokenService refreshTokenService;
+    private final WebAuthnCredentialRepository webAuthnCredentialRepository;
 
     @Value("${jwt.cookie.name}")
     private String cookieName;
@@ -54,7 +59,7 @@ public class AuthService {
     public CurrentUserResponse loginWithAuthentication(Authentication authentication, HttpServletResponse response) {
         SecurityContextHolder.getContext().setAuthentication(authentication);
         String username = authentication.getName();
-        User user = userService.getUserByUsername(username);
+        User user = findUserByIdentifier(username);
         String jwt = jwtTokenProvider.generateToken(user);
         RefreshToken refreshToken = refreshTokenService.createRefreshToken(user.getId());
 
@@ -149,5 +154,35 @@ public class AuthService {
 
     public Cookie createClearCookie(String name) {
         return CookieUtils.createCookie(name, "", 0, cookieSecure, cookieDomain, "Lax", cookieSecure);
+    }
+
+    public List<WebAuthnCredentialDto> getCurrentUserWebAuthnCredentials() {
+        CurrentUserResponse currentUser = getCurrentUser();
+        if (!currentUser.authenticated() || currentUser.id() == null) {
+            return List.of();
+        }
+        User user = userService.getUserById(currentUser.id());
+        return webAuthnCredentialRepository.findByUser(user).stream()
+                .map(cred -> new WebAuthnCredentialDto(
+                        cred.getId(),
+                        Base64.getUrlEncoder().withoutPadding().encodeToString(cred.getCredentialId()),
+                        cred.getLabel() != null ? cred.getLabel() : "Passkey",
+                        cred.getCreated(),
+                        cred.getLastUsed()
+                ))
+                .toList();
+    }
+
+    public void deleteWebAuthnCredential(Long id) {
+        CurrentUserResponse currentUser = getCurrentUser();
+        if (!currentUser.authenticated() || currentUser.id() == null) {
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "User not authenticated");
+        }
+        WebAuthnCredential credential = webAuthnCredentialRepository.findById(id)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Credential not found"));
+        if (!credential.getUser().getId().equals(currentUser.id())) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Access denied");
+        }
+        webAuthnCredentialRepository.delete(credential);
     }
 }

@@ -5,14 +5,14 @@ DO
 $$
     BEGIN
         IF NOT EXISTS (SELECT 1 FROM users) THEN
-            -- Insert sample users
+            -- Insert sample users (default password: aaaa)
             INSERT INTO users (username, email, password, name, surname, role, enabled, requires_password_setup)
-            VALUES ('a', 'a@a.pl', '$2a$10$N9qo8uLOickgx2ZMRZoMyea7wdtWgtb7pfXoReLE2qQR2N4VuAbtO', 'John', 'Doe',
+            VALUES ('a', 'a@a.pl', '$2a$10$V65oQMpsrvfsFh/nZnkcqODgvu5R2y.c6NgObKsXSOa.cM4kucYeC', 'John', 'Doe',
                     'USER', true, false),
                    ('jane_smith', 'janis66ddd6@gmail.com',
-                    '$2a$10$N9qo8uLOickgx2ZMRZoMyea7wdtWgtb7pfXoReLE2qQR2N4VuAbtO', 'Jane', 'Smith', 'USER', true,
+                    '$2a$10$V65oQMpsrvfsFh/nZnkcqODgvu5R2y.c6NgObKsXSOa.cM4kucYeC', 'Jane', 'Smith', 'USER', true,
                     false),
-                   ('admin', 'admin@example.com', '$2a$10$N9qo8uLOickgx2ZMRZoMyea7wdtWgtb7pfXoReLE2qQR2N4VuAbtO',
+                   ('admin', 'admin@example.com', '$2a$10$V65oQMpsrvfsFh/nZnkcqODgvu5R2y.c6NgObKsXSOa.cM4kucYeC',
                     'Admin', 'User', 'ADMIN', true, false);
 
             -- Insert sample groups

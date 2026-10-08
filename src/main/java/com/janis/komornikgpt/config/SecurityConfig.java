@@ -7,6 +7,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
+import org.springframework.security.config.ObjectPostProcessor;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
@@ -17,12 +18,16 @@ import org.springframework.security.web.context.RequestAttributeSecurityContextR
 import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
 import org.springframework.security.web.header.writers.XXssProtectionHeaderWriter;
 import org.springframework.security.web.util.matcher.RequestMatcher;
+import org.springframework.security.web.webauthn.authentication.WebAuthnAuthenticationFilter;
+import org.springframework.util.StringUtils;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 @Configuration
 @EnableWebSecurity
@@ -66,7 +71,9 @@ public class SecurityConfig {
             "/api/users/register",
             "/api/pwd/forgot-password",
             "/api/pwd/reset-password",
-            "/api/pwd/set-password-with-token"
+            "/api/pwd/set-password-with-token",
+            "/login/webauthn",
+            "/webauthn/authenticate/options"
     };
 
     public static final String[] OAUTH_URLS = {
@@ -83,27 +90,58 @@ public class SecurityConfig {
             "https://127.0.0.1:80",
             "http://localhost",
             "http://127.0.0.1",
-            "http://127.0.0.1:80"
+            "http://127.0.0.1:80",
+            "https://komornik.uno"
     };
     private final OAuth2AuthenticationSuccessHandler oAuth2AuthenticationSuccessHandler;
     private final OAuth2AuthenticationFailureHandler oAuth2AuthenticationFailureHandler;
+    private final WebAuthnAuthenticationSuccessHandler webAuthnAuthenticationSuccessHandler;
     private final JwtAuthenticationFilter jwtAuthFilter;
     private final HttpCookieOAuth2AuthorizationRequestRepository cookieAuthorizationRequestRepository;
+
+    @Value("${webauthn.rp-id:localhost}")
+    private String rpId;
+
+    @Value("${webauthn.rp-name:KomornikGPT}")
+    private String rpName;
 
     @Value("${frontend.url}")
     private String frontendUrl;
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) {
+        Set<String> origins = new HashSet<>(Arrays.asList(ALLOWED_ORIGINS));
+        if (StringUtils.hasText(frontendUrl)) {
+            origins.add(frontendUrl);
+        }
+
         http
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .csrf(csrf -> {
                     CookieCsrfTokenRepository csrfRepository = CookieCsrfTokenRepository.withHttpOnlyFalse();
                     csrfRepository.setCookiePath("/");
-                    csrf.ignoringRequestMatchers("/api/auth/login", "/api/auth/refresh", "/api/users/register")
+                    csrf.ignoringRequestMatchers(
+                                    "/api/auth/login",
+                                    "/api/auth/refresh",
+                                    "/api/users/register",
+                                    "/login/webauthn",
+                                    "/webauthn/**"
+                            )
                             .csrfTokenRepository(csrfRepository)
                             .csrfTokenRequestHandler(new SpaCsrfTokenRequestHandler());
                 })
+                .webAuthn(webAuthn -> webAuthn
+                        .rpId(rpId)
+                        .rpName(rpName)
+                        .allowedOrigins(origins)
+                        .disableDefaultRegistrationPage(true)
+                        .withObjectPostProcessor(new ObjectPostProcessor<WebAuthnAuthenticationFilter>() {
+                            @Override
+                            public <O extends WebAuthnAuthenticationFilter> O postProcess(O filter) {
+                                filter.setAuthenticationSuccessHandler(webAuthnAuthenticationSuccessHandler);
+                                return filter;
+                            }
+                        }))
                 .securityContext(context -> context
                         .securityContextRepository(new RequestAttributeSecurityContextRepository()))
                 .authorizeHttpRequests(auth -> auth

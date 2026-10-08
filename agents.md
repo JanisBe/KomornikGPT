@@ -48,20 +48,20 @@ KomornikGPT/
 
 ### 3.1 Technology Stack
 
-| Item        | Value                                                |
-|-------------|------------------------------------------------------|
-| Language    | Java 25                                              |
-| Framework   | Spring Boot 4.2.0-M2                                 |
-| Build tool  | Maven 3.9.9                                          |
-| Database    | PostgreSQL 42.7.x (driver)                           |
-| ORM         | Spring Data JPA / Hibernate                          |
-| Security    | Spring Security + JJWT 0.13.0 + OAuth2 Client        |
-| HTTP client | Spring `RestClient` (spring-boot-starter-restclient) |
-| Utilities   | Lombok 1.18.48                                       |
-| Email       | Spring Mail                                          |
-| Metrics     | Micrometer + Prometheus                              |
-| Templating  | Thymeleaf (email templates)                          |
-| Testing     | JUnit 5, Spring Boot Test, Spring Security Test      |
+| Item        | Value                                                    |
+|-------------|----------------------------------------------------------|
+| Language    | Java 25                                                  |
+| Framework   | Spring Boot 4.2.0-M2                                     |
+| Build tool  | Maven 3.9.9                                              |
+| Database    | PostgreSQL 42.7.x (driver)                               |
+| ORM         | Spring Data JPA / Hibernate                              |
+| Security    | Spring Security + JJWT 0.13.0 + OAuth2 Client + WebAuthn |
+| HTTP client | Spring `RestClient` (spring-boot-starter-restclient)     |
+| Utilities   | Lombok 1.18.48                                           |
+| Email       | Spring Mail                                              |
+| Metrics     | Micrometer + Prometheus                                  |
+| Templating  | Thymeleaf (email templates)                              |
+| Testing     | JUnit 5, Spring Boot Test, Spring Security Test          |
 
 ### 3.2 Backend Root
 
@@ -78,6 +78,10 @@ src/main/java/com/janis/komornikgpt/
 │   ├── CustomOAuth2UserService.java
 │   ├── OAuth2AuthenticationSuccessHandler.java
 │   ├── OAuth2AuthenticationFailureHandler.java
+│   ├── WebAuthnAuthenticationSuccessHandler.java
+│   ├── JpaUserCredentialRepository.java
+│   ├── JpaPublicKeyCredentialUserEntityRepository.java
+│   ├── WebAuthnCredential.java / WebAuthnCredentialRepository.java
 │   ├── HttpCookieOAuth2AuthorizationRequestRepository.java
 │   ├── CookieUtils.java
 │   ├── CsrfCookieFilter.java
@@ -188,6 +192,7 @@ src/main/frontend/komornik-gpt/
 │       │   │   ├── user.service.ts
 │       │   │   ├── password.service.ts
 │       │   │   ├── social-auth.service.ts
+│       │   │   ├── webauthn.service.ts
 │       │   │   ├── notification.service.ts  ← Centralised MatSnackBar wrapper
 │       │   │   ├── theme.service.ts
 │       │   │   └── excel-export.service.ts

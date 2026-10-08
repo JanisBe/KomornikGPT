@@ -17,6 +17,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.List;
 import java.util.UUID;
 
@@ -31,7 +32,8 @@ public class UserService implements UserDetailsService {
     @Override
     public @NonNull UserDetails loadUserByUsername(@NonNull String username) throws UsernameNotFoundException {
         return userRepository.findByEmail(username)
-                .orElseThrow(() -> new UsernameNotFoundException("User not found"));
+                .or(() -> userRepository.findByUsername(username))
+                .orElseThrow(() -> new UsernameNotFoundException("User not found: " + username));
     }
 
     public List<User> findAll() {
@@ -56,7 +58,7 @@ public class UserService implements UserDetailsService {
         user.setRole(Role.USER);
         user.setEnabled(false);
         String token = UUID.randomUUID().toString();
-        VerificationToken vt = new VerificationToken(token, user, LocalDateTime.now().plusHours(24));
+        VerificationToken vt = new VerificationToken(token, user, LocalDateTime.now(ZoneId.systemDefault()).plusHours(24));
         verificationTokenRepository.save(vt);
 
         emailService.sendVerificationEmail(user.getEmail(), token, request.getUsername());
@@ -147,7 +149,7 @@ public class UserService implements UserDetailsService {
         user.setPassword(passwordEncoder.encode(randomPassword));
 
         String token = UUID.randomUUID().toString();
-        VerificationToken vt = new VerificationToken(token, user, LocalDateTime.now().plusHours(48));
+        VerificationToken vt = new VerificationToken(token, user, LocalDateTime.now(ZoneId.systemDefault()).plusHours(48));
         verificationTokenRepository.save(vt);
 
         User savedUser = userRepository.save(user);
@@ -171,7 +173,7 @@ public class UserService implements UserDetailsService {
                 throw new TokenAlreadyExistsException("Token already exists");
             }
             String token = UUID.randomUUID().toString();
-            VerificationToken verificationToken = new VerificationToken(token, user, LocalDateTime.now().plusHours(24));
+            VerificationToken verificationToken = new VerificationToken(token, user, LocalDateTime.now(ZoneId.systemDefault()).plusHours(24));
             verificationTokenRepository.save(verificationToken);
 
             emailService.sendPasswordResetEmail(user.getEmail(), token);

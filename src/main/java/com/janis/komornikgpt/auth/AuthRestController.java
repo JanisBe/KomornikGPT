@@ -10,6 +10,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 @RestController
 @RequestMapping("/api/auth")
 @RequiredArgsConstructor
@@ -44,5 +46,18 @@ public class AuthRestController {
     @Operation(summary = "Wyloguj użytkownika", description = "Usuwa tokeny z bazy oraz czyści ciasteczka przeglądarki.")
     public ResponseEntity<MessageResponse> logout(HttpServletResponse response) {
         return ResponseEntity.ok(authService.logout(response));
+    }
+
+    @GetMapping("/webauthn/credentials")
+    @Operation(summary = "Pobierz listę zarejestrowanych kluczy WebAuthn", description = "Zwraca klucze biometryczne zalogowanego użytkownika.")
+    public ResponseEntity<List<WebAuthnCredentialDto>> getWebAuthnCredentials() {
+        return ResponseEntity.ok(authService.getCurrentUserWebAuthnCredentials());
+    }
+
+    @DeleteMapping("/webauthn/credentials/{id}")
+    @Operation(summary = "Usuń zarejestrowany klucz WebAuthn", description = "Usuwa powiązany klucz biometryczny użytkownika.")
+    public ResponseEntity<Void> deleteWebAuthnCredential(@PathVariable Long id) {
+        authService.deleteWebAuthnCredential(id);
+        return ResponseEntity.noContent().build();
     }
 }

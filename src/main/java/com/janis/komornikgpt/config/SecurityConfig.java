@@ -91,7 +91,8 @@ public class SecurityConfig {
             "http://localhost",
             "http://127.0.0.1",
             "http://127.0.0.1:80",
-            "https://komornik.uno"
+            "https://komornik.uno",
+            "https://www.komornik.uno"
     };
     private final OAuth2AuthenticationSuccessHandler oAuth2AuthenticationSuccessHandler;
     private final OAuth2AuthenticationFailureHandler oAuth2AuthenticationFailureHandler;
